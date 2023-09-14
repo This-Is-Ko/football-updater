@@ -36,13 +36,13 @@ public class Team {
     private String league;
 
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "data_source_id")
+    @JoinColumn(name = "team_data_source_id")
     @JdbcTypeCode(SqlTypes.JSON)
     private Set<DataSource> dataSources;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "update_status_id")
-    private UpdateStatus updateStatus;
+    @JoinColumn(name = "checked_status_id")
+    private CheckedStatus checkedStatus;
 
     public Integer getId() {
         return id;
@@ -84,11 +84,11 @@ public class Team {
         this.dataSources = dataSources;
     }
 
-    public UpdateStatus getUpdateStatus() {
-        return updateStatus;
+    public CheckedStatus getCheckedStatus() {
+        return checkedStatus;
     }
 
-    public void setUpdateStatus(UpdateStatus updateStatus) {
-        this.updateStatus = updateStatus;
+    public void setCheckedStatus(CheckedStatus checkedStatus) {
+        this.checkedStatus = checkedStatus;
     }
 }

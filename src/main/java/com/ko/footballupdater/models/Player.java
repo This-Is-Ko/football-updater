@@ -1,6 +1,7 @@
 package com.ko.footballupdater.models;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,7 +10,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -23,6 +26,7 @@ public class Player {
     @GeneratedValue(strategy= GenerationType.AUTO)
     private Integer id;
 
+    @NotNull
     @Column
     private String name;
 
@@ -39,10 +43,14 @@ public class Player {
     @JdbcTypeCode(SqlTypes.JSON)
     private Set<Image> images;
 
-    @OneToMany
-    @JoinColumn(name = "data_source_id")
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "player_data_source_id")
     @JdbcTypeCode(SqlTypes.JSON)
     private Set<DataSource> dataSources;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "checked_status_id")
+    private CheckedStatus checkedStatus;
 
     public Integer getId() {
         return id;
@@ -90,5 +98,13 @@ public class Player {
 
     public void setDataSources(Set<DataSource> dataSources) {
         this.dataSources = dataSources;
+    }
+
+    public CheckedStatus getCheckedStatus() {
+        return checkedStatus;
+    }
+
+    public void setCheckedStatus(CheckedStatus checkedStatus) {
+        this.checkedStatus = checkedStatus;
     }
 }

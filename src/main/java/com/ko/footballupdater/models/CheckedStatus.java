@@ -9,19 +9,17 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
-import org.hibernate.annotations.SourceType;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
 
 @Entity
-@Table(name = "update_statuses")
-public class UpdateStatus {
+@Table(name = "checked_statuses")
+public class CheckedStatus {
 
-    public UpdateStatus () {
+    public CheckedStatus() {
     }
 
-    public UpdateStatus (DataSourceSiteName siteName) {
+    public CheckedStatus(DataSourceSiteName siteName) {
         this.siteName = siteName;
     }
 
@@ -39,7 +37,7 @@ public class UpdateStatus {
     private Date lastChecked = new Date();
 
     @Column
-    private String lastestData;
+    private String latestCheckedMatchUrl;
 
     public Integer getId() {
         return id;
@@ -65,11 +63,11 @@ public class UpdateStatus {
         this.lastChecked = lastChecked;
     }
 
-    public String getLastestData() {
-        return lastestData;
+    public String getLatestCheckedMatchUrl() {
+        return latestCheckedMatchUrl;
     }
 
-    public void setLastestData(String lastestData) {
-        this.lastestData = lastestData;
+    public void setLatestCheckedMatchUrl(String latestCheckedMatchUrl) {
+        this.latestCheckedMatchUrl = latestCheckedMatchUrl;
     }
 }
