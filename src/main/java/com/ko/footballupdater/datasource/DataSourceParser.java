@@ -10,10 +10,10 @@ import java.util.List;
 
 public interface DataSourceParser {
 
-    public DataSourceSiteName getDataSourceSiteName();
+    DataSourceSiteName getDataSourceSiteName();
 
-    public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, DataSource dataSource);
+    PlayerMatchPerformanceStats parsePlayerMatchData(Player player, DataSource dataSource);
 
-    public List<Player> parseSquadDataForTeam(Team team, DataSource dataSource);
+    List<Player> parseSquadDataForTeam(Team team, DataSource dataSource);
 
 }
