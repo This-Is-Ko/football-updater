@@ -100,7 +100,13 @@ public class ParsingService {
                 }
                 for (DataSourceParser dataSourceParser : dataSourceParsers) {
                     if (dataSourceParser.getDataSourceSiteName().equals(dataSource.getSiteName())) {
-                        return dataSourceParser.parsePlayerMatchData(player, dataSource);
+                        try {
+                            Document doc = Jsoup.connect(dataSource.getUrl()).get();
+                            return dataSourceParser.parsePlayerMatchData(player, doc);
+                        } catch (IOException e) {
+                            log.warn("Unable to retrieve page at " + dataSource.getUrl());
+                            return null;
+                        }
                     }
                 }
             }

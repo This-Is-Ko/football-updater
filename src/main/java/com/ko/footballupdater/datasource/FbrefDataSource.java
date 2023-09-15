@@ -45,11 +45,9 @@ public class FbrefDataSource implements DataSourceParser {
 
 
     @Override
-    public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, DataSource dataSource) {
+    public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document) {
         try {
-            Document doc = Jsoup.connect(dataSource.getUrl()).get();
-
-            Element tableElement = doc.getElementsByClass("stats_table").first();
+            Element tableElement = document.getElementsByClass("stats_table").first();
             if (tableElement == null) {
                 log.info("Cannot find any match results table: stats_table");
                 return null;

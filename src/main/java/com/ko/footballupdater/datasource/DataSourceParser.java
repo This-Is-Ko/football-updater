@@ -5,6 +5,7 @@ import com.ko.footballupdater.models.DataSourceSiteName;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Team;
+import org.jsoup.nodes.Document;
 
 import java.util.List;
 
@@ -12,7 +13,7 @@ public interface DataSourceParser {
 
     DataSourceSiteName getDataSourceSiteName();
 
-    PlayerMatchPerformanceStats parsePlayerMatchData(Player player, DataSource dataSource);
+    PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document);
 
     List<Player> parseSquadDataForTeam(Team team, DataSource dataSource);
 
