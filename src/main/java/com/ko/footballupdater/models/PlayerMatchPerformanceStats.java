@@ -1,5 +1,8 @@
 package com.ko.footballupdater.models;
 
+import lombok.Getter;
+
+@Getter
 public class PlayerMatchPerformanceStats {
 
     private final Match match;
@@ -33,8 +36,15 @@ public class PlayerMatchPerformanceStats {
     private final Integer progressiveCarries;
     private final Integer takesOnsAttempted;
     private final Integer takesOnsCompleted;
+    private final Integer gkShotsOnTargetAgainst;
+    private final Integer gkGoalsAgainst;
+    private final Integer gkSaves;
+    private final Integer gkSavePercentage;
+    private final Integer gkPenaltiesAttamptedAgainst;
+    private final Integer gkPenaltiesScoredAgainst;
+    private final Integer gkPenaltiesSaved;
 
-    public PlayerMatchPerformanceStats(Match match, Integer minutesPlayed, Integer goals, Integer assists, Integer penaltiesScored, Integer penaltiesWon, Integer shots, Integer shotsOnTarget, Integer yellowCards, Integer redCards, Integer fouls, Integer fouled, Integer offsides, Integer crosses, Integer touches, Integer tackles, Integer tacklesWon, Integer interceptions, Integer blocks, Float xg, Float xg_assist, Integer shotCreatingActions, Integer goalCreatingActions, Integer passesCompleted, Integer passesAttempted, Integer passesSuccessPercentage, Integer progressivePasses, Integer carries, Integer progressiveCarries, Integer takesOnsAttempted, Integer takesOnsCompleted) {
+    public PlayerMatchPerformanceStats(Match match, Integer minutesPlayed, Integer goals, Integer assists, Integer penaltiesScored, Integer penaltiesWon, Integer shots, Integer shotsOnTarget, Integer yellowCards, Integer redCards, Integer fouls, Integer fouled, Integer offsides, Integer crosses, Integer touches, Integer tackles, Integer tacklesWon, Integer interceptions, Integer blocks, Float xg, Float xg_assist, Integer shotCreatingActions, Integer goalCreatingActions, Integer passesCompleted, Integer passesAttempted, Integer passesSuccessPercentage, Integer progressivePasses, Integer carries, Integer progressiveCarries, Integer takesOnsAttempted, Integer takesOnsCompleted, Integer gkShotsOnTargetAgainst, Integer gkGoalsAgainst, Integer gkSaves, Integer gkSavePercentage, Integer gkPenaltiesAttamptedAgainst, Integer gkPenaltiesScoredAgainst, Integer gkPenaltiesSaved) {
         this.match = match;
         this.minutesPlayed = minutesPlayed;
         this.goals = goals;
@@ -66,102 +76,13 @@ public class PlayerMatchPerformanceStats {
         this.progressiveCarries = progressiveCarries;
         this.takesOnsAttempted = takesOnsAttempted;
         this.takesOnsCompleted = takesOnsCompleted;
-    }
-
-    public Match getMatch() {
-        return match;
-    }
-
-    public Integer getMinutesPlayed() {
-        return minutesPlayed;
-    }
-
-    public Integer getGoals() {
-        return goals;
-    }
-
-    public Integer getAssists() {
-        return assists;
-    }
-
-    public Integer getShots() {
-        return shots;
-    }
-
-    public Integer getShotsOnTarget() {
-        return shotsOnTarget;
-    }
-
-    public Integer getYellowCards() {
-        return yellowCards;
-    }
-
-    public Integer getRedCards() {
-        return redCards;
-    }
-
-    public Integer getTouches() {
-        return touches;
-    }
-
-    public Integer getTackles() {
-        return tackles;
-    }
-
-    public Integer getInterceptions() {
-        return interceptions;
-    }
-
-    public Integer getBlocks() {
-        return blocks;
-    }
-
-    public Float getXg() {
-        return xg;
-    }
-
-    public Float getXg_assist() {
-        return xg_assist;
-    }
-
-    public Integer getShotCreatingActions() {
-        return shotCreatingActions;
-    }
-
-    public Integer getGoalCreatingActions() {
-        return goalCreatingActions;
-    }
-
-    public Integer getPassesCompleted() {
-        return passesCompleted;
-    }
-
-    public Integer getPassesAttempted() {
-        return passesAttempted;
-    }
-
-    public Integer getPassesSuccessPercentage() {
-        return passesSuccessPercentage;
-    }
-
-    public Integer getProgressivePasses() {
-        return progressivePasses;
-    }
-
-    public Integer getCarries() {
-        return carries;
-    }
-
-    public Integer getProgressiveCarries() {
-        return progressiveCarries;
-    }
-
-    public Integer getTakesOnsAttempted() {
-        return takesOnsAttempted;
-    }
-
-    public Integer getTakesOnsCompleted() {
-        return takesOnsCompleted;
+        this.gkShotsOnTargetAgainst = gkShotsOnTargetAgainst;
+        this.gkGoalsAgainst = gkGoalsAgainst;
+        this.gkSaves = gkSaves;
+        this.gkSavePercentage = gkSavePercentage;
+        this.gkPenaltiesAttamptedAgainst = gkPenaltiesAttamptedAgainst;
+        this.gkPenaltiesScoredAgainst = gkPenaltiesScoredAgainst;
+        this.gkPenaltiesSaved = gkPenaltiesSaved;
     }
 
     public String toFormattedString() {

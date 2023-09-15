@@ -1,28 +1,30 @@
 package com.ko.footballupdater.services;
 
+import com.ko.footballupdater.datasource.DataSourceParser;
 import com.ko.footballupdater.models.CheckedStatus;
 import com.ko.footballupdater.models.DataSource;
 import com.ko.footballupdater.models.DataSourceSiteName;
-import com.ko.footballupdater.models.Match;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Team;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 
+@Slf4j
 @Service
 public class ParsingService {
 
-    Logger LOG = LoggerFactory.getLogger(ParsingService.class);
+    @Autowired
+    private List<DataSourceParser> dataSourceParsers;
 
     @Value("${datasource.sitename}")
     private DataSourceSiteName dataSourceSiteName;
@@ -93,90 +95,13 @@ public class ParsingService {
         if (player.getDataSources() != null && !player.getDataSources().isEmpty()) {
             while (player.getDataSources().iterator().hasNext()) {
                 DataSource dataSource = player.getDataSources().iterator().next();
-                try {
-                    if (dataSourceSiteName.equals(dataSource.getSiteName())) {
-                        Document doc = Jsoup.connect(dataSource.getUrl()).get();
-
-                        // Potentially support other sites
-                        // TODO Change to interface
-                        switch (dataSourceSiteName) {
-                            case FBREF -> {
-                                Element tableElement = doc.getElementsByClass("stats_table").first();
-                                if (tableElement != null) {
-                                    Element tbodyElement = tableElement.getElementsByTag("tbody").first();
-                                    if (tbodyElement != null) {
-                                        Elements resultRows = tbodyElement.select("tr");
-                                        if (resultRows.isEmpty()) {
-                                            break;
-                                        }
-                                        // Assume last row is the latest match
-                                        Collections.reverse(resultRows);
-                                        for (Element resultRow : resultRows) {
-                                            // For games not played, appears as unused_sub class
-                                            if (resultRow.getElementsByClass("unused_sub").isEmpty()) {
-                                                String latestMatchUrl = resultRow.select("th[data-stat=date] > a").attr("href");
-
-                                                // Check if match is new
-                                                if (player.getCheckedStatus() == null || (player.getCheckedStatus().getLatestCheckedMatchUrl() != null && player.getCheckedStatus().getLatestCheckedMatchUrl().equals(latestMatchUrl))) {
-                                                    // No new updates
-                                                    LOG.info("latestMatchUrl matches last checked");
-                                                    return null;
-                                                }
-
-                                                String homeTeam, awayTeam, relevantTeam;
-                                                if (HOME.equals(resultRow.select("td[data-stat=venue]").text())) {
-                                                    homeTeam = resultRow.select("td[data-stat=team] > a").text();
-                                                    awayTeam = resultRow.select("td[data-stat=opponent] > a").text();
-                                                    relevantTeam = homeTeam;
-                                                } else {
-                                                    homeTeam = resultRow.select("td[data-stat=opponent] > a").text();
-                                                    awayTeam = resultRow.select("td[data-stat=team] > a").text();
-                                                    relevantTeam = awayTeam;
-                                                }
-                                                return new PlayerMatchPerformanceStats(
-                                                        new Match(latestMatchUrl, homeTeam, awayTeam, relevantTeam),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=minutes]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=goals]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=assists]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=pens_made]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=pens_won]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=shots]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=shots_on_target]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=cards_yellow]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=cards_red]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=fouls]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=fouled]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=offsides]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=crosses]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=touches]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=tackles]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=tackles_won]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=interceptions]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=blocks]").text()),
-                                                        parseFloatOrNull(resultRow.select("td[data-stat=xg]").text()),
-                                                        parseFloatOrNull(resultRow.select("td[data-stat=xg_assist]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=sca]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=gca]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=passes_completed]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=passes]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=passes_pct]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=progressive_passes]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=carries]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=progressive_carries]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=take_ons]").text()),
-                                                        parseIntegerOrNull(resultRow.select("td[data-stat=take_ons_won]").text())
-                                                );
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            default -> throw new IllegalStateException("Unexpected value: " + dataSourceSiteName);
-                        }
-                        break;
+                if (!dataSource.getSiteName().equals(player.getCheckedStatus().getSiteName())) {
+                    log.info("Last checked was " + player.getCheckedStatus().getSiteName() + "; dataSource is " + dataSource.getSiteName());
+                }
+                for (DataSourceParser dataSourceParser : dataSourceParsers) {
+                    if (dataSourceParser.getDataSourceSiteName().equals(dataSource.getSiteName())) {
+                        return dataSourceParser.parsePlayerMatchData(player, dataSource);
                     }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
                 }
             }
 
@@ -184,15 +109,17 @@ public class ParsingService {
         return null;
     }
 
-    private Integer parseIntegerOrNull(String input) {
-        if (input != null && !input.isEmpty()) {
-            return Integer.parseInt(input);
-        }
-        return null;
-    }
-    private Float parseFloatOrNull(String input) {
-        if (input != null && !input.isEmpty()) {
-            return Float.parseFloat(input);
+    public List<Player> parseSquadDataForTeam(Team team) {
+        if (team.getDataSources() != null && !team.getDataSources().isEmpty()) {
+            while (team.getDataSources().iterator().hasNext()) {
+                DataSource dataSource = team.getDataSources().iterator().next();
+                for (DataSourceParser dataSourceParser : dataSourceParsers) {
+                    if (dataSourceParser.getDataSourceSiteName().equals(dataSource.getSiteName())) {
+                        return dataSourceParser.parseSquadDataForTeam(team, dataSource);
+                    }
+                }
+            }
+
         }
         return null;
     }

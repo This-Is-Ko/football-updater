@@ -52,6 +52,14 @@ public class Player {
     @JoinColumn(name = "checked_status_id")
     private CheckedStatus checkedStatus;
 
+    public Player() {
+    }
+
+    public Player(String name, Date dob) {
+        this.name = name;
+        this.dob = dob;
+    }
+
     public Integer getId() {
         return id;
     }

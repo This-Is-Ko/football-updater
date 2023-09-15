@@ -17,8 +17,9 @@ public class TeamController {
 
     @Autowired
     private TeamService teamService;
+
     @PostMapping(path="/add")
-    public @ResponseBody Team addNewTeam (@RequestBody Team newTeam) {
+    public @ResponseBody Team addNewTeam(@RequestBody Team newTeam) {
         return teamService.addTeam(newTeam);
     }
 

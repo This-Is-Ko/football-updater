@@ -10,7 +10,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
 
+@Getter
 @Entity
 @Table(name = "data_sources")
 public class DataSource {
@@ -33,32 +35,25 @@ public class DataSource {
     @Column
     private String url;
 
-    public Integer getId() {
-        return id;
+    public DataSource() {
+    }
+
+    public DataSource(DataSourceType type, DataSourceSiteName siteName, String url) {
+        this.type = type;
+        this.siteName = siteName;
+        this.url = url;
     }
 
     public void setId(Integer id) {
         this.id = id;
     }
 
-    public DataSourceType getType() {
-        return type;
-    }
-
     public void setType(DataSourceType type) {
         this.type = type;
     }
 
-    public DataSourceSiteName getSiteName() {
-        return siteName;
-    }
-
     public void setSiteName(DataSourceSiteName siteName) {
         this.siteName = siteName;
-    }
-
-    public String getUrl() {
-        return url;
     }
 
     public void setUrl(String url) {

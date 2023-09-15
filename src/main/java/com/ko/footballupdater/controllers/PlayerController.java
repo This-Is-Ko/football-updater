@@ -20,7 +20,7 @@ public class PlayerController {
     private PlayerService playerService;
 
     @PostMapping(path="/add")
-    public @ResponseBody Player addNewPlayer (@RequestBody Player newPlayer) {
+    public @ResponseBody Player addNewPlayer(@RequestBody Player newPlayer) {
         try {
             return playerService.addPlayer(newPlayer);
         } catch (Exception ex) {
@@ -44,4 +44,5 @@ public class PlayerController {
                     HttpStatus.CONFLICT, "Updating players failed", ex);
         }
     }
+
 }
