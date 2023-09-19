@@ -1,9 +1,11 @@
 package com.ko.footballupdater.controllers;
 
 import com.ko.footballupdater.models.Player;
+import com.ko.footballupdater.responses.UpdatePlayersResponse;
 import com.ko.footballupdater.services.PlayerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,14 +37,14 @@ public class PlayerController {
     }
 
     @GetMapping(path="/data/update")
-    public @ResponseBody String dataUpdate() {
+    public @ResponseBody ResponseEntity<UpdatePlayersResponse> dataUpdate() {
+        UpdatePlayersResponse response = new UpdatePlayersResponse();
         try {
-            int updatedPlayers = playerService.updateDataForAllPlayers();
-            return updatedPlayers + " player(s) updated";
+            playerService.updateDataForAllPlayers(response);
+            return ResponseEntity.ok(response);
         } catch (Exception ex) {
             throw new ResponseStatusException(
-                    HttpStatus.CONFLICT, "Updating players failed", ex);
+                    HttpStatus.BAD_REQUEST, "Updating players failed", ex);
         }
     }
-
 }

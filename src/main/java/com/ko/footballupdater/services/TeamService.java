@@ -7,6 +7,7 @@ import com.ko.footballupdater.models.Team;
 import com.ko.footballupdater.repositories.PlayerRepository;
 import com.ko.footballupdater.repositories.TeamRepository;
 import com.ko.footballupdater.repositories.UpdateStatusRepository;
+import com.ko.footballupdater.responses.AddNewTeamResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,25 +33,29 @@ public class TeamService {
     @Autowired
     private ParsingService parsingService;
 
-    public Team addTeam(Team newTeam) {
+    public void addTeam(Team newTeam, AddNewTeamResponse response) throws Exception {
+        if (!teamRepository.findByNameAndCountryAndLeague(newTeam.getName(), newTeam.getCountry(), newTeam.getLeague()).isEmpty()) {
+            throw new Exception("Team already exists");
+        }
+
         newTeam.setCheckedStatus(new CheckedStatus(DataSourceSiteName.FBREF));
         Team savedTeam = teamRepository.save(newTeam);
+        response.setTeam(savedTeam);
         // Parse players and add to database
         List<Player> players = parsingService.parseSquadDataForTeam(newTeam);
-        if (players == null) {
-            return null;
+        if (players == null || players.isEmpty()) {
+            log.info("No players to add");
+            return;
         }
-        int playersAdded = 0;
         for (Player player : players) {
             try {
                 playerService.addPlayer(player);
-                playersAdded++;
+                response.getPlayersAdded().add(player);
             } catch (Exception ex) {
-                continue;
+                log.info("Error while adding player " + player.getName());
             }
         }
-        log.info("Added " + playersAdded + " players");
-        return savedTeam;
+        log.info("Added " + response.getPlayersAdded().size() + " players");
     }
 
     public Iterable<Team> getTeams() {

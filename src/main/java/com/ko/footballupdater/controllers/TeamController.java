@@ -2,8 +2,10 @@ package com.ko.footballupdater.controllers;
 
 
 import com.ko.footballupdater.models.Team;
+import com.ko.footballupdater.responses.AddNewTeamResponse;
 import com.ko.footballupdater.services.TeamService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,8 +21,14 @@ public class TeamController {
     private TeamService teamService;
 
     @PostMapping(path="/add")
-    public @ResponseBody Team addNewTeam(@RequestBody Team newTeam) {
-        return teamService.addTeam(newTeam);
+    public @ResponseBody ResponseEntity<AddNewTeamResponse> addNewTeam(@RequestBody Team newTeam) throws Exception {
+        AddNewTeamResponse response = new AddNewTeamResponse();
+        teamService.addTeam(newTeam, response);
+        if (response.getTeam() != null) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping(path="/all")

@@ -15,10 +15,11 @@ public class InstagramPost {
     }
 
     public String generateDefaultPlayerCaption(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats) {
-        return String.format("%s stats in %s vs %s\n",
+        return String.format("%s stats in %s vs %s on %s\n",
                 player.getName(),
                 playerMatchPerformanceStats.getMatch().getHomeTeamName(),
-                playerMatchPerformanceStats.getMatch().getAwayTeamName()
+                playerMatchPerformanceStats.getMatch().getAwayTeamName(),
+                playerMatchPerformanceStats.getMatch().getDateAsFormattedString()
         ) + playerMatchPerformanceStats.toFormattedString();
     }
 

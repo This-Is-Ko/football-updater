@@ -7,6 +7,7 @@ import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.repositories.PlayerRepository;
 import com.ko.footballupdater.repositories.UpdateStatusRepository;
+import com.ko.footballupdater.responses.UpdatePlayersResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -43,7 +44,7 @@ public class PlayerService {
         return playerRepository.findAll();
     }
 
-    public int updateDataForAllPlayers() {
+    public void updateDataForAllPlayers(UpdatePlayersResponse response) {
         // Find latest match data for each player
         Iterator<Player> playerIterator = playerRepository.findAll().iterator();
         List<InstagramPost> posts = new ArrayList<>();
@@ -62,10 +63,11 @@ public class PlayerService {
 
         // No updates
         if (posts.isEmpty()) {
-            return 0;
+            return;
         }
 
         boolean isEmailSent = emailService.sendEmailUpdate(posts);
+        response.setEmailSent(isEmailSent);
         if (isEmailSent) {
             List<Player> playersToUpdate = new ArrayList<>();
             Date currentDateTime = new Date();
@@ -76,8 +78,9 @@ public class PlayerService {
                 playersToUpdate.add(post.getPlayer());
             }
             playerRepository.saveAll(playersToUpdate);
-            return playersToUpdate.size();
+            // Populate response
+            response.setPlayersUpdated(playersToUpdate);
+            response.setNumPlayersUpdated(playersToUpdate.size());
         }
-        return 0;
     }
 }
