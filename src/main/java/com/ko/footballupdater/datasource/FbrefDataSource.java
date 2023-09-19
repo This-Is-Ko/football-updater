@@ -20,6 +20,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -69,6 +70,9 @@ public class FbrefDataSource implements DataSourceParser {
                 if (!resultRow.getElementsByClass("unused_sub").isEmpty()) {
                     log.atInfo().setMessage(player.getName() + " " + "Skip latest due to unused sub").addKeyValue("player", player.getName()).log();
                     continue;
+                } else if (!resultRow.getElementsByClass("partial_table").isEmpty()) {
+                    log.atInfo().setMessage(player.getName() + " " + "Spacer row skipped").addKeyValue("player", player.getName()).log();
+                    continue;
                 }
                 String latestMatchUrl = resultRow.select("th[data-stat=date] > a").attr("href");
 
@@ -89,8 +93,12 @@ public class FbrefDataSource implements DataSourceParser {
                     awayTeam = resultRow.select("td[data-stat=team] > a").text();
                     relevantTeam = awayTeam;
                 }
+                Date matchDate = null;
+                if (!resultRow.select("th[data-stat=date] > a").text().isEmpty()) {
+                    matchDate = dateFormat.parse(resultRow.select("th[data-stat=date] > a").text());
+                }
                 return new PlayerMatchPerformanceStats(
-                        new Match(latestMatchUrl, dateFormat.parse(resultRow.select("th[data-stat=date] > a").text()), homeTeam, awayTeam, relevantTeam),
+                        new Match(latestMatchUrl, matchDate, homeTeam, awayTeam, relevantTeam),
                         parseIntegerOrNull(resultRow.select("td[data-stat=minutes]").text()),
                         parseIntegerOrNull(resultRow.select("td[data-stat=goals]").text()),
                         parseIntegerOrNull(resultRow.select("td[data-stat=assists]").text()),

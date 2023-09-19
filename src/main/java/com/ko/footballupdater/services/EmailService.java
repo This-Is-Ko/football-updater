@@ -57,6 +57,7 @@ public class EmailService {
             log.warn("Sending email failed with " + ex);
             return false;
         }
+        log.info("Sending email was successful");
         return true;
     }
 }
