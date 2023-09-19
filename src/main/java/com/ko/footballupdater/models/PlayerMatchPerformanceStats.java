@@ -30,7 +30,7 @@ public class PlayerMatchPerformanceStats {
     private final Integer goalCreatingActions;
     private final Integer passesCompleted;
     private final Integer passesAttempted;
-    private final Integer passesSuccessPercentage;
+    private final Float passesSuccessPercentage;
     private final Integer progressivePasses;
     private final Integer carries;
     private final Integer progressiveCarries;
@@ -39,12 +39,12 @@ public class PlayerMatchPerformanceStats {
     private final Integer gkShotsOnTargetAgainst;
     private final Integer gkGoalsAgainst;
     private final Integer gkSaves;
-    private final Integer gkSavePercentage;
+    private final Float gkSavePercentage;
     private final Integer gkPenaltiesAttamptedAgainst;
     private final Integer gkPenaltiesScoredAgainst;
     private final Integer gkPenaltiesSaved;
 
-    public PlayerMatchPerformanceStats(Match match, Integer minutesPlayed, Integer goals, Integer assists, Integer penaltiesScored, Integer penaltiesWon, Integer shots, Integer shotsOnTarget, Integer yellowCards, Integer redCards, Integer fouls, Integer fouled, Integer offsides, Integer crosses, Integer touches, Integer tackles, Integer tacklesWon, Integer interceptions, Integer blocks, Float xg, Float xg_assist, Integer shotCreatingActions, Integer goalCreatingActions, Integer passesCompleted, Integer passesAttempted, Integer passesSuccessPercentage, Integer progressivePasses, Integer carries, Integer progressiveCarries, Integer takesOnsAttempted, Integer takesOnsCompleted, Integer gkShotsOnTargetAgainst, Integer gkGoalsAgainst, Integer gkSaves, Integer gkSavePercentage, Integer gkPenaltiesAttamptedAgainst, Integer gkPenaltiesScoredAgainst, Integer gkPenaltiesSaved) {
+    public PlayerMatchPerformanceStats(Match match, Integer minutesPlayed, Integer goals, Integer assists, Integer penaltiesScored, Integer penaltiesWon, Integer shots, Integer shotsOnTarget, Integer yellowCards, Integer redCards, Integer fouls, Integer fouled, Integer offsides, Integer crosses, Integer touches, Integer tackles, Integer tacklesWon, Integer interceptions, Integer blocks, Float xg, Float xg_assist, Integer shotCreatingActions, Integer goalCreatingActions, Integer passesCompleted, Integer passesAttempted, Float passesSuccessPercentage, Integer progressivePasses, Integer carries, Integer progressiveCarries, Integer takesOnsAttempted, Integer takesOnsCompleted, Integer gkShotsOnTargetAgainst, Integer gkGoalsAgainst, Integer gkSaves, Float gkSavePercentage, Integer gkPenaltiesAttamptedAgainst, Integer gkPenaltiesScoredAgainst, Integer gkPenaltiesSaved) {
         this.match = match;
         this.minutesPlayed = minutesPlayed;
         this.goals = goals;

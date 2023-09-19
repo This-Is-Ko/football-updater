@@ -7,6 +7,7 @@ import com.ko.footballupdater.models.DataSourceSiteName;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Team;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -26,10 +27,9 @@ public class ParsingService {
     @Autowired
     private List<DataSourceParser> dataSourceParsers;
 
+    @NotNull
     @Value("${datasource.sitename}")
     private DataSourceSiteName dataSourceSiteName;
-
-    private final String HOME = "Home";
 
     public String parseTeamData(Team team) {
         if (team.getDataSources() != null && !team.getDataSources().isEmpty()) {

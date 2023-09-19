@@ -2,10 +2,12 @@ package com.ko.footballupdater.configuration;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Getter
+@Setter
 @Component
 @ConfigurationProperties(prefix = "to")
 public class MailerToProperties {
@@ -15,13 +17,5 @@ public class MailerToProperties {
 
     @NotNull
     private String address;
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
 
 }

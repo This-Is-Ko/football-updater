@@ -115,7 +115,7 @@ public class FbrefDataSource implements DataSourceParser {
                         parseIntegerOrNull(resultRow.select("td[data-stat=gca]").text()),
                         parseIntegerOrNull(resultRow.select("td[data-stat=passes_completed]").text()),
                         parseIntegerOrNull(resultRow.select("td[data-stat=passes]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=passes_pct]").text()),
+                        parseFloatOrNull(resultRow.select("td[data-stat=passes_pct]").text()),
                         parseIntegerOrNull(resultRow.select("td[data-stat=progressive_passes]").text()),
                         parseIntegerOrNull(resultRow.select("td[data-stat=carries]").text()),
                         parseIntegerOrNull(resultRow.select("td[data-stat=progressive_carries]").text()),
@@ -124,7 +124,7 @@ public class FbrefDataSource implements DataSourceParser {
                         parseIntegerOrNull(resultRow.select("td[data-stat=gk_shots_on_target_against]").text()),
                         parseIntegerOrNull(resultRow.select("td[data-stat=gk_goals_against]").text()),
                         parseIntegerOrNull(resultRow.select("td[data-stat=gk_saves]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=gk_save_pct]").text()),
+                        parseFloatOrNull(resultRow.select("td[data-stat=gk_save_pct]").text()),
                         parseIntegerOrNull(resultRow.select("td[data-stat=gk_pens_att]").text()),
                         parseIntegerOrNull(resultRow.select("td[data-stat=gk_pens_allowed]").text()),
                         parseIntegerOrNull(resultRow.select("td[data-stat=gk_pens_saved]").text()));
