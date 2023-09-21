@@ -104,7 +104,7 @@ public class ParsingService {
                             Document doc = Jsoup.connect(dataSource.getUrl()).get();
                             return dataSourceParser.parsePlayerMatchData(player, doc);
                         } catch (IOException e) {
-                            log.warn("Unable to retrieve page at " + dataSource.getUrl());
+                            log.warn("Unable to retrieve page at " + dataSource.getUrl() + '\n' + e);
                             return null;
                         }
                     }
