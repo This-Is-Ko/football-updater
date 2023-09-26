@@ -5,46 +5,87 @@ import lombok.Getter;
 @Getter
 public class PlayerMatchPerformanceStats {
 
-    private final Match match;
-    private final Integer minutesPlayed;
-    private final Integer goals;
-    private final Integer assists;
-    private final Integer penaltiesScored;
-    private final Integer penaltiesWon;
-    private final Integer shots;
-    private final Integer shotsOnTarget;
-    private final Integer yellowCards;
-    private final Integer redCards;
-    private final Integer fouls;
-    private final Integer fouled;
-    private final Integer offsides;
-    private final Integer crosses;
-    private final Integer touches;
-    private final Integer tackles;
-    private final Integer tacklesWon;
-    private final Integer interceptions;
-    private final Integer blocks;
-    private final Float xg;
-    private final Float xg_assist;
-    private final Integer shotCreatingActions;
-    private final Integer goalCreatingActions;
-    private final Integer passesCompleted;
-    private final Integer passesAttempted;
-    private final Float passesSuccessPercentage;
-    private final Integer progressivePasses;
-    private final Integer carries;
-    private final Integer progressiveCarries;
-    private final Integer takesOnsAttempted;
-    private final Integer takesOnsCompleted;
-    private final Integer gkShotsOnTargetAgainst;
-    private final Integer gkGoalsAgainst;
-    private final Integer gkSaves;
-    private final Float gkSavePercentage;
-    private final Integer gkPenaltiesAttamptedAgainst;
-    private final Integer gkPenaltiesScoredAgainst;
-    private final Integer gkPenaltiesSaved;
+    private Match match;
+    private Integer minutesPlayed;
+    private Integer goals;
+    private Integer assists;
+    private Integer penaltiesScored;
+    private Integer penaltiesWon;
+    private Integer shots;
+    private Integer shotsOnTarget;
+    private Integer shotsBlocked;
+    private Integer yellowCards;
+    private Integer redCards;
+    private Integer fouls;
+    private Integer fouled;
+    private Integer offsides;
+    private Integer crosses;
+    private String crossingAccuracyAll;
+    private Integer dispossessed;
+    private Integer touches;
+    private Integer tackles;
+    private Integer tacklesWon;
+    private String tacklingSuccessAll;
+    private Integer interceptions;
+    private Integer blocks;
+    private Integer defensiveActions;
+    private Integer recoveries;
+    private Integer duelsWon;
+    private Integer duelsLost;
+    private Integer groundDuelsWon;
+    private Integer aerialDuelsWon;
+    private Float xg;
+    private Float xg_assist;
+    private Integer shotCreatingActions;
+    private Integer goalCreatingActions;
+    private Integer chancesCreatedAll;
+    private Integer passesCompleted;
+    private Integer passesAttempted;
+    private Float passesSuccessPercentage;
+    private String passingAccuracyAll;
+    private Integer progressivePasses;
+    private Integer passesIntoFinalThird;
+    private Integer carries;
+    private Integer progressiveCarries;
+    private String carriesSuccessAll;
+    private Integer takesOnsAttempted;
+    private Integer takesOnsCompleted;
+    private Integer gkShotsOnTargetAgainst;
+    private Integer gkGoalsAgainst;
+    private Integer gkSaves;
+    private Float gkSavePercentage;
+    private Integer gkPenaltiesAttemptedAgainst;
+    private Integer gkPenaltiesScoredAgainst;
+    private Integer gkPenaltiesSaved;
 
-    public PlayerMatchPerformanceStats(Match match, Integer minutesPlayed, Integer goals, Integer assists, Integer penaltiesScored, Integer penaltiesWon, Integer shots, Integer shotsOnTarget, Integer yellowCards, Integer redCards, Integer fouls, Integer fouled, Integer offsides, Integer crosses, Integer touches, Integer tackles, Integer tacklesWon, Integer interceptions, Integer blocks, Float xg, Float xg_assist, Integer shotCreatingActions, Integer goalCreatingActions, Integer passesCompleted, Integer passesAttempted, Float passesSuccessPercentage, Integer progressivePasses, Integer carries, Integer progressiveCarries, Integer takesOnsAttempted, Integer takesOnsCompleted, Integer gkShotsOnTargetAgainst, Integer gkGoalsAgainst, Integer gkSaves, Float gkSavePercentage, Integer gkPenaltiesAttamptedAgainst, Integer gkPenaltiesScoredAgainst, Integer gkPenaltiesSaved) {
+    public PlayerMatchPerformanceStats(Match match, Integer minutesPlayed, Integer goals, Integer assists, Integer shots, Integer shotsBlocked, Integer fouls, Integer fouled, Integer offsides, String crossingAccuracyAll, Integer dispossessed, Integer touches, String tacklingSuccessAll, Integer defensiveActions, Integer recoveries, Integer duelsWon, Integer duelsLost, Integer groundDuelsWon, Integer aerialDuelsWon, Integer chancesCreatedAll, String passingAccuracyAll, Integer passesIntoFinalThird, String carriesSuccessAll) {
+        this.match = match;
+        this.minutesPlayed = minutesPlayed;
+        this.goals = goals;
+        this.assists = assists;
+        this.shots = shots;
+        this.shotsBlocked = shotsBlocked;
+        this.fouls = fouls;
+        this.fouled = fouled;
+        this.offsides = offsides;
+        this.crossingAccuracyAll = crossingAccuracyAll;
+        this.dispossessed = dispossessed;
+        this.touches = touches;
+        this.tacklingSuccessAll = tacklingSuccessAll;
+        this.defensiveActions = defensiveActions;
+        this.recoveries = recoveries;
+        this.duelsWon = duelsWon;
+        this.duelsLost = duelsLost;
+        this.groundDuelsWon = groundDuelsWon;
+        this.aerialDuelsWon = aerialDuelsWon;
+        this.chancesCreatedAll = chancesCreatedAll;
+        this.passingAccuracyAll = passingAccuracyAll;
+        this.passesIntoFinalThird = passesIntoFinalThird;
+        this.carriesSuccessAll = carriesSuccessAll;
+    }
+
+    // Used by FBREF
+    public PlayerMatchPerformanceStats(Match match, Integer minutesPlayed, Integer goals, Integer assists, Integer penaltiesScored, Integer penaltiesWon, Integer shots, Integer shotsOnTarget, Integer yellowCards, Integer redCards, Integer fouls, Integer fouled, Integer offsides, Integer crosses, Integer touches, Integer tackles, Integer tacklesWon, Integer interceptions, Integer blocks, Float xg, Float xg_assist, Integer shotCreatingActions, Integer goalCreatingActions, Integer passesCompleted, Integer passesAttempted, Float passesSuccessPercentage, Integer progressivePasses, Integer carries, Integer progressiveCarries, Integer takesOnsAttempted, Integer takesOnsCompleted, Integer gkShotsOnTargetAgainst, Integer gkGoalsAgainst, Integer gkSaves, Float gkSavePercentage, Integer gkPenaltiesAttemptedAgainst, Integer gkPenaltiesScoredAgainst, Integer gkPenaltiesSaved) {
         this.match = match;
         this.minutesPlayed = minutesPlayed;
         this.goals = goals;
@@ -80,7 +121,7 @@ public class PlayerMatchPerformanceStats {
         this.gkGoalsAgainst = gkGoalsAgainst;
         this.gkSaves = gkSaves;
         this.gkSavePercentage = gkSavePercentage;
-        this.gkPenaltiesAttamptedAgainst = gkPenaltiesAttamptedAgainst;
+        this.gkPenaltiesAttemptedAgainst = gkPenaltiesAttemptedAgainst;
         this.gkPenaltiesScoredAgainst = gkPenaltiesScoredAgainst;
         this.gkPenaltiesSaved = gkPenaltiesSaved;
     }
@@ -110,6 +151,9 @@ public class PlayerMatchPerformanceStats {
         if (shotsOnTarget != null) {
             builder.append("Shots on Target: ").append(shotsOnTarget).append("\n");
         }
+        if (shotsBlocked != null) {
+            builder.append("Shots Blocked: ").append(shotsBlocked).append("\n");
+        }
         if (yellowCards != null && yellowCards != 0) {
             builder.append("Yellow Cards: ").append(yellowCards).append("\n");
         }
@@ -128,6 +172,12 @@ public class PlayerMatchPerformanceStats {
         if (crosses != null) {
             builder.append("Crosses: ").append(crosses).append("\n");
         }
+        if (crossingAccuracyAll != null) {
+            builder.append("Crossing Accuracy: ").append(crossingAccuracyAll).append("\n");
+        }
+        if (dispossessed != null) {
+            builder.append("Dispossessed: ").append(dispossessed).append("\n");
+        }
         if (touches != null) {
             builder.append("Touches: ").append(touches).append("\n");
         }
@@ -137,11 +187,32 @@ public class PlayerMatchPerformanceStats {
         if (tacklesWon != null) {
             builder.append("Tackles Won: ").append(tacklesWon).append("\n");
         }
+        if (tacklingSuccessAll != null) {
+            builder.append("Tackling Success: ").append(tacklingSuccessAll).append("\n");
+        }
         if (interceptions != null) {
             builder.append("Interceptions: ").append(interceptions).append("\n");
         }
         if (blocks != null) {
             builder.append("Blocks: ").append(blocks).append("\n");
+        }
+        if (defensiveActions != null) {
+            builder.append("Defensive Actions: ").append(defensiveActions).append("\n");
+        }
+        if (recoveries != null) {
+            builder.append("Recoveries: ").append(recoveries).append("\n");
+        }
+        if (duelsWon != null) {
+            builder.append("Duels Won: ").append(duelsWon).append("\n");
+        }
+        if (duelsLost != null) {
+            builder.append("Duels Lost: ").append(duelsLost).append("\n");
+        }
+        if (groundDuelsWon != null) {
+            builder.append("Ground Duels Won: ").append(groundDuelsWon).append("\n");
+        }
+        if (aerialDuelsWon != null) {
+            builder.append("Aerial Duels Won: ").append(aerialDuelsWon).append("\n");
         }
         if (xg != null) {
             builder.append("Expected Goals (xG): ").append(xg).append("\n");
@@ -155,6 +226,9 @@ public class PlayerMatchPerformanceStats {
         if (goalCreatingActions != null) {
             builder.append("Goal Creating Actions: ").append(goalCreatingActions).append("\n");
         }
+        if (chancesCreatedAll != null) {
+            builder.append("Chances Created: ").append(chancesCreatedAll).append("\n");
+        }
         if (passesCompleted != null) {
             builder.append("Passes Completed: ").append(passesCompleted).append("\n");
         }
@@ -164,8 +238,14 @@ public class PlayerMatchPerformanceStats {
         if (passesSuccessPercentage != null) {
             builder.append("Pass Success Percentage: ").append(passesSuccessPercentage).append("\n");
         }
+        if (passingAccuracyAll != null) {
+            builder.append("Passing Accuracy: ").append(passingAccuracyAll).append("\n");
+        }
         if (progressivePasses != null) {
             builder.append("Progressive Passes: ").append(progressivePasses).append("\n");
+        }
+        if (passesIntoFinalThird != null) {
+            builder.append("Passes Into Final Third: ").append(passesIntoFinalThird).append("\n");
         }
         if (carries != null) {
             builder.append("Carries: ").append(carries).append("\n");
@@ -173,11 +253,35 @@ public class PlayerMatchPerformanceStats {
         if (progressiveCarries != null) {
             builder.append("Progressive Carries: ").append(progressiveCarries).append("\n");
         }
+        if (carriesSuccessAll != null) {
+            builder.append("Carries Success: ").append(carriesSuccessAll).append("\n");
+        }
         if (takesOnsAttempted != null) {
             builder.append("Take-Ons Attempted: ").append(takesOnsAttempted).append("\n");
         }
         if (takesOnsCompleted != null) {
             builder.append("Take-Ons Completed: ").append(takesOnsCompleted).append("\n");
+        }
+        if (gkShotsOnTargetAgainst != null) {
+            builder.append("Shots On Target Against: ").append(gkShotsOnTargetAgainst).append("\n");
+        }
+        if (gkGoalsAgainst != null) {
+            builder.append("Goals Against: ").append(gkGoalsAgainst).append("\n");
+        }
+        if (gkSaves != null) {
+            builder.append("Saves: ").append(gkSaves).append("\n");
+        }
+        if (gkSavePercentage != null) {
+            builder.append("Save Percentage: ").append(gkSavePercentage).append("\n");
+        }
+        if (gkPenaltiesAttemptedAgainst != null) {
+            builder.append("Penalties Attampted Against: ").append(gkPenaltiesAttemptedAgainst).append("\n");
+        }
+        if (gkPenaltiesScoredAgainst != null) {
+            builder.append("Penalties Scored Against: ").append(gkPenaltiesScoredAgainst).append("\n");
+        }
+        if (gkPenaltiesSaved != null) {
+            builder.append("Penalties Saved: ").append(gkPenaltiesSaved).append("\n");
         }
 
         return builder.toString();

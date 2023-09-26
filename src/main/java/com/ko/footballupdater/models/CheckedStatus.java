@@ -9,19 +9,16 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Date;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "checked_statuses")
 public class CheckedStatus {
-
-    public CheckedStatus() {
-    }
-
-    public CheckedStatus(DataSourceSiteName siteName) {
-        this.siteName = siteName;
-    }
 
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
@@ -39,35 +36,10 @@ public class CheckedStatus {
     @Column
     private String latestCheckedMatchUrl;
 
-    public Integer getId() {
-        return id;
+    public CheckedStatus() {
     }
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public DataSourceSiteName getSiteName() {
-        return siteName;
-    }
-
-    public void setSiteName(DataSourceSiteName siteName) {
+    public CheckedStatus(DataSourceSiteName siteName) {
         this.siteName = siteName;
-    }
-
-    public Date getLastChecked() {
-        return lastChecked;
-    }
-
-    public void setLastChecked(Date lastChecked) {
-        this.lastChecked = lastChecked;
-    }
-
-    public String getLatestCheckedMatchUrl() {
-        return latestCheckedMatchUrl;
-    }
-
-    public void setLatestCheckedMatchUrl(String latestCheckedMatchUrl) {
-        this.latestCheckedMatchUrl = latestCheckedMatchUrl;
     }
 }

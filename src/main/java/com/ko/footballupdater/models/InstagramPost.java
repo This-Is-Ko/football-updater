@@ -1,5 +1,7 @@
 package com.ko.footballupdater.models;
 
+import com.ko.footballupdater.utils.PostHelper;
+
 public class InstagramPost {
 
     private Player player;
@@ -10,22 +12,8 @@ public class InstagramPost {
     public InstagramPost(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats) {
         this.player = player;
         this.playerMatchPerformanceStats = playerMatchPerformanceStats;
-        this.caption = generateDefaultPlayerCaption(player, playerMatchPerformanceStats);
-        this.imageSearchUrl = generateImageSearchUrl(player, playerMatchPerformanceStats);
-    }
-
-    public String generateDefaultPlayerCaption(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats) {
-        return String.format("%s stats in %s vs %s on %s\n",
-                player.getName(),
-                playerMatchPerformanceStats.getMatch().getHomeTeamName(),
-                playerMatchPerformanceStats.getMatch().getAwayTeamName(),
-                playerMatchPerformanceStats.getMatch().getDateAsFormattedString()
-        ) + playerMatchPerformanceStats.toFormattedString();
-    }
-
-    private String generateImageSearchUrl(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats) {
-        String searchPhrase = player.getName() + " " + playerMatchPerformanceStats.getMatch().getRelevantTeam();
-        return String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:w", searchPhrase.replaceAll(" ", "%20"));
+        this.caption = PostHelper.generatePostDefaultPlayerCaption(player, playerMatchPerformanceStats);
+        this.imageSearchUrl = PostHelper.generatePostImageSearchUrl(player, playerMatchPerformanceStats);
     }
 
     public Player getPlayer() {

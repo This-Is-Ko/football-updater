@@ -1,5 +1,6 @@
 package com.ko.footballupdater.controllers;
 
+import com.ko.footballupdater.models.DataSource;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.responses.UpdatePlayersResponse;
 import com.ko.footballupdater.services.PlayerService;
@@ -45,6 +46,16 @@ public class PlayerController {
         } catch (Exception ex) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Updating players failed", ex);
+        }
+    }
+
+    @PostMapping(path="/data-source/update")
+    public @ResponseBody DataSource updatePlayerDataSource(@RequestBody DataSource dataSource) {
+        try {
+            return playerService.updatePlayerDataSource(dataSource);
+        } catch (Exception ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "Unable to add player", ex);
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.ko.footballupdater.services;
 
 import com.ko.footballupdater.models.CheckedStatus;
+import com.ko.footballupdater.models.DataSource;
 import com.ko.footballupdater.models.DataSourceSiteName;
 import com.ko.footballupdater.models.InstagramPost;
 import com.ko.footballupdater.models.Player;
@@ -82,5 +83,10 @@ public class PlayerService {
             response.setPlayersUpdated(playersToUpdate);
             response.setNumPlayersUpdated(playersToUpdate.size());
         }
+    }
+
+    public DataSource updatePlayerDataSource(DataSource dataSource) {
+//        playerRepository.findByNameEquals();
+        return dataSource;
     }
 }
