@@ -18,7 +18,10 @@ jobs:
         with:
           java-version: '20'
           distribution: 'adopt'
-
+          
+      - name: Grant Permissions to gradlew
+        run: chmod +x gradlew
+        
       - name: Build
         run: ./gradlew --batch-mode -DskipTests package
 
