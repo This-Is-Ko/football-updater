@@ -76,3 +76,6 @@ Enable service
     systemctl status football-updater.service
     # To see more logs - add -f to see log stream
     journalctl _SYSTEMD_UNIT=football-updater.service -f
+    # Restart service after file changes
+    sudo systemctl daemon-reload
+    sudo systemctl restart football-updater
