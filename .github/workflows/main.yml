@@ -28,11 +28,17 @@ jobs:
       - name: Test
         run: ./gradlew test --continue
 
-      - name: Report
-        uses: dorny/test-reporter@v1
-        if: always()
+      # - name: Report
+      #   uses: dorny/test-reporter@v1
+      #   if: always()
+      #   with:
+      #     name: Maven Tests
+      #     path: '**/build/test-results/TEST-*.xml'
+      #     reporter: java-junit
+      #     fail-on-error: true
+
+      - name: Upload coverage for matrix module
+        uses: actions/upload-artifact@v2
         with:
-          name: Maven Tests
-          path: '**/build/test-results/TEST-*.xml'
-          reporter: java-junit
-          fail-on-error: true
+          name: test-case reports
+          path: build/github
