@@ -37,8 +37,8 @@ jobs:
       #     reporter: java-junit
       #     fail-on-error: true
 
-      - name: Upload coverage for matrix module
+      - name: Upload test report
         uses: actions/upload-artifact@v2
         with:
           name: test-case reports
-          path: build/github
+          path: build/test-results
