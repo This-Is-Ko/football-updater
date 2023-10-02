@@ -2,7 +2,6 @@ package com.ko.footballupdater.datasource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.ko.footballupdater.models.DataSource;
 import com.ko.footballupdater.models.DataSourceSiteName;
 import com.ko.footballupdater.models.DataSourceType;
@@ -18,7 +17,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import java.net.URL;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -31,9 +29,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.ko.footballupdater.datasource.ParsingHelper.parseFloatOrNull;
-import static com.ko.footballupdater.datasource.ParsingHelper.parseIntegerOrNull;
-
 @Slf4j
 @Component
 @Qualifier("fotmob")
@@ -44,7 +39,7 @@ public class FotmobDataSource implements DataSourceParser {
 
     private final String HOME = "Home";
     private final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-    private final String BASEURL = "https://www.fotmob.com/";
+    private final String BASEURL = "https://www.fotmob.com";
     private final String API_MATCH_BASE_URL = "/api/matchDetails?matchId=";
 
     @Override
@@ -84,9 +79,16 @@ public class FotmobDataSource implements DataSourceParser {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode jsonNode = mapper.readTree(json);
 
+            // Check whether this match is newer than last checked
+            Date selectedMatchDate = dateFormat.parse(jsonNode.get("general").get("matchTimeUTCDate").textValue());
+            if (player.getCheckedStatus().getLatestCheckedMatchDate() != null && !(selectedMatchDate.compareTo(player.getCheckedStatus().getLatestCheckedMatchDate()) > 0)) {
+                log.info(player.getName() + " - Selected match is not newer than last checked");
+                return null;
+            }
+
             Match match = new Match(
                     matchReportUrl,
-                    dateFormat.parse(jsonNode.get("general").get("matchTimeUTCDate").textValue()),
+                    selectedMatchDate,
                     jsonNode.get("general").get("homeTeam").get("name").textValue(),
                     jsonNode.get("general").get("awayTeam").get("name").textValue(),
                     "");
@@ -95,7 +97,7 @@ public class FotmobDataSource implements DataSourceParser {
             if (lineups.isArray()) {
                 for (JsonNode lineup : lineups) {
                     JsonNode optaLineup = lineup.get("optaLineup");
-                    if (optaLineup.isObject()) {
+                    if (optaLineup != null && optaLineup.isObject()) {
                         // Check starting lineup
                         JsonNode starting = optaLineup.get("players");
                         if (starting.isArray()) {
@@ -125,7 +127,7 @@ public class FotmobDataSource implements DataSourceParser {
             }
             log.atInfo().setMessage(player.getName() + " " + "Unable to update player, parsed all players in the match").addKeyValue("player", player.getName()).log();
         } catch (Exception ex) {
-            log.warn("Error while trying to update player: " + player.getName() + " - " + ex);
+            log.warn("Error while trying to update player: " + player.getName(), ex);
         }
         return null;
     }
@@ -160,68 +162,104 @@ public class FotmobDataSource implements DataSourceParser {
 
         return new PlayerMatchPerformanceStats(
             match,
-            topStats.get("stats").get("Minutes played").get("value").intValue(),
-            topStats.get("stats").get("Goals").get("value").intValue(),
-            topStats.get("stats").get("Assists").get("value").intValue(),
-            topStats.get("stats").get("Total shots").get("value").intValue(),
-            attackStats.get("stats").get("Blocked shots").get("value").intValue(),
-            duelsStats.get("stats").get("Fouls committed").get("value").intValue(),
-            duelsStats.get("stats").get("Was fouled").get("value").intValue(),
-            attackStats.get("stats").get("Offsides").get("value").intValue(),
-            attackStats.get("stats").get("Accurate crosses").get("value").textValue(),
-            attackStats.get("stats").get("Dispossessed").get("value").intValue(),
-            attackStats.get("stats").get("Touches").get("value").intValue(),
-            defenseStats.get("stats").get("Tackles won").get("value").textValue(),
-            defenseStats.get("stats").get("Defensive actions").get("value").intValue(),
-            defenseStats.get("stats").get("Recoveries").get("value").intValue(),
-            duelsStats.get("stats").get("Duels won").get("value").intValue(),
-            duelsStats.get("stats").get("Duels lost").get("value").intValue(),
-            duelsStats.get("stats").get("Ground duels won").get("value").intValue(),
-            duelsStats.get("stats").get("Aerial duels won").get("value").intValue(),
-            topStats.get("stats").get("Chances created").get("value").intValue(),
-            topStats.get("stats").get("Accurate passes").get("value").textValue(),
-            attackStats.get("stats").get("Passes into final third").get("value").intValue(),
-            attackStats.get("stats").get("Successful dribbles").get("value").textValue()
+            getStatIntegerOrDefault(topStats, "Minutes played", 0),
+            getStatIntegerOrDefault(topStats, "Goals", 0),
+            getStatIntegerOrDefault(topStats, "Assists", 0),
+            getStatIntegerOrDefault(topStats, "Total shots", 0),
+            getStatIntegerOrDefault(attackStats, "Blocked shots", 0),
+            getStatIntegerOrDefault(duelsStats, "Fouls committed", 0),
+            getStatIntegerOrDefault(duelsStats, "Was fouled", 0),
+            getStatIntegerOrDefault(attackStats, "Offsides", 0),
+            getStatStringOrDefault(attackStats, "Accurate crosses", "0"),
+            getStatIntegerOrDefault(attackStats, "Dispossessed", 0),
+            getStatIntegerOrDefault(attackStats, "Touches", 0),
+            getStatStringOrDefault(defenseStats, "Tackles won", "0"),
+            getStatIntegerOrDefault(defenseStats, "Defensive actions", 0),
+            getStatIntegerOrDefault(defenseStats, "Recoveries", 0),
+            getStatIntegerOrDefault(duelsStats, "Duels won", 0),
+            getStatIntegerOrDefault(duelsStats, "Duels lost", 0),
+            getStatIntegerOrDefault(duelsStats, "Ground duels won", 0),
+            getStatIntegerOrDefault(duelsStats, "Aerial duels won", 0),
+            getStatIntegerOrDefault(topStats, "Chances created", 0),
+            getStatStringOrDefault(topStats, "Accurate passes", "0"),
+            getStatIntegerOrDefault(attackStats, "Passes into final third", 0),
+            getStatStringOrDefault(attackStats, "Successful dribbles", "0")
             );
     }
 
-    @Override
-    public List<Player> parseSquadDataForTeam(Team team, DataSource dataSource) {
-//        List<Player> players = new ArrayList<>();
-//        try {
-//            Document doc = Jsoup.connect(dataSource.getUrl()).get();
-//
-//            Element tableElement = doc.getElementById("roster");
-//            if (tableElement == null) {
-//                log.info("Unable to find roster/squad: table");
-//                return null;
-//            }
-//            Element tbodyElement = tableElement.getElementsByTag("tbody").first();
-//            if (tbodyElement == null) {
-//                log.info("Cannot find any match results: tbody");
-//                return null;
-//            }
-//            Elements playerRows = tbodyElement.select("tr");
-//            if (playerRows.isEmpty()) {
-//                log.info("Cannot find any match results in table: tr");
-//                return null;
-//            }
-//            for (Element playerRow : playerRows) {
-//                Player player = new Player(
-//                        playerRow.select("td[data-stat=player] > a").text(),
-//                        dateFormat.parse(playerRow.select("td[data-stat=birth_date]").text())
-//                );
-//                Set<DataSource> dataSources = new HashSet<>();
-//                dataSources.add(new DataSource(DataSourceType.PLAYER, DataSourceSiteName.FBREF, generatePlayerUrl(playerRow, player.getName())));
-//                player.setDataSources(dataSources);
-//                players.add(player);
-//            }
-//            return players;
-//        } catch (Exception ex) {
-//            log.warn("Unable to create players list to add: " + ex);
-//            return null;
-//        }
-        return null;
+    private int getStatIntegerOrDefault(JsonNode statContainer, String stateName, int defaultValue) {
+        // Return default if stat is no found
+        try {
+            return statContainer.get("stats").get(stateName).get("value").intValue();
+        } catch (Exception ex) {
+            return defaultValue;
+        }
     }
 
+    private String getStatStringOrDefault(JsonNode statContainer, String stateName, String defaultValue) {
+        // Return default if stat is no found
+        try {
+            return statContainer.get("stats").get(stateName).get("value").textValue();
+        } catch (Exception ex) {
+            return defaultValue;
+        }
+    }
+
+    @Override
+    public void parseSquadDataForTeam(Team team, DataSource dataSource, List<Player> players) {
+        // https://www.fotmob.com/api/teams?id=5981&ccode3=AUS
+        try {
+            Document matchReportDocument = Jsoup.connect(dataSource.getUrl()).ignoreContentType(true).get();
+            Element jsonElement =  matchReportDocument.selectFirst("body");
+            if (jsonElement == null) {
+                return;
+            }
+            String json = jsonElement.text();
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode jsonNode = mapper.readTree(json);
+
+            JsonNode squad = jsonNode.get("squad");
+            if (squad == null) {
+                log.info("Unable to find squad entries");
+                return;
+            }
+            if (squad.isArray()) {
+                for (JsonNode squadSection : squad) {
+                    if (squadSection.size() != 2 || squadSection.get(0).textValue().equals("coach")) {
+                        continue;
+                    }
+                    for (JsonNode playerEntry : squadSection.get(1)) {
+                        String playerName = playerEntry.get("name").textValue();
+                        DataSource newDataSource = new DataSource(DataSourceType.PLAYER, DataSourceSiteName.FOTMOB, generatePlayerUrl(playerEntry, playerName));
+                        // Player exists in passed player list
+                        if (players.stream().anyMatch(o -> o.getName().equals(playerName))) {
+                            Player existingPlayer = players.stream().filter(o -> o.getName().equals(playerName)).findFirst().get();
+                            existingPlayer.getDataSources().add(newDataSource);
+                        } else {
+                            // Create player and add to list
+                            Player player = new Player(playerName);
+                            Set<DataSource> dataSources = new HashSet<>();
+                            dataSources.add(newDataSource);
+                            player.setDataSources(dataSources);
+                            players.add(player);
+                        }
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            log.warn("Unable to create players list to add: " + ex);
+        }
+    }
+
+    private String generatePlayerUrl(JsonNode playerEntry, String playerName) throws Exception {
+        // Example url
+        // https://www.fotmob.com/players/645998/mackenzie-arnold
+        int playerId = playerEntry.get("id").intValue();
+        if (playerId != 0) {
+            return BASEURL + "/players/" + playerId + "/" + playerName.replaceAll(" ", "-");
+        } else {
+            throw new Exception("Unable to generate player url due to href empty: " + playerName);
+        }
+    }
 }

@@ -18,6 +18,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 @Slf4j
@@ -26,6 +28,10 @@ public class ParsingService {
 
     @Autowired
     private List<DataSourceParser> dataSourceParsers;
+
+    @NotNull
+    @Value("#{'${datasource.priority}'.split(',')}")
+    private List<DataSourceSiteName> dataSourcePriority;
 
     @NotNull
     @Value("${datasource.sitename}")
@@ -92,21 +98,33 @@ public class ParsingService {
     }
 
     public PlayerMatchPerformanceStats parsePlayerMatchData(Player player) {
+        // Use data source based on config order
+        // If the data source does not resolve a new match, try the next data source using match date to compare
+        List<DataSource> dataSources = new ArrayList<>();
         if (player.getDataSources() != null && !player.getDataSources().isEmpty()) {
-            while (player.getDataSources().iterator().hasNext()) {
-                DataSource dataSource = player.getDataSources().iterator().next();
-                if (!dataSource.getSiteName().equals(player.getCheckedStatus().getSiteName())) {
-                    log.info("Last checked was " + player.getCheckedStatus().getSiteName() + "; dataSource is " + dataSource.getSiteName());
-                }
+            player.getDataSources().iterator().forEachRemaining(dataSources::add);
+        }
+
+        for (DataSourceSiteName source : dataSourcePriority) {
+            if (dataSources.stream().anyMatch(o -> o.getSiteName().equals(source))) {
+                DataSource dataSource = dataSources.stream().filter(o -> o.getSiteName().equals(source)).findFirst().get();
+
+                log.info(player.getName() + " - Last checked was " + player.getCheckedStatus().getSiteName() + "; dataSource is " + dataSource.getSiteName());
+
                 for (DataSourceParser dataSourceParser : dataSourceParsers) {
                     if (dataSourceParser.getDataSourceSiteName().equals(dataSource.getSiteName())) {
                         try {
                             Document doc = Jsoup.connect(dataSource.getUrl()).get();
-                            return dataSourceParser.parsePlayerMatchData(player, doc);
+                            PlayerMatchPerformanceStats playerMatchPerformanceStats = dataSourceParser.parsePlayerMatchData(player, doc);
+                            if (playerMatchPerformanceStats != null) {
+                                player.getCheckedStatus().setSiteName(dataSource.getSiteName());
+                                return playerMatchPerformanceStats;
+                            }
                         } catch (IOException e) {
                             log.warn("Unable to retrieve page at " + dataSource.getUrl() + '\n' + e);
                             return null;
                         }
+                        break;
                     }
                 }
             }
@@ -116,15 +134,18 @@ public class ParsingService {
 
     public List<Player> parseSquadDataForTeam(Team team) {
         if (team.getDataSources() != null && !team.getDataSources().isEmpty()) {
-            while (team.getDataSources().iterator().hasNext()) {
-                DataSource dataSource = team.getDataSources().iterator().next();
+            Iterator<DataSource> dataSourceIterator = team.getDataSources().iterator();
+
+            List<Player> players = new ArrayList<>();
+            while (dataSourceIterator.hasNext()) {
+                DataSource dataSource = dataSourceIterator.next();
                 for (DataSourceParser dataSourceParser : dataSourceParsers) {
                     if (dataSourceParser.getDataSourceSiteName().equals(dataSource.getSiteName())) {
-                        return dataSourceParser.parseSquadDataForTeam(team, dataSource);
+                        dataSourceParser.parseSquadDataForTeam(team, dataSource, players);
                     }
                 }
             }
-
+            return players;
         }
         return null;
     }

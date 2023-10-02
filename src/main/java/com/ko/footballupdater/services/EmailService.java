@@ -31,7 +31,7 @@ public class EmailService {
         StringBuilder emailContent = new StringBuilder();
         for (InstagramPost post : posts) {
             emailContent.append("############").append(post.getPlayer().getName()).append("############\n\n");
-            emailContent.append(post.getCaption()).append("\n");
+            emailContent.append(post.getCaption()).append("\n\n");
             emailContent.append(post.getImageSearchUrl()).append("\n\n\n");
         }
         try {

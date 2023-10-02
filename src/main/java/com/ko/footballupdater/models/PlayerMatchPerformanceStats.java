@@ -148,10 +148,10 @@ public class PlayerMatchPerformanceStats {
         if (shots != null) {
             builder.append("Shots: ").append(shots).append("\n");
         }
-        if (shotsOnTarget != null) {
+        if (shotsOnTarget != null && shotsOnTarget != 0) {
             builder.append("Shots on Target: ").append(shotsOnTarget).append("\n");
         }
-        if (shotsBlocked != null) {
+        if (shotsBlocked != null && shotsBlocked != 0) {
             builder.append("Shots Blocked: ").append(shotsBlocked).append("\n");
         }
         if (yellowCards != null && yellowCards != 0) {
@@ -163,13 +163,13 @@ public class PlayerMatchPerformanceStats {
         if (fouls != null) {
             builder.append("Fouls: ").append(fouls).append("\n");
         }
-        if (fouled != null) {
+        if (fouled != null && fouled != 0) {
             builder.append("Fouled: ").append(fouled).append("\n");
         }
-        if (offsides != null) {
+        if (offsides != null && offsides != 0) {
             builder.append("Offsides: ").append(offsides).append("\n");
         }
-        if (crosses != null) {
+        if (crosses != null && crosses != 0) {
             builder.append("Crosses: ").append(crosses).append("\n");
         }
         if (crossingAccuracyAll != null) {
@@ -254,7 +254,7 @@ public class PlayerMatchPerformanceStats {
             builder.append("Progressive Carries: ").append(progressiveCarries).append("\n");
         }
         if (carriesSuccessAll != null) {
-            builder.append("Carries Success: ").append(carriesSuccessAll).append("\n");
+            builder.append("Carries Success Rate: ").append(carriesSuccessAll).append("\n");
         }
         if (takesOnsAttempted != null) {
             builder.append("Take-Ons Attempted: ").append(takesOnsAttempted).append("\n");
@@ -275,7 +275,7 @@ public class PlayerMatchPerformanceStats {
             builder.append("Save Percentage: ").append(gkSavePercentage).append("\n");
         }
         if (gkPenaltiesAttemptedAgainst != null) {
-            builder.append("Penalties Attampted Against: ").append(gkPenaltiesAttemptedAgainst).append("\n");
+            builder.append("Penalties Attempted Against: ").append(gkPenaltiesAttemptedAgainst).append("\n");
         }
         if (gkPenaltiesScoredAgainst != null) {
             builder.append("Penalties Scored Against: ").append(gkPenaltiesScoredAgainst).append("\n");
@@ -283,6 +283,7 @@ public class PlayerMatchPerformanceStats {
         if (gkPenaltiesSaved != null) {
             builder.append("Penalties Saved: ").append(gkPenaltiesSaved).append("\n");
         }
+        builder.append("\n");
 
         return builder.toString();
     }

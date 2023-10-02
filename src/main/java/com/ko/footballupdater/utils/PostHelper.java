@@ -16,7 +16,7 @@ public class PostHelper {
 
     public static String generatePostImageSearchUrl(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats) {
         String searchPhrase = player.getName() + " " + playerMatchPerformanceStats.getMatch().getRelevantTeam();
-        return String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:w", searchPhrase.replaceAll(" ", "%20"));
+        return String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:d\n\n", searchPhrase.replaceAll(" ", "%20")) + String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:w", searchPhrase.replaceAll(" ", "%20"));
     }
 
     public static String generatePlayerHashtags(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats) {
@@ -26,6 +26,7 @@ public class PostHelper {
         }
         return "#" + player.getName().replaceAll(" ", "") + " " +
                 teamNameHashtag +  " " +
+                "#upthetillies" + " " +
                 "#womensfootball" + " " +
                 "#womenssoccer";
     }

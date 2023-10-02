@@ -59,6 +59,10 @@ public class Player {
     public Player() {
     }
 
+    public Player(String name) {
+        this.name = name;
+    }
+
     public Player(String name, Date dob) {
         this.name = name;
         this.dob = dob;

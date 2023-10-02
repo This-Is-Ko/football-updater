@@ -32,13 +32,18 @@ public class PlayerService {
     @Autowired
     private EmailService emailService;
 
-    public Player addPlayer(Player newPlayer) throws Exception {
+    public Player addPlayer(Player newPlayer, DataSourceSiteName dataSourceSiteName) throws Exception {
         if (!playerRepository.findByNameEquals(newPlayer.getName()).isEmpty()) {
             throw new Exception("Player already exists");
         }
 
-        newPlayer.setCheckedStatus(new CheckedStatus(DataSourceSiteName.FBREF));
+        newPlayer.setCheckedStatus(new CheckedStatus(dataSourceSiteName));
         return playerRepository.save(newPlayer);
+    }
+
+    public Player addPlayer(Player newPlayer) throws Exception {
+        // Default to FOTMOB
+        return addPlayer(newPlayer, DataSourceSiteName.FOTMOB);
     }
 
     public Iterable<Player> getPlayers() {
@@ -76,6 +81,7 @@ public class PlayerService {
             for (InstagramPost post : posts) {
                 post.getPlayer().getCheckedStatus().setLastChecked(currentDateTime);
                 post.getPlayer().getCheckedStatus().setLatestCheckedMatchUrl(post.getPlayerMatchPerformanceStats().getMatch().getUrl());
+                post.getPlayer().getCheckedStatus().setLatestCheckedMatchDate(post.getPlayerMatchPerformanceStats().getMatch().getDate());
                 playersToUpdate.add(post.getPlayer());
             }
             playerRepository.saveAll(playersToUpdate);

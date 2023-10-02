@@ -77,7 +77,18 @@ public class FbrefDataSource implements DataSourceParser {
                 String latestMatchUrl = resultRow.select("th[data-stat=date] > a").attr("href");
 
                 // Check if match is new
-                if (player.getCheckedStatus() == null || (player.getCheckedStatus().getLatestCheckedMatchUrl() != null && player.getCheckedStatus().getLatestCheckedMatchUrl().equals(latestMatchUrl))) {
+                Date selectedMatchDate = null;
+                if (!resultRow.select("th[data-stat=date] > a").text().isEmpty()) {
+                    selectedMatchDate = dateFormat.parse(resultRow.select("th[data-stat=date] > a").text());
+                } else {
+                    log.atInfo().setMessage(player.getName() + " - Unable to get date from match row").addKeyValue("player", player.getName()).log();
+                    return null;
+                }
+
+                if (player.getCheckedStatus() == null ||
+                        (player.getCheckedStatus().getLatestCheckedMatchUrl() != null && player.getCheckedStatus().getLatestCheckedMatchUrl().equals(latestMatchUrl)) ||
+                        (player.getCheckedStatus().getLatestCheckedMatchDate() != null && !(selectedMatchDate.compareTo(player.getCheckedStatus().getLatestCheckedMatchDate()) > 0))
+                ) {
                     // No new updates
                     log.atInfo().setMessage(player.getName() + " " + "latestMatchUrl matches last checked").addKeyValue("player", player.getName()).log();
                     return null;
@@ -93,12 +104,9 @@ public class FbrefDataSource implements DataSourceParser {
                     awayTeam = resultRow.select("td[data-stat=team] > a").text();
                     relevantTeam = awayTeam;
                 }
-                Date matchDate = null;
-                if (!resultRow.select("th[data-stat=date] > a").text().isEmpty()) {
-                    matchDate = dateFormat.parse(resultRow.select("th[data-stat=date] > a").text());
-                }
+
                 return new PlayerMatchPerformanceStats(
-                        new Match(latestMatchUrl, matchDate, homeTeam, awayTeam, relevantTeam),
+                        new Match(latestMatchUrl, selectedMatchDate, homeTeam, awayTeam, relevantTeam),
                         parseIntegerOrNull(resultRow.select("td[data-stat=minutes]").text()),
                         parseIntegerOrNull(resultRow.select("td[data-stat=goals]").text()),
                         parseIntegerOrNull(resultRow.select("td[data-stat=assists]").text()),
@@ -145,40 +153,46 @@ public class FbrefDataSource implements DataSourceParser {
     }
 
     @Override
-    public List<Player> parseSquadDataForTeam(Team team, DataSource dataSource) {
-        List<Player> players = new ArrayList<>();
+    public void parseSquadDataForTeam(Team team, DataSource dataSource, List<Player> players) {
         try {
             Document doc = Jsoup.connect(dataSource.getUrl()).get();
 
             Element tableElement = doc.getElementById("roster");
             if (tableElement == null) {
                 log.info("Unable to find roster/squad: table");
-                return null;
+                return;
             }
             Element tbodyElement = tableElement.getElementsByTag("tbody").first();
             if (tbodyElement == null) {
                 log.info("Cannot find any match results: tbody");
-                return null;
+                return;
             }
             Elements playerRows = tbodyElement.select("tr");
             if (playerRows.isEmpty()) {
                 log.info("Cannot find any match results in table: tr");
-                return null;
+                return;
             }
             for (Element playerRow : playerRows) {
-                Player player = new Player(
-                        playerRow.select("td[data-stat=player] > a").text(),
-                        dateFormat.parse(playerRow.select("td[data-stat=birth_date]").text())
-                );
-                Set<DataSource> dataSources = new HashSet<>();
-                dataSources.add(new DataSource(DataSourceType.PLAYER, DataSourceSiteName.FBREF, generatePlayerUrl(playerRow, player.getName())));
-                player.setDataSources(dataSources);
-                players.add(player);
+                String playerName = playerRow.select("td[data-stat=player] > a").text();
+                DataSource newDataSource = new DataSource(DataSourceType.PLAYER, DataSourceSiteName.FBREF, generatePlayerUrl(playerRow, playerName));
+                // Player exists in passed player list
+                if (players.stream().anyMatch(o -> o.getName().equals(playerName))) {
+                    Player existingPlayer = players.stream().filter(o -> o.getName().equals(playerName)).findFirst().get();
+                    existingPlayer.getDataSources().add(newDataSource);
+                } else {
+                    // Create player and add to list
+                    Player player = new Player(
+                            playerName,
+                            dateFormat.parse(playerRow.select("td[data-stat=birth_date]").text())
+                    );
+                    Set<DataSource> dataSources = new HashSet<>();
+                    dataSources.add(newDataSource);
+                    player.setDataSources(dataSources);
+                    players.add(player);
+                }
             }
-            return players;
         } catch (Exception ex) {
             log.warn("Unable to create players list to add: " + ex);
-            return null;
         }
     }
 
