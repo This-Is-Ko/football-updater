@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.ko'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.2-SNAPSHOT'
 
 java {
 	sourceCompatibility = '20'
@@ -49,4 +49,8 @@ bootJar {
 		attributes 'Start-Class': "com.ko.footballupdater.FootballUpdaterApplication"
 		attributes 'Main-Class': "org.springframework.boot.loader.JarLauncher"
 	}
+}
+
+test {
+	useJUnitPlatform()
 }
