@@ -1,7 +1,6 @@
 package com.ko.footballupdater.services;
 
 import com.ko.footballupdater.models.CheckedStatus;
-import com.ko.footballupdater.models.DataSourceSiteName;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.Team;
 import com.ko.footballupdater.repositories.PlayerRepository;

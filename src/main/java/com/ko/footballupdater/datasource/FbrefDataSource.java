@@ -85,12 +85,17 @@ public class FbrefDataSource implements DataSourceParser {
                     return null;
                 }
 
-                if (player.getCheckedStatus() == null ||
-                        (player.getCheckedStatus().getLatestCheckedMatchUrl() != null && player.getCheckedStatus().getLatestCheckedMatchUrl().equals(latestMatchUrl)) ||
-                        (player.getCheckedStatus().getLatestCheckedMatchDate() != null && !(selectedMatchDate.compareTo(player.getCheckedStatus().getLatestCheckedMatchDate()) > 0))
-                ) {
-                    // No new updates
-                    log.atInfo().setMessage(player.getName() + " " + "latestMatchUrl matches last checked").addKeyValue("player", player.getName()).log();
+                if (player.getCheckedStatus() != null) {
+                    if (player.getCheckedStatus().getLatestCheckedMatchDate() != null && !(selectedMatchDate.compareTo(player.getCheckedStatus().getLatestCheckedMatchDate()) > 0)) {
+                        log.atInfo().setMessage(player.getName() + " - Selected match is not newer than last checked").addKeyValue("player", player.getName()).log();
+                        return null;
+                    } else if (player.getCheckedStatus().getLatestCheckedMatchUrl() != null && player.getCheckedStatus().getLatestCheckedMatchUrl().equals(latestMatchUrl)) {
+                        // No new updates
+                        log.atInfo().setMessage(player.getName() + " - latestMatchUrl matches last checked").addKeyValue("player", player.getName()).log();
+                        return null;
+                    }
+                } else {
+                    log.atInfo().setMessage(player.getName() + " - CheckedStatus is null").addKeyValue("player", player.getName()).log();
                     return null;
                 }
 
