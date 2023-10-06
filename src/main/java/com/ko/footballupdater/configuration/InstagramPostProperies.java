@@ -9,20 +9,10 @@ import org.springframework.stereotype.Component;
 @Getter
 @Setter
 @Component
-@ConfigurationProperties(prefix = "mailer")
-public class MailerProperties {
+@ConfigurationProperties(prefix = "ig.post")
+public class InstagramPostProperies {
 
     @NotNull
-    private boolean enabled;
-
-    @NotNull
-    private String subject;
-
-    private MailerFromProperties from;
-
-    private MailerToProperties to;
-
-    @NotNull
-    private boolean attachImages;
+    private int version;
 
 }

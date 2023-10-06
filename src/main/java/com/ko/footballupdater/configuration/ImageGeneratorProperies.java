@@ -9,20 +9,16 @@ import org.springframework.stereotype.Component;
 @Getter
 @Setter
 @Component
-@ConfigurationProperties(prefix = "mailer")
-public class MailerProperties {
+@ConfigurationProperties(prefix = "image.generator")
+public class ImageGeneratorProperies {
 
     @NotNull
     private boolean enabled;
 
     @NotNull
-    private String subject;
-
-    private MailerFromProperties from;
-
-    private MailerToProperties to;
+    private String inputPath;
 
     @NotNull
-    private boolean attachImages;
+    private String outputPath;
 
 }

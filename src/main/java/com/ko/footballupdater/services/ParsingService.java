@@ -117,6 +117,7 @@ public class ParsingService {
                             Document doc = Jsoup.connect(dataSource.getUrl()).get();
                             PlayerMatchPerformanceStats playerMatchPerformanceStats = dataSourceParser.parsePlayerMatchData(player, doc);
                             if (playerMatchPerformanceStats != null) {
+                                log.atInfo().setMessage(player.getName() + " - " + dataSource.getSiteName() + " - Successfully parse player data").addKeyValue("player", player.getName()).log();
                                 player.getCheckedStatus().setSiteName(dataSource.getSiteName());
                                 return playerMatchPerformanceStats;
                             }

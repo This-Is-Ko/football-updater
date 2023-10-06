@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PlayerService {
@@ -31,6 +32,12 @@ public class PlayerService {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private AmazonS3Service amazonS3Service;
+
+    @Autowired
+    private ImageGeneratorService imageGeneratorService;
 
     public Player addPlayer(Player newPlayer, DataSourceSiteName dataSourceSiteName) throws Exception {
         if (!playerRepository.findByNameEquals(newPlayer.getName()).isEmpty()) {
@@ -50,29 +57,56 @@ public class PlayerService {
         return playerRepository.findAll();
     }
 
-    public void updateDataForAllPlayers(UpdatePlayersResponse response) {
+    public UpdatePlayersResponse updateDataForAllPlayers() {
         // Find latest match data for each player
         Iterator<Player> playerIterator = playerRepository.findAll().iterator();
-        List<InstagramPost> posts = new ArrayList<>();
+        List<Player> requestPlayersToUpdate = new ArrayList<>();
 
         while(playerIterator.hasNext()){
             Player player = playerIterator.next();
+            requestPlayersToUpdate.add(player);
+        }
+
+        return updateDataForPlayers(requestPlayersToUpdate);
+    }
+
+    public UpdatePlayersResponse updateDataForPlayer(Integer playerId) throws Exception {
+        // Find latest match data for each player
+        Optional<Player> requestPlayersToUpdate = playerRepository.findById(playerId);
+        if (requestPlayersToUpdate.isEmpty()) {
+            throw new Exception("Player name not found");
+        }
+        return updateDataForPlayers(requestPlayersToUpdate.stream().toList());
+    }
+
+    public UpdatePlayersResponse updateDataForPlayers(List<Player> requestPlayersToUpdate) {
+        UpdatePlayersResponse response = new UpdatePlayersResponse();
+
+        // Find latest match data for each player
+        List<InstagramPost> posts = new ArrayList<>();
+
+        for (Player player : requestPlayersToUpdate) {
             PlayerMatchPerformanceStats playerMatchPerformanceStats = parsingService.parsePlayerMatchData(player);
             if (playerMatchPerformanceStats == null) {
                 // No new updates
                 continue;
             }
-            // Generate caption
+            // Generate post and caption
             InstagramPost post = new InstagramPost(player, playerMatchPerformanceStats);
+            // Generate stat images
+            imageGeneratorService.generatePlayerStatImage(post);
+            // Upload stat images to s3
+            amazonS3Service.uploadtoS3(post);
             posts.add(post);
         }
 
         // No updates
         if (posts.isEmpty()) {
-            return;
+            return response;
         }
 
         boolean isEmailSent = emailService.sendEmailUpdate(posts);
+
         response.setEmailSent(isEmailSent);
         if (isEmailSent) {
             List<Player> playersToUpdate = new ArrayList<>();
@@ -89,9 +123,11 @@ public class PlayerService {
             response.setPlayersUpdated(playersToUpdate);
             response.setNumPlayersUpdated(playersToUpdate.size());
         }
+        return response;
     }
 
-    public DataSource updatePlayerDataSource(DataSource dataSource) {
+
+        public DataSource updatePlayerDataSource(DataSource dataSource) {
 //        playerRepository.findByNameEquals();
         return dataSource;
     }
