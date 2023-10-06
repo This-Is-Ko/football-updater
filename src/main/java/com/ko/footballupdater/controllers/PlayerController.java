@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,14 +39,24 @@ public class PlayerController {
     }
 
     @GetMapping(path="/data/update")
-    public @ResponseBody ResponseEntity<UpdatePlayersResponse> dataUpdate() {
-        UpdatePlayersResponse response = new UpdatePlayersResponse();
+    public @ResponseBody ResponseEntity<UpdatePlayersResponse> dataUpdateForAllPlayers() {
         try {
-            playerService.updateDataForAllPlayers(response);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(playerService.updateDataForAllPlayers());
         } catch (Exception ex) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Updating players failed", ex);
+        }
+    }
+
+    @GetMapping(path="/data/update/{playerId}")
+    public @ResponseBody ResponseEntity<UpdatePlayersResponse> dataUpdateForPlayer(
+            @PathVariable("playerId") Integer playerId
+    ) {
+        try {
+            return ResponseEntity.ok(playerService.updateDataForPlayer(playerId));
+        } catch (Exception ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Updating player failed", ex);
         }
     }
 

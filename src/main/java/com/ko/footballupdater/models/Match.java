@@ -15,6 +15,7 @@ public class Match {
     private final String relevantTeam;
 
     private final SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd");
+    private final SimpleDateFormat formatterFileName = new SimpleDateFormat("yyyy_MM_dd");
 
     public Match(String url, Date date, String homeTeamName, String awayTeamName, String relevantTeam) {
         this.url = url;
@@ -26,5 +27,9 @@ public class Match {
 
     public String getDateAsFormattedString() {
         return formatter.format(date);
+    }
+
+    public String getDateAsFormattedStringForFileName() {
+        return formatterFileName.format(date);
     }
 }

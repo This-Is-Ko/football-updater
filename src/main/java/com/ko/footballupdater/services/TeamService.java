@@ -1,7 +1,6 @@
 package com.ko.footballupdater.services;
 
 import com.ko.footballupdater.models.CheckedStatus;
-import com.ko.footballupdater.models.DataSourceSiteName;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.Team;
 import com.ko.footballupdater.repositories.PlayerRepository;
@@ -34,11 +33,12 @@ public class TeamService {
     private ParsingService parsingService;
 
     public void addTeam(Team newTeam, AddNewTeamResponse response) throws Exception {
+        // Check if team exists
         if (!teamRepository.findByNameAndCountryAndLeague(newTeam.getName(), newTeam.getCountry(), newTeam.getLeague()).isEmpty()) {
             throw new Exception("Team already exists");
         }
 
-        newTeam.setCheckedStatus(new CheckedStatus(DataSourceSiteName.FBREF));
+//        newTeam.setCheckedStatus(new CheckedStatus());
         Team savedTeam = teamRepository.save(newTeam);
         response.setTeam(savedTeam);
         // Parse players and add to database
@@ -52,11 +52,40 @@ public class TeamService {
                 playerService.addPlayer(player);
                 response.getPlayersAdded().add(player);
             } catch (Exception ex) {
-                log.info("Error while adding player " + player.getName());
+                response.getPlayersNotAdded().add(player);
+                log.info("Error while adding player " + player.getName(), ex);
             }
         }
         log.info("Added " + response.getPlayersAdded().size() + " players");
     }
+
+    // TODO
+//    public void updateTeamPlayers(Team newTeam, UpdateTeamPlayersResponse response) throws Exception {
+//        // Check if team exists
+//        List<Team> searchResult = teamRepository.findByNameAndCountryAndLeague(newTeam.getName(), newTeam.getCountry(), newTeam.getLeague());
+//        if (searchResult.isEmpty()) {
+//            throw new Exception("Team doesn't exist");
+//        } else if (searchResult.size() > 1) {
+//            throw new Exception("Too many teams returned from search");
+//        }
+//
+//        Team team = searchResult.get(0);
+//        // Parse players and add to database
+//        List<Player> players = parsingService.parseSquadDataForTeam(newTeam);
+//        if (players == null || players.isEmpty()) {
+//            log.info("No players to add");
+//            return;
+//        }
+//        for (Player player : players) {
+//            try {
+//                playerService.addPlayer(player);
+//                response.getPlayersAdded().add(player);
+//            } catch (Exception ex) {
+//                log.info("Error while adding player " + player.getName());
+//            }
+//        }
+//        log.info("Added " + response.getPlayersAdded().size() + " players");
+//    }
 
     public Iterable<Team> getTeams() {
         return teamRepository.findAll();

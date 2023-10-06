@@ -15,4 +15,6 @@ public class AddNewTeamResponse {
     private Team team;
 
     private List<Player> playersAdded = new ArrayList<>();
+
+    private List<Player> playersNotAdded = new ArrayList<>();
 }

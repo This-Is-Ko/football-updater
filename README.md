@@ -1,5 +1,10 @@
 # Football Updater
 
+Check for player match performance data from their latest game and generate images which contain their statistic for the selected game.
+
+These are uploaded to a S3 bucket and an email is sent to the configured email containing a generated post caption, S3 file links and Google Image search links for recent photos for the player.
+
+The players and teams to check are stored in RDS MySQL database and configured with an external cron job to run at scheduled times.
 
 ### Build
 To build jar use 
@@ -22,6 +27,53 @@ Additional env params can be passed in with
     --MAILER_TO_NAME=****
     --MAILER_TO_ADDRESS=****
     --ENDPOINT_SECRET=****
+
+### Configurable
+
+The main configurable groupings are:
+
+Sprint Datasource (Database)
+
+    SPRING_DATASOURCE_HOST
+    SPRING_DATASOURCE_NAME
+    SPRING_DATASOURCE_USERNAME
+    SPRING_DATASOURCE_PASSWORD
+
+Endpoint secret
+
+    ENDPOINT_SECRET
+
+Datasource (Stat sources)
+
+    DATASOURCE_PRIORITY
+
+Post Version
+
+    IG_POST_VERSION
+
+Stat Image generator
+    
+    IMAGE_GENERATOR_ENABLED
+    IMAGE_GENERATOR_INPUT_PATH
+    IMAGE_GENERATOR_OUTPUT_PATH
+
+Mailer
+
+    MAILER_IS_ENABLED
+    MAILER_SUBJECT
+    MAILER_FROM_NAME
+    MAILER_FROM_ADDRESS
+    MAILER_FROM_PASSWORD
+    MAILER_TO_NAME
+    MAILER_TO_ADDRESS
+    MAILER_IS_ATTACH_IMAGES
+
+AWS S3 Uploads
+
+    AWS_S3_IS_ENABLED
+    AWS_ACCESS_KEY
+    AWS_SECRET_KEY
+    AWS_S3_BUCKET_NAME
 
 ### Local MYSQL
 

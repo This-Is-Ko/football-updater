@@ -36,6 +36,9 @@ public class CheckedStatus {
     @Column
     private String latestCheckedMatchUrl;
 
+    @Column
+    private Date latestCheckedMatchDate;
+
     public CheckedStatus() {
     }
 
