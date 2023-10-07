@@ -131,3 +131,11 @@ Enable service
     # Restart service after file changes
     sudo systemctl daemon-reload
     sudo systemctl restart football-updater
+
+To set up fonts for image generation, add font files to 
+
+    /usr/share/fonts/ChakraPetch-Bold.ttf
+    /usr/share/fonts/Nike_Ithaca.otf
+
+Additional reference for fonts on Linux https://medium.com/source-words/how-to-manually-install-update-and-uninstall-fonts-on-linux-a8d09a3853b0
+

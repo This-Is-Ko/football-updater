@@ -111,6 +111,7 @@ public class FbrefDataSource implements DataSourceParser {
                 }
 
                 return new PlayerMatchPerformanceStats(
+                        dataSourceSiteName,
                         new Match(latestMatchUrl, selectedMatchDate, homeTeam, awayTeam, relevantTeam),
                         parseIntegerOrNull(resultRow.select("td[data-stat=minutes]").text()),
                         parseIntegerOrNull(resultRow.select("td[data-stat=goals]").text()),

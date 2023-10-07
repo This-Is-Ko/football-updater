@@ -59,14 +59,4 @@ public class PlayerController {
                     HttpStatus.BAD_REQUEST, "Updating player failed", ex);
         }
     }
-
-    @PostMapping(path="/data-source/update")
-    public @ResponseBody DataSource updatePlayerDataSource(@RequestBody DataSource dataSource) {
-        try {
-            return playerService.updatePlayerDataSource(dataSource);
-        } catch (Exception ex) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT, "Unable to add player", ex);
-        }
-    }
 }

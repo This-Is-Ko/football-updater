@@ -49,10 +49,11 @@ public class PostHelper {
             teamNameHashtag = "#" + playerMatchPerformanceStats.getMatch().getRelevantTeam().replaceAll(" ", "");
         }
         return "#" + player.getName().replaceAll(" ", "") + " " +
-                "#upthetillies" + " " +
-                "#womensfootball" + " " +
-                "#womenssoccer" + " " +
-                "#woso" + " " +
+                "#upthetillies " +
+                "#matildas " +
+                "#womensfootball " +
+                "#womenssoccer" +
+                "#woso " +
                 teamNameHashtag;
     }
 

@@ -49,9 +49,11 @@ public class EmailService {
         // Create email body
         StringBuilder emailContent = new StringBuilder();
         for (InstagramPost post : posts) {
-            emailContent.append("############").append(post.getPlayer().getName()).append(" - ").append(post.getPlayerMatchPerformanceStats().getMatch().getDateAsFormattedString()).append("############\n\n");
+            emailContent.append("############").append(post.getPlayer().getName()).append(" - ").append(post.getPlayerMatchPerformanceStats().getDataSourceSiteName().toString()).append(" - ").append(post.getPlayerMatchPerformanceStats().getMatch().getDateAsFormattedString()).append("############\n\n");
             emailContent.append(PostHelper.generatePostCaption(instagramPostProperies.getVersion(), post)).append("\n\n");
-            emailContent.append("Stat image(s)\n").append(PostHelper.generateS3UrlList(post)).append("\n");
+            if (!post.getImagesS3Urls().isEmpty()) {
+                emailContent.append("Stat image(s)\n").append(PostHelper.generateS3UrlList(post)).append("\n");
+            }
             emailContent.append("Google image search links\n").append(PostHelper.generatePostImageSearchUrl(post)).append("\n\n\n");
 
             // Add images to attachment - config driven
@@ -77,7 +79,6 @@ public class EmailService {
                     .withTransportStrategy(TransportStrategy.SMTP_TLS)
                     .withSessionTimeout(10 * 1000)
                     .clearEmailValidator()
-                    .withDebugLogging(true)
                     .buildMailer();
 
             mailer.validate(email);

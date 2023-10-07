@@ -161,6 +161,7 @@ public class FotmobDataSource implements DataSourceParser {
         }
 
         return new PlayerMatchPerformanceStats(
+            dataSourceSiteName,
             match,
             getStatIntegerOrDefault(topStats, "Minutes played", 0),
             getStatIntegerOrDefault(topStats, "Goals", 0),

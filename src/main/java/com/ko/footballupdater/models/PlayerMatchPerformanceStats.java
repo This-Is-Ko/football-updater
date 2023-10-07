@@ -5,6 +5,7 @@ import lombok.Getter;
 @Getter
 public class PlayerMatchPerformanceStats {
 
+    private DataSourceSiteName dataSourceSiteName;
     private Match match;
     private Integer minutesPlayed;
     private Integer goals;
@@ -58,7 +59,8 @@ public class PlayerMatchPerformanceStats {
     private Integer gkPenaltiesScoredAgainst;
     private Integer gkPenaltiesSaved;
 
-    public PlayerMatchPerformanceStats(Match match, Integer minutesPlayed, Integer goals, Integer assists, Integer shots, Integer shotsBlocked, Integer fouls, Integer fouled, Integer offsides, String crossingAccuracyAll, Integer dispossessed, Integer touches, String tacklingSuccessAll, Integer defensiveActions, Integer recoveries, Integer duelsWon, Integer duelsLost, Integer groundDuelsWon, Integer aerialDuelsWon, Integer chancesCreatedAll, String passingAccuracyAll, Integer passesIntoFinalThird, String carriesSuccessAll) {
+    public PlayerMatchPerformanceStats(DataSourceSiteName dataSourceSiteName, Match match, Integer minutesPlayed, Integer goals, Integer assists, Integer shots, Integer shotsBlocked, Integer fouls, Integer fouled, Integer offsides, String crossingAccuracyAll, Integer dispossessed, Integer touches, String tacklingSuccessAll, Integer defensiveActions, Integer recoveries, Integer duelsWon, Integer duelsLost, Integer groundDuelsWon, Integer aerialDuelsWon, Integer chancesCreatedAll, String passingAccuracyAll, Integer passesIntoFinalThird, String carriesSuccessAll) {
+        this.dataSourceSiteName = dataSourceSiteName;
         this.match = match;
         this.minutesPlayed = minutesPlayed;
         this.goals = goals;
@@ -85,7 +87,8 @@ public class PlayerMatchPerformanceStats {
     }
 
     // Used by FBREF
-    public PlayerMatchPerformanceStats(Match match, Integer minutesPlayed, Integer goals, Integer assists, Integer penaltiesScored, Integer penaltiesWon, Integer shots, Integer shotsOnTarget, Integer yellowCards, Integer redCards, Integer fouls, Integer fouled, Integer offsides, Integer crosses, Integer touches, Integer tackles, Integer tacklesWon, Integer interceptions, Integer blocks, Float xg, Float xg_assist, Integer shotCreatingActions, Integer goalCreatingActions, Integer passesCompleted, Integer passesAttempted, Float passesSuccessPercentage, Integer progressivePasses, Integer carries, Integer progressiveCarries, Integer takesOnsAttempted, Integer takesOnsCompleted, Integer gkShotsOnTargetAgainst, Integer gkGoalsAgainst, Integer gkSaves, Float gkSavePercentage, Integer gkPenaltiesAttemptedAgainst, Integer gkPenaltiesScoredAgainst, Integer gkPenaltiesSaved) {
+    public PlayerMatchPerformanceStats(DataSourceSiteName dataSourceSiteName, Match match, Integer minutesPlayed, Integer goals, Integer assists, Integer penaltiesScored, Integer penaltiesWon, Integer shots, Integer shotsOnTarget, Integer yellowCards, Integer redCards, Integer fouls, Integer fouled, Integer offsides, Integer crosses, Integer touches, Integer tackles, Integer tacklesWon, Integer interceptions, Integer blocks, Float xg, Float xg_assist, Integer shotCreatingActions, Integer goalCreatingActions, Integer passesCompleted, Integer passesAttempted, Float passesSuccessPercentage, Integer progressivePasses, Integer carries, Integer progressiveCarries, Integer takesOnsAttempted, Integer takesOnsCompleted, Integer gkShotsOnTargetAgainst, Integer gkGoalsAgainst, Integer gkSaves, Float gkSavePercentage, Integer gkPenaltiesAttemptedAgainst, Integer gkPenaltiesScoredAgainst, Integer gkPenaltiesSaved) {
+        this.dataSourceSiteName = dataSourceSiteName;
         this.match = match;
         this.minutesPlayed = minutesPlayed;
         this.goals = goals;

@@ -26,7 +26,7 @@ public class ImageGeneratorService {
     private final int STAT_Y_COORDINATE = 350;
     private final String BASE_IMAGE_FILE_NAME = "_base_player_stat_image.jpg";
 
-    public void generatePlayerStatImage(InstagramPost post) {
+    public void generatePlayerStatImage(InstagramPost post) throws Exception {
         if (!imageGeneratorProperies.isEnabled()) {
             return;
         }
@@ -45,12 +45,12 @@ public class ImageGeneratorService {
 
             int attributeCounter = 0;
             int createdImageCounter = 0;
-//            Map<String, Object> attributeValueMap = new HashMap<>();
             for (Field field : post.getPlayerMatchPerformanceStats().getClass().getDeclaredFields()) {
                 field.setAccessible(true); // Make the private field accessible
                 try {
                     Object value = field.get(post.getPlayerMatchPerformanceStats()); // Get the field's value
-                    if (value != null && !field.getName().equals("match")) {
+                    // Only use stat values which are populated and filter select stats if they are NOT zero
+                    if (value != null && !field.getName().equals("match") && !field.getName().equals("dataSourceSiteName")) {
                         List<String> zeroValueFilter = getZeroValueFilter();
                         if (zeroValueFilter.contains(field.getName()) && value.equals(0)) {
                             continue;
@@ -58,7 +58,6 @@ public class ImageGeneratorService {
                         // Generate proper stat name - capitalise words and spacing
                         ImageStatEntry imageStatEntry = generateDisplayedName(field.getName(), value);
 
-//                        attributeValueMap.put(field.getName(), value);
                         graphics.drawString(imageStatEntry.getName(), statNameX, statY);
                         graphics.drawString(imageStatEntry.getValue(), statValueX, statY);
                         // Shift y coordinate down to next position
@@ -87,6 +86,7 @@ public class ImageGeneratorService {
             saveImage(post, image, createdImageCounter);
         } catch (Exception ex) {
             log.warn(post.getPlayer().getName() + " - Error while generating stat image ", ex);
+            throw new Exception(post.getPlayer().getName() + " - Error while generating stat image ", ex);
         }
     }
 
@@ -110,6 +110,7 @@ public class ImageGeneratorService {
         Color textColor = Color.BLACK;
         graphics.setFont(font);
         graphics.setColor(textColor);
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         return graphics;
     }
 
@@ -162,5 +163,4 @@ public class ImageGeneratorService {
         zeroValueFilter.add("gkPenaltiesSaved");
         return zeroValueFilter;
     }
-
 }

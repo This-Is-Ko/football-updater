@@ -1,7 +1,6 @@
 package com.ko.footballupdater.services;
 
 import com.ko.footballupdater.models.CheckedStatus;
-import com.ko.footballupdater.models.DataSource;
 import com.ko.footballupdater.models.DataSourceSiteName;
 import com.ko.footballupdater.models.InstagramPost;
 import com.ko.footballupdater.models.Player;
@@ -9,6 +8,7 @@ import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.repositories.PlayerRepository;
 import com.ko.footballupdater.repositories.UpdateStatusRepository;
 import com.ko.footballupdater.responses.UpdatePlayersResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class PlayerService {
 
@@ -93,10 +94,16 @@ public class PlayerService {
             }
             // Generate post and caption
             InstagramPost post = new InstagramPost(player, playerMatchPerformanceStats);
-            // Generate stat images
-            imageGeneratorService.generatePlayerStatImage(post);
-            // Upload stat images to s3
-            amazonS3Service.uploadtoS3(post);
+            try {
+                // Generate stat images
+                imageGeneratorService.generatePlayerStatImage(post);
+                // Upload stat images to s3
+                amazonS3Service.uploadtoS3(post);
+            } catch (Exception e) {
+                // Skip if image generation or upload fails, allows future retry
+                log.warn(post.getPlayer().getName() + " - Unable to generate or upload image");
+                continue;
+            }
             posts.add(post);
         }
 
@@ -105,13 +112,14 @@ public class PlayerService {
             return response;
         }
 
+        // Attempt to send email with updates
         boolean isEmailSent = emailService.sendEmailUpdate(posts);
 
         response.setEmailSent(isEmailSent);
+        // Update player checked status if email was sent
         if (isEmailSent) {
             List<Player> playersToUpdate = new ArrayList<>();
             Date currentDateTime = new Date();
-            // Update player checked status if email was sent
             for (InstagramPost post : posts) {
                 post.getPlayer().getCheckedStatus().setLastChecked(currentDateTime);
                 post.getPlayer().getCheckedStatus().setLatestCheckedMatchUrl(post.getPlayerMatchPerformanceStats().getMatch().getUrl());
@@ -126,9 +134,8 @@ public class PlayerService {
         return response;
     }
 
-
-        public DataSource updatePlayerDataSource(DataSource dataSource) {
-//        playerRepository.findByNameEquals();
-        return dataSource;
-    }
+//        public DataSource updatePlayerDataSource(DataSource dataSource) {
+////        playerRepository.findByNameEquals();
+//        return dataSource;
+//    }
 }
