@@ -48,24 +48,6 @@ public class FbrefDataSourceTest {
         assertEquals(0, result.getAssists());
     }
 
-//    @Test
-//    public void testParseSquadDataForTeam() {
-//        // Implement your test for parseSquadDataForTeam here
-//        // Mock dependencies and verify the expected behavior
-//
-//        // Example:
-//        Team team = new Team(/* create a Team instance here */);
-//        DataSource dataSource = new DataSource(/* create a DataSource instance here */);
-//
-//        // Mock external dependencies or expectations
-//
-//        // Call the method to be tested
-//        List<Player> result = fbrefDataSource.parseSquadDataForTeam(team, dataSource);
-//
-//        // Assert the expected behavior or result
-//        assertNotNull(result); // Add more assertions based on your test requirements
-//    }
-
     private String readHtmlFile(String fileName) throws IOException {
         StringBuilder contentBuilder = new StringBuilder();
         BufferedReader in = new BufferedReader(new FileReader(fileName));
