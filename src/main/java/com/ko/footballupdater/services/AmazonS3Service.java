@@ -37,12 +37,15 @@ public class AmazonS3Service {
                 // Overwrites any file with the same name
                 for (String imageFileName : post.getImagesFileNames()) {
                     String filePath = imageGeneratorProperies.getOutputPath() + imageFileName;
-                    PutObjectRequest request = new PutObjectRequest(amazonS3Properties.getBucketName(),imageFileName, new File(filePath))
+                    File file = new File(filePath);
+                    PutObjectRequest request = new PutObjectRequest(amazonS3Properties.getBucketName(),imageFileName, file)
                             .withCannedAcl(CannedAccessControlList.PublicRead);
                     s3Client.putObject(request);
                     String imageUrl = s3Client.getUrl(amazonS3Properties.getBucketName(), imageFileName).toString();
                     log.atInfo().setMessage(post.getPlayer().getName() + " - Successfully uploaded image " + imageFileName + " to S3 @ " + imageUrl).log();
                     post.getImagesS3Urls().add(imageUrl);
+
+                    cleanUpFile(file);
                 }
             } catch (AmazonServiceException ex) {
                 // The call was transmitted successfully, but Amazon S3 couldn't process
@@ -55,6 +58,15 @@ public class AmazonS3Service {
             }
         } else {
             log.atInfo().setMessage(post.getPlayer().getName() + " - No images to upload").log();
+        }
+    }
+
+    // Delete files uploaded to S3
+    private void cleanUpFile(File file) {
+        if (file.delete()) {
+            log.info("Deleted file: " + file.getAbsolutePath());
+        } else {
+            log.warn("Unable to delete file: " + file.getAbsolutePath());
         }
     }
 }
