@@ -51,7 +51,7 @@ public class FotmobDataSource implements DataSourceParser {
             // Assume first row is the latest match
             Elements latestMatchRow = document.selectXpath("//main/div[2]/div[1]/div[4]/section/div/article/table/tbody/tr[1]/td[2]/a");
             if (latestMatchRow.isEmpty()) {
-                log.info("Cannot find any match results on player page");
+                log.atInfo().setMessage("Cannot find any match results on player page").addKeyValue("player", player.getName()).log();
                 return null;
             }
 
@@ -82,7 +82,7 @@ public class FotmobDataSource implements DataSourceParser {
             // Check whether this match is newer than last checked
             Date selectedMatchDate = dateFormat.parse(jsonNode.get("general").get("matchTimeUTCDate").textValue());
             if (player.getCheckedStatus().getLatestCheckedMatchDate() != null && !(selectedMatchDate.compareTo(player.getCheckedStatus().getLatestCheckedMatchDate()) > 0)) {
-                log.info(player.getName() + " - Selected match is not newer than last checked");
+                log.atInfo().setMessage("Selected match is not newer than last checked").addKeyValue("player", player.getName()).log();
                 return null;
             }
 
@@ -125,9 +125,9 @@ public class FotmobDataSource implements DataSourceParser {
                     }
                 }
             }
-            log.atInfo().setMessage(player.getName() + " " + "Unable to update player, parsed all players in the match").addKeyValue("player", player.getName()).log();
+            log.atInfo().setMessage("Unable to update player, parsed all players in the match").addKeyValue("player", player.getName()).log();
         } catch (Exception ex) {
-            log.warn("Error while trying to update player: " + player.getName(), ex);
+            log.atWarn().setMessage("Error while trying to update player").setCause(ex).addKeyValue("player", player.getName()).log();
         }
         return null;
     }

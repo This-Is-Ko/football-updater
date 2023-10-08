@@ -42,7 +42,7 @@ public class AmazonS3Service {
                             .withCannedAcl(CannedAccessControlList.PublicRead);
                     s3Client.putObject(request);
                     String imageUrl = s3Client.getUrl(amazonS3Properties.getBucketName(), imageFileName).toString();
-                    log.atInfo().setMessage(post.getPlayer().getName() + " - Successfully uploaded image " + imageFileName + " to S3 @ " + imageUrl).log();
+                    log.atInfo().setMessage("Successfully uploaded image " + imageFileName + " to S3 @ " + imageUrl).addKeyValue("player", post.getPlayer().getName()).log();
                     post.getImagesS3Urls().add(imageUrl);
 
                     cleanUpFile(file);
@@ -50,11 +50,11 @@ public class AmazonS3Service {
             } catch (AmazonServiceException ex) {
                 // The call was transmitted successfully, but Amazon S3 couldn't process
                 // it, so it returned an error response.
-                log.warn(post.getPlayer().getName() + " - Error attempting to upload", ex);
+                log.atWarn().setMessage("Error attempting to upload").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
             } catch (SdkClientException ex) {
                 // Amazon S3 couldn't be contacted for a response, or the client
                 // couldn't parse the response from Amazon S3.
-                log.warn(post.getPlayer().getName() + " - Error attempting to upload", ex);
+                log.atWarn().setMessage("Error attempting to upload").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
             }
         } else {
             log.atInfo().setMessage(post.getPlayer().getName() + " - No images to upload").log();
@@ -64,9 +64,9 @@ public class AmazonS3Service {
     // Delete files uploaded to S3
     private void cleanUpFile(File file) {
         if (file.delete()) {
-            log.info("Deleted file: " + file.getAbsolutePath());
+            log.atInfo().setMessage("Deleted file: " + file.getAbsolutePath()).log();
         } else {
-            log.warn("Unable to delete file: " + file.getAbsolutePath());
+            log.atWarn().setMessage("Unable to delete file: " + file.getAbsolutePath()).log();
         }
     }
 }

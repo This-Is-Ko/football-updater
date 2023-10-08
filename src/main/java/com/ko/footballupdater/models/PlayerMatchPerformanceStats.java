@@ -59,6 +59,11 @@ public class PlayerMatchPerformanceStats {
     private Integer gkPenaltiesScoredAgainst;
     private Integer gkPenaltiesSaved;
 
+    // For tests
+    public PlayerMatchPerformanceStats(DataSourceSiteName dataSourceSiteName) {
+        this.dataSourceSiteName = dataSourceSiteName;
+    }
+
     public PlayerMatchPerformanceStats(DataSourceSiteName dataSourceSiteName, Match match, Integer minutesPlayed, Integer goals, Integer assists, Integer shots, Integer shotsBlocked, Integer fouls, Integer fouled, Integer offsides, String crossingAccuracyAll, Integer dispossessed, Integer touches, String tacklingSuccessAll, Integer defensiveActions, Integer recoveries, Integer duelsWon, Integer duelsLost, Integer groundDuelsWon, Integer aerialDuelsWon, Integer chancesCreatedAll, String passingAccuracyAll, Integer passesIntoFinalThird, String carriesSuccessAll) {
         this.dataSourceSiteName = dataSourceSiteName;
         this.match = match;

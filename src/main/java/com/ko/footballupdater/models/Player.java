@@ -67,4 +67,14 @@ public class Player {
         this.name = name;
         this.dob = dob;
     }
+
+    public Player(Integer id, String name, Team team, Date dob, Set<Image> images, Set<DataSource> dataSources, CheckedStatus checkedStatus) {
+        this.id = id;
+        this.name = name;
+        this.team = team;
+        this.dob = dob;
+        this.images = images;
+        this.dataSources = dataSources;
+        this.checkedStatus = checkedStatus;
+    }
 }

@@ -85,7 +85,7 @@ public class ImageGeneratorService {
             createdImageCounter++;
             saveImage(post, image, createdImageCounter);
         } catch (Exception ex) {
-            log.warn(post.getPlayer().getName() + " - Error while generating stat image ", ex);
+            log.atWarn().setMessage("Error while generating stat image").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
             throw new Exception(post.getPlayer().getName() + " - Error while generating stat image ", ex);
         }
     }
@@ -138,7 +138,7 @@ public class ImageGeneratorService {
         String outputImageFilePath = imageGeneratorProperies.getOutputPath() + fileName;
         ImageIO.write(image, "jpg", new File(outputImageFilePath));
         post.getImagesFileNames().add(fileName);
-        log.atInfo().setMessage(post.getPlayer().getName() + " - Generated stat image " + createdImageCounter).addKeyValue("player", post.getPlayer().getName()).log();
+        log.atInfo().setMessage("Generated stat image " + createdImageCounter).addKeyValue("player", post.getPlayer().getName()).log();
     }
 
     private static List<String> getZeroValueFilter() {

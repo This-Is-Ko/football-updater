@@ -68,10 +68,10 @@ public class FbrefDataSource implements DataSourceParser {
             for (Element resultRow : resultRows) {
                 // For games not played, appears as unused_sub class
                 if (!resultRow.getElementsByClass("unused_sub").isEmpty()) {
-                    log.atInfo().setMessage(player.getName() + " " + "Skip latest due to unused sub").addKeyValue("player", player.getName()).log();
+                    log.atInfo().setMessage("Skip latest due to unused sub").addKeyValue("player", player.getName()).log();
                     continue;
                 } else if (!resultRow.getElementsByClass("partial_table").isEmpty()) {
-                    log.atInfo().setMessage(player.getName() + " " + "Spacer row skipped").addKeyValue("player", player.getName()).log();
+                    log.atInfo().setMessage("Spacer row skipped").addKeyValue("player", player.getName()).log();
                     continue;
                 }
                 String latestMatchUrl = resultRow.select("th[data-stat=date] > a").attr("href");
@@ -81,17 +81,17 @@ public class FbrefDataSource implements DataSourceParser {
                 if (!resultRow.select("th[data-stat=date] > a").text().isEmpty()) {
                     selectedMatchDate = dateFormat.parse(resultRow.select("th[data-stat=date] > a").text());
                 } else {
-                    log.atInfo().setMessage(player.getName() + " - Unable to get date from match row").addKeyValue("player", player.getName()).log();
+                    log.atInfo().setMessage("Unable to get date from match row").addKeyValue("player", player.getName()).log();
                     return null;
                 }
 
                 if (player.getCheckedStatus() != null) {
                     if (player.getCheckedStatus().getLatestCheckedMatchDate() != null && !(selectedMatchDate.compareTo(player.getCheckedStatus().getLatestCheckedMatchDate()) > 0)) {
-                        log.atInfo().setMessage(player.getName() + " - Selected match is not newer than last checked").addKeyValue("player", player.getName()).log();
+                        log.atInfo().setMessage("Selected match is not newer than last checked").addKeyValue("player", player.getName()).log();
                         return null;
                     } else if (player.getCheckedStatus().getLatestCheckedMatchUrl() != null && player.getCheckedStatus().getLatestCheckedMatchUrl().equals(latestMatchUrl)) {
                         // No new updates
-                        log.atInfo().setMessage(player.getName() + " - latestMatchUrl matches last checked").addKeyValue("player", player.getName()).log();
+                        log.atInfo().setMessage("latestMatchUrl matches last checked").addKeyValue("player", player.getName()).log();
                         return null;
                     }
                 } else {

@@ -109,7 +109,7 @@ public class ParsingService {
             if (dataSources.stream().anyMatch(o -> o.getSiteName().equals(source))) {
                 DataSource dataSource = dataSources.stream().filter(o -> o.getSiteName().equals(source)).findFirst().get();
 
-                log.info(player.getName() + " - Last checked was " + player.getCheckedStatus().getSiteName() + "; dataSource is " + dataSource.getSiteName());
+                log.atInfo().setMessage("Attempting dataSource " + dataSource.getSiteName()).addKeyValue("player", player.getName()).log();
 
                 for (DataSourceParser dataSourceParser : dataSourceParsers) {
                     if (dataSourceParser.getDataSourceSiteName().equals(dataSource.getSiteName())) {
@@ -117,12 +117,12 @@ public class ParsingService {
                             Document doc = Jsoup.connect(dataSource.getUrl()).get();
                             PlayerMatchPerformanceStats playerMatchPerformanceStats = dataSourceParser.parsePlayerMatchData(player, doc);
                             if (playerMatchPerformanceStats != null) {
-                                log.atInfo().setMessage(player.getName() + " - " + dataSource.getSiteName() + " - Successfully parse player data").addKeyValue("player", player.getName()).log();
+                                log.atInfo().setMessage(dataSource.getSiteName() + " - Successfully parse player data").addKeyValue("player", player.getName()).log();
                                 player.getCheckedStatus().setSiteName(dataSource.getSiteName());
                                 return playerMatchPerformanceStats;
                             }
-                        } catch (IOException e) {
-                            log.warn("Unable to retrieve page at " + dataSource.getUrl() + '\n' + e);
+                        } catch (IOException ex) {
+                            log.atWarn().setMessage("Unable to retrieve page at " + dataSource.getUrl()).setCause(ex).addKeyValue("player", player.getName()).log();
                             return null;
                         }
                         break;

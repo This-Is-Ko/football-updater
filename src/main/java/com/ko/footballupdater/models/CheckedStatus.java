@@ -45,4 +45,9 @@ public class CheckedStatus {
     public CheckedStatus(DataSourceSiteName siteName) {
         this.siteName = siteName;
     }
+
+    public CheckedStatus(Integer id, DataSourceSiteName siteName) {
+        this.id = id;
+        this.siteName = siteName;
+    }
 }
