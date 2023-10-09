@@ -44,6 +44,7 @@ public class PlayerMatchPerformanceStats {
     private Integer passesAttempted;
     private Float passesSuccessPercentage;
     private String passingAccuracyAll;
+    private String longBallAccuracyAll;
     private Integer progressivePasses;
     private Integer passesIntoFinalThird;
     private Integer carries;
@@ -55,6 +56,11 @@ public class PlayerMatchPerformanceStats {
     private Integer gkGoalsAgainst;
     private Integer gkSaves;
     private Float gkSavePercentage;
+    private String gkSavesAll;
+    private Integer gkPunches;
+    private Integer gkThrows;
+    private Integer gkHighClaim;
+    private Integer gkRecoveries;
     private Integer gkPenaltiesAttemptedAgainst;
     private Integer gkPenaltiesScoredAgainst;
     private Integer gkPenaltiesSaved;
@@ -64,6 +70,23 @@ public class PlayerMatchPerformanceStats {
         this.dataSourceSiteName = dataSourceSiteName;
     }
 
+    // Used by FOTMOB goalkeepers
+    public PlayerMatchPerformanceStats(DataSourceSiteName dataSourceSiteName, Match match, Integer minutesPlayed, Integer touches, String passingAccuracyAll, String longBallAccuracyAll, Integer gkGoalsAgainst, String gkSavesAll, Integer gkPunches, Integer gkThrows, Integer gkHighClaim, Integer gkRecoveries) {
+        this.dataSourceSiteName = dataSourceSiteName;
+        this.match = match;
+        this.minutesPlayed = minutesPlayed;
+        this.touches = touches;
+        this.passingAccuracyAll = passingAccuracyAll;
+        this.longBallAccuracyAll = longBallAccuracyAll;
+        this.gkGoalsAgainst = gkGoalsAgainst;
+        this.gkSavesAll = gkSavesAll;
+        this.gkPunches = gkPunches;
+        this.gkThrows = gkThrows;
+        this.gkHighClaim = gkHighClaim;
+        this.gkRecoveries = gkRecoveries;
+    }
+
+    // Used by FOTMOB outfield players
     public PlayerMatchPerformanceStats(DataSourceSiteName dataSourceSiteName, Match match, Integer minutesPlayed, Integer goals, Integer assists, Integer shots, Integer shotsBlocked, Integer fouls, Integer fouled, Integer offsides, String crossingAccuracyAll, Integer dispossessed, Integer touches, String tacklingSuccessAll, Integer defensiveActions, Integer recoveries, Integer duelsWon, Integer duelsLost, Integer groundDuelsWon, Integer aerialDuelsWon, Integer chancesCreatedAll, String passingAccuracyAll, Integer passesIntoFinalThird, String carriesSuccessAll) {
         this.dataSourceSiteName = dataSourceSiteName;
         this.match = match;

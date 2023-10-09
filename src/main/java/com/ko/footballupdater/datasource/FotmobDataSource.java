@@ -41,6 +41,7 @@ public class FotmobDataSource implements DataSourceParser {
     private final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private final String BASEURL = "https://www.fotmob.com";
     private final String API_MATCH_BASE_URL = "/api/matchDetails?matchId=";
+    private final String GOALKEEPER_FOTMOB_STRING_SHORT = "GK";
 
     @Override
     public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document) {
@@ -156,6 +157,28 @@ public class FotmobDataSource implements DataSourceParser {
             }
         }
 
+        // Separate stats required for goalkeepers
+        if (GOALKEEPER_FOTMOB_STRING_SHORT.equals(playerEntry.get("positionStringShort").asText())) {
+            // Goalkeepers only contain top stats
+            if (topStats == null) {
+                return null;
+            }
+            return new PlayerMatchPerformanceStats(dataSourceSiteName,
+                    match,
+                    getStatIntegerOrDefault(topStats, "Minutes played", 0),
+                    getStatIntegerOrDefault(topStats, "Touches", 0),
+                    getStatStringOrDefault(topStats, "Accurate passes", "0"),
+                    getStatStringOrDefault(topStats, "Accurate long balls", "0"),
+                    getStatIntegerOrDefault(topStats, "Goals conceded", 0),
+                    getStatStringOrDefault(topStats, "Saves", "0"),
+                    getStatIntegerOrDefault(topStats, "Punches", 0),
+                    getStatIntegerOrDefault(topStats, "Throws", 0),
+                    getStatIntegerOrDefault(topStats, "High claim", 0),
+                    getStatIntegerOrDefault(topStats, "Recoveries", 0)
+                    );
+        }
+
+        // Outfield players require all stats
         if (topStats == null || attackStats == null || defenseStats == null || duelsStats == null) {
             return null;
         }
