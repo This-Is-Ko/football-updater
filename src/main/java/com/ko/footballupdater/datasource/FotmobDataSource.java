@@ -62,7 +62,12 @@ public class FotmobDataSource implements DataSourceParser {
             Pattern pattern = Pattern.compile("/match/(\\d+)/");
             Matcher matcher = pattern.matcher(latestMatchUrl);
             if (!matcher.find()) {
-                return null;
+                pattern = Pattern.compile("/matches/.*/NaN#(\\d+)");
+                matcher = pattern.matcher(latestMatchUrl);
+                if (!matcher.find()) {
+                    log.atInfo().setMessage("Cannot find match id from url").addKeyValue("player", player.getName()).log();
+                    return null;
+                }
             }
 
             // Construct api url
