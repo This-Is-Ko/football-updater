@@ -20,8 +20,6 @@ import org.springframework.stereotype.Component;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -37,7 +35,6 @@ public class FotmobDataSource implements DataSourceParser {
     @Getter
     private final DataSourceSiteName dataSourceSiteName = DataSourceSiteName.FOTMOB;
 
-    private final String HOME = "Home";
     private final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private final String BASEURL = "https://www.fotmob.com";
     private final String API_MATCH_BASE_URL = "/api/matchDetails?matchId=";
