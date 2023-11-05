@@ -65,8 +65,12 @@ public class FotmobDataSource implements DataSourceParser {
                 pattern = Pattern.compile("/matches/.*/NaN#(\\d+)");
                 matcher = pattern.matcher(latestMatchUrl);
                 if (!matcher.find()) {
-                    log.atInfo().setMessage("Cannot find match id from url").addKeyValue("player", player.getName()).log();
-                    return null;
+                    pattern = Pattern.compile("/matches/.*#(\\d+)");
+                    matcher = pattern.matcher(latestMatchUrl);
+                    if (!matcher.find()) {
+                        log.atInfo().setMessage("Cannot find match id from url").addKeyValue("player", player.getName()).log();
+                        return null;
+                    }
                 }
             }
 
@@ -163,7 +167,7 @@ public class FotmobDataSource implements DataSourceParser {
         }
 
         // Separate stats required for goalkeepers
-        if (GOALKEEPER_FOTMOB_STRING_SHORT.equals(playerEntry.get("positionStringShort").asText())) {
+        if (playerEntry.get("positionStringShort") != null && GOALKEEPER_FOTMOB_STRING_SHORT.equals(playerEntry.get("positionStringShort").asText())) {
             // Goalkeepers only contain top stats
             if (topStats == null) {
                 return null;
@@ -185,6 +189,7 @@ public class FotmobDataSource implements DataSourceParser {
 
         // Outfield players require all stats
         if (topStats == null || attackStats == null || defenseStats == null || duelsStats == null) {
+            log.atInfo().setMessage("Cannot find stats for outfield player").addKeyValue("player", player.getName()).log();
             return null;
         }
 

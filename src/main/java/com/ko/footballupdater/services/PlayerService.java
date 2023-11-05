@@ -72,7 +72,7 @@ public class PlayerService {
     }
 
     public UpdatePlayersResponse updateDataForPlayer(Integer playerId) throws Exception {
-        // Find latest match data for each player
+        // Find latest match data for individual player
         Optional<Player> requestPlayersToUpdate = playerRepository.findById(playerId);
         if (requestPlayersToUpdate.isEmpty()) {
             throw new Exception("Player name not found");
