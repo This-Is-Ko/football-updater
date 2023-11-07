@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
 
 @Controller
-@RequestMapping(path="/player")
+@RequestMapping(path="/api/player")
 public class PlayerController {
 
     @Autowired

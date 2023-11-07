@@ -8,15 +8,15 @@ import java.util.List;
 
 @Getter
 @Setter
-public class InstagramPost {
+public class InstagramPostHolder {
 
-    private Player player;
+    private Post post;
     private PlayerMatchPerformanceStats playerMatchPerformanceStats;
     private List<String> imagesFileNames = new ArrayList<>();
-    private List<String> imagesS3Urls = new ArrayList<>();
 
-    public InstagramPost(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats) {
-        this.player = player;
+    public InstagramPostHolder(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats) {
+        this.post = new Post(player);
         this.playerMatchPerformanceStats = playerMatchPerformanceStats;
     }
+
 }

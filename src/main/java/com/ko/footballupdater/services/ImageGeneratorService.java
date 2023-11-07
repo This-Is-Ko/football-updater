@@ -2,7 +2,7 @@ package com.ko.footballupdater.services;
 
 import com.ko.footballupdater.configuration.ImageGeneratorProperies;
 import com.ko.footballupdater.models.ImageStatEntry;
-import com.ko.footballupdater.models.InstagramPost;
+import com.ko.footballupdater.models.InstagramPostHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,15 +26,15 @@ public class ImageGeneratorService {
     private final int STAT_Y_COORDINATE = 350;
     private final String BASE_IMAGE_FILE_NAME = "_base_player_stat_image.jpg";
 
-    public void generatePlayerStatImage(InstagramPost post) throws Exception {
+    public void generatePlayerStatImage(InstagramPostHolder postHolder) throws Exception {
         if (!imageGeneratorProperies.isEnabled()) {
             return;
         }
 
         try {
             // Load the base image
-            String playerImageBaseFilePath = imageGeneratorProperies.getInputPath() + post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME;
-            BufferedImage image = setUpBaseImage(playerImageBaseFilePath, post);
+            String playerImageBaseFilePath = imageGeneratorProperies.getInputPath() + postHolder.getPost().getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME;
+            BufferedImage image = setUpBaseImage(playerImageBaseFilePath, postHolder);
 
             // Match stats to image
             Graphics2D graphics = setUpStatsGraphicsDefaults(image);
@@ -45,10 +45,10 @@ public class ImageGeneratorService {
 
             int attributeCounter = 0;
             int createdImageCounter = 0;
-            for (Field field : post.getPlayerMatchPerformanceStats().getClass().getDeclaredFields()) {
+            for (Field field : postHolder.getPlayerMatchPerformanceStats().getClass().getDeclaredFields()) {
                 field.setAccessible(true); // Make the private field accessible
                 try {
-                    Object value = field.get(post.getPlayerMatchPerformanceStats()); // Get the field's value
+                    Object value = field.get(postHolder.getPlayerMatchPerformanceStats()); // Get the field's value
                     // Only use stat values which are populated and filter select stats if they are NOT zero
                     if (value != null && !field.getName().equals("match") && !field.getName().equals("dataSourceSiteName")) {
                         List<String> zeroValueFilter = getZeroValueFilter();
@@ -67,8 +67,8 @@ public class ImageGeneratorService {
                         // Once max stats for one image is added, generate new image
                         if (attributeCounter % 12 == 0) {
                             createdImageCounter++;
-                            saveImage(post, image, createdImageCounter);
-                            image = setUpBaseImage(playerImageBaseFilePath, post);
+                            saveImage(postHolder, image, createdImageCounter);
+                            image = setUpBaseImage(playerImageBaseFilePath, postHolder);
                             graphics = setUpStatsGraphicsDefaults(image);
                             statY = STAT_Y_COORDINATE;
                         }
@@ -83,14 +83,14 @@ public class ImageGeneratorService {
 
             // Save the modified image
             createdImageCounter++;
-            saveImage(post, image, createdImageCounter);
+            saveImage(postHolder, image, createdImageCounter);
         } catch (Exception ex) {
-            log.atWarn().setMessage("Error while generating stat image").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
-            throw new Exception(post.getPlayer().getName() + " - Error while generating stat image ", ex);
+            log.atWarn().setMessage("Error while generating stat image").setCause(ex).addKeyValue("player", postHolder.getPost().getPlayer().getName()).log();
+            throw new Exception(postHolder.getPost().getPlayer().getName() + " - Error while generating stat image ", ex);
         }
     }
 
-    private BufferedImage setUpBaseImage(String baseImagePath, InstagramPost post) throws IOException {
+    private BufferedImage setUpBaseImage(String baseImagePath, InstagramPostHolder postHolder) throws IOException {
         BufferedImage baseImage = ImageIO.read(new File(baseImagePath));
         Graphics2D graphics = baseImage.createGraphics();
 
@@ -99,7 +99,7 @@ public class ImageGeneratorService {
         graphics.setColor(Color.BLACK);
         int playerNameX = 77;
         int playerNameY = 116;
-        graphics.drawString(post.getPlayer().getName().toUpperCase(), playerNameX, playerNameY);
+        graphics.drawString(postHolder.getPost().getPlayer().getName().toUpperCase(), playerNameX, playerNameY);
         graphics.dispose();
         return baseImage;
     }
@@ -133,12 +133,12 @@ public class ImageGeneratorService {
         return new ImageStatEntry(displayStatName, String.valueOf(value));
     }
 
-    private void saveImage(InstagramPost post, BufferedImage image, int createdImageCounter) throws IOException {
-        String fileName = post.getPlayer().getName().replaceAll(" ", "") + "_" + post.getPlayerMatchPerformanceStats().getMatch().getDateAsFormattedStringForFileName() + "_stat_image_" + createdImageCounter + ".jpg";
+    private void saveImage(InstagramPostHolder postHolder, BufferedImage image, int createdImageCounter) throws IOException {
+        String fileName = postHolder.getPost().getPlayer().getName().replaceAll(" ", "") + "_" + postHolder.getPlayerMatchPerformanceStats().getMatch().getDateAsFormattedStringForFileName() + "_stat_image_" + createdImageCounter + ".jpg";
         String outputImageFilePath = imageGeneratorProperies.getOutputPath() + fileName;
         ImageIO.write(image, "jpg", new File(outputImageFilePath));
-        post.getImagesFileNames().add(fileName);
-        log.atInfo().setMessage("Generated stat image " + createdImageCounter).addKeyValue("player", post.getPlayer().getName()).log();
+        postHolder.getImagesFileNames().add(fileName);
+        log.atInfo().setMessage("Generated stat image " + createdImageCounter).addKeyValue("player", postHolder.getPost().getPlayer().getName()).log();
     }
 
     private static List<String> getZeroValueFilter() {

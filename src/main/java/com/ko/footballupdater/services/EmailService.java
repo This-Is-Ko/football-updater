@@ -3,7 +3,7 @@ package com.ko.footballupdater.services;
 import com.ko.footballupdater.configuration.ImageGeneratorProperies;
 import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.configuration.MailerProperties;
-import com.ko.footballupdater.models.InstagramPost;
+import com.ko.footballupdater.models.InstagramPostHolder;
 import com.ko.footballupdater.utils.PostHelper;
 import jakarta.activation.FileDataSource;
 import lombok.extern.slf4j.Slf4j;
@@ -30,10 +30,7 @@ public class EmailService {
     @Autowired
     private ImageGeneratorProperies imageGeneratorProperies;
 
-    @Autowired
-    InstagramPostProperies instagramPostProperies;
-
-    public boolean sendEmailUpdate(List<InstagramPost> posts){
+    public boolean sendEmailUpdate(List<InstagramPostHolder> posts){
         // Check config for email enabled status
         if (!mailerProperties.isEnabled()) {
             return false;
@@ -48,18 +45,18 @@ public class EmailService {
         List<AttachmentResource> attachments = new ArrayList<>();
         // Create email body
         StringBuilder emailContent = new StringBuilder();
-        for (InstagramPost post : posts) {
-            emailContent.append("############").append(post.getPlayer().getName()).append(" - ").append(post.getPlayerMatchPerformanceStats().getDataSourceSiteName().toString()).append(" - ").append(post.getPlayerMatchPerformanceStats().getMatch().getDateAsFormattedString()).append("############\n\n");
-            emailContent.append(PostHelper.generatePostCaption(instagramPostProperies.getVersion(), post)).append("\n\n");
-            if (!post.getImagesS3Urls().isEmpty()) {
-                emailContent.append("Stat image(s)\n").append(PostHelper.generateS3UrlList(post)).append("\n");
+        for (InstagramPostHolder postHolder : posts) {
+            emailContent.append("############").append(postHolder.getPost().getPlayer().getName()).append(" - ").append(postHolder.getPlayerMatchPerformanceStats().getDataSourceSiteName().toString()).append(" - ").append(postHolder.getPlayerMatchPerformanceStats().getMatch().getDateAsFormattedString()).append("############\n\n");
+            emailContent.append(postHolder.getPost().getCaption()).append("\n\n");
+            if (!postHolder.getPost().getImagesUrls().isEmpty()) {
+                emailContent.append("Stat image(s)\n").append(PostHelper.generateS3UrlList(postHolder)).append("\n");
             }
-            emailContent.append("Google image search links\n").append(PostHelper.generatePostImageSearchUrl(post)).append("\n\n\n");
+            emailContent.append("Google image search links\n").append(postHolder.getPost().getImageSearchUrls()).append("\n\n\n");
 
             // Add images to attachment - config driven
             if (mailerProperties.isAttachImages()) {
-                if (!post.getImagesFileNames().isEmpty()) {
-                    for (String fileName : post.getImagesFileNames()) {
+                if (!postHolder.getImagesFileNames().isEmpty()) {
+                    for (String fileName : postHolder.getImagesFileNames()) {
                         attachments.add(new AttachmentResource(fileName, new FileDataSource(imageGeneratorProperies.getOutputPath() + fileName)));
                     }
                 }
