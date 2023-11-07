@@ -39,6 +39,7 @@ public class Post {
     @Column(name = "image_urls")
     private List<String> imagesUrls;
 
+    // Placeholder to refactor as Java Date
     private String dateAsString;
 
     @Column(name = "caption")
@@ -50,8 +51,9 @@ public class Post {
     public Post() {
     }
 
-    public Post(Player player) {
+    public Post(Player player, String dateAsString) {
         this.player = player;
+        this.dateAsString = dateAsString;
         imagesUrls = new ArrayList<>();
     }
 

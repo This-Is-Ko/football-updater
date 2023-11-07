@@ -15,7 +15,7 @@ public class InstagramPostHolder {
     private List<String> imagesFileNames = new ArrayList<>();
 
     public InstagramPostHolder(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats) {
-        this.post = new Post(player);
+        this.post = new Post(player, playerMatchPerformanceStats.getMatch().getDateAsFormattedString());
         this.playerMatchPerformanceStats = playerMatchPerformanceStats;
     }
 

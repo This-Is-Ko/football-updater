@@ -2,42 +2,55 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Posts</title>
+    <title>Football Updater | Posts</title>
+    <link th:rel="stylesheet" th:href="@{webjars/bootstrap/5.3.2/css/bootstrap.min.css} "/>
 </head>
-<body>
-<h1>Posts</h1>
-<form th:object="${postsForm}" method="post" th:action="@{/posts/save}">
-    <table>
-        <thead>
-        <tr>
-            <th></th>
-            <th>Date</th>
-            <th>Player</th>
-            <th>Caption</th>
-            <th>Images</th>
-            <th>Posted</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="post, itemStat : ${form.posts}">
-            <td>
-                <input hidden th:name="|posts[${itemStat.index}].id|" th:value="${post.getId()}"/>
-            </td>
-            <td th:text="${post.dateAsString}"></td>
-            <td th:text="${post.player.name}"></td>
-            <td th:text="${post.caption}"></td>
-            <td>
-                <ul th:each="imageUrl : ${post.imagesUrls}">
-                    <a th:href="${imageUrl}"><li th:text="${imageUrl}"></li></a>
-                </ul>
-            </td>
-            <td>
-                <input type="checkbox" th:checked="${post.isPostedStatus()}" th:name="|posts[${itemStat.index}].postedStatus|" />
-            </td>
-        </tr>
-        </tbody>
-    </table>
-    <button type="submit">Save Changes</button>
-</form>
-</body>
+    <body>
+        <div class="container">
+            <h1>Posts</h1>
+            <div class="container">
+                <form th:if="${ not#lists.isEmpty(form.posts)}" th:object="${postsForm}" method="post" th:action="@{/posts/save}">
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Player</th>
+                            <th>Caption</th>
+                            <th>Images</th>
+                            <th>Posted</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="post, itemStat : ${form.posts}">
+                            <td th:text="${post.dateAsString}"></td>
+                            <td th:text="${post.player.name}"></td>
+                            <td th:text="${post.caption}"></td>
+                            <td>
+                                <ul th:each="imageUrl : ${post.imagesUrls}">
+                                    <a th:href="${imageUrl}"><li th:text="${imageUrl}"></li></a>
+                                </ul>
+                            </td>
+                            <td>
+                                <input hidden th:name="|posts[${itemStat.index}].id|" th:value="${post.getId()}"/>
+                                <input type="checkbox" th:checked="${post.isPostedStatus()}" th:name="|posts[${itemStat.index}].postedStatus|" />
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <button type="submit">Save Changes</button>
+                </form>
+                <div th:if="${ #lists.isEmpty(form.posts)}">
+                    <p>No posts available</p>
+                </div>
+            </div>
+        </div>
+        <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+        <script th:src="@{/webjars/popper.js/umd/popper.min.js}"></script>
+        <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+
+        <script>
+
+
+        </script>
+    </body>
 </html>
