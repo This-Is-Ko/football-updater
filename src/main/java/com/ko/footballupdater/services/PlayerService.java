@@ -131,10 +131,11 @@ public class PlayerService {
 
         response.setEmailSent(isEmailSent);
         // Update player checked status if email was sent
-//        if (isEmailSent) {
+        if (isEmailSent) {
             List<Player> playersToUpdate = new ArrayList<>();
             Date currentDateTime = new Date();
             for (InstagramPostHolder postHolder : posts) {
+                // Save post in database for dashboard use
                 postRepository.save(postHolder.getPost());
 
                 postHolder.getPost().getPlayer().getCheckedStatus().setLastChecked(currentDateTime);
@@ -142,16 +143,11 @@ public class PlayerService {
                 postHolder.getPost().getPlayer().getCheckedStatus().setLatestCheckedMatchDate(postHolder.getPlayerMatchPerformanceStats().getMatch().getDate());
                 playersToUpdate.add(postHolder.getPost().getPlayer());
             }
-//            playerRepository.saveAll(playersToUpdate);
+            playerRepository.saveAll(playersToUpdate);
             // Populate response
             response.setPlayersUpdated(playersToUpdate);
             response.setNumPlayersUpdated(playersToUpdate.size());
-//        }
+        }
         return response;
     }
-
-//        public DataSource updatePlayerDataSource(DataSource dataSource) {
-////        playerRepository.findByNameEquals();
-//        return dataSource;
-//    }
 }

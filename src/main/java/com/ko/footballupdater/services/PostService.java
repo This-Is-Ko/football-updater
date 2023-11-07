@@ -19,9 +19,7 @@ public class PostService {
 
 
     public List<Post> getPosts() {
-        Iterable<Post> posts = postRepository.findAll();
-        List<Post> postsList = new ArrayList<Post>();
-        posts.forEach(postsList::add);
+        List<Post> postsList = postRepository.findAllByOrderByDateGeneratedDesc();
         return postsList;
     }
 

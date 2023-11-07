@@ -19,6 +19,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Getter
@@ -44,8 +45,8 @@ public class Post {
     @Convert(converter = StringListConverter.class)
     private List<String> imageSearchUrls = new ArrayList<>();
 
-    // Placeholder to refactor as Java Date
-    private String dateAsString;
+    @NotNull
+    private Date dateGenerated = new Date();
 
     @Column(name = "caption")
     private String caption;
@@ -56,9 +57,8 @@ public class Post {
     public Post() {
     }
 
-    public Post(Player player, String dateAsString) {
+    public Post(Player player) {
         this.player = player;
-        this.dateAsString = dateAsString;
         imagesUrls = new ArrayList<>();
     }
 
@@ -68,9 +68,8 @@ public class Post {
         imagesUrls = new ArrayList<>();
     }
 
-    public Post(Player player, String dateAsString, List<String> imagesUrls) {
+    public Post(Player player, List<String> imagesUrls) {
         this.player = player;
-        this.dateAsString = dateAsString;
         this.imagesUrls = imagesUrls;
         this.postedStatus = false;
     }

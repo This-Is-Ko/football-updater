@@ -43,6 +43,10 @@ Endpoint secret
 
     ENDPOINT_SECRET
 
+Dashboard password
+
+    DASHBOARD_PASSWORD
+
 Datasource (Stat sources)
 
     DATASOURCE_PRIORITY
