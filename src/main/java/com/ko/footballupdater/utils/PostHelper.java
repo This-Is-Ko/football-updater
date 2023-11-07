@@ -3,6 +3,7 @@ package com.ko.footballupdater.utils;
 import com.ko.footballupdater.models.InstagramPostHolder;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
+import com.ko.footballupdater.models.Post;
 
 public class PostHelper {
 
@@ -40,9 +41,16 @@ public class PostHelper {
         ) + generatePlayerHashtags(player, playerMatchPerformanceStats);
     }
 
-    public static String generatePostImageSearchUrl(InstagramPostHolder postHolder) {
+    public static void generatePostImageSearchUrl(InstagramPostHolder postHolder) {
         String searchPhrase = postHolder.getPost().getPlayer().getName() + " " + postHolder.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam();
-        return String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:d\n", searchPhrase.replaceAll(" ", "%20")) + String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:w", searchPhrase.replaceAll(" ", "%20"));
+        postHolder.getPost().getImageSearchUrls().add(String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:d", searchPhrase.replaceAll(" ", "%20")));
+        postHolder.getPost().getImageSearchUrls().add(String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:w", searchPhrase.replaceAll(" ", "%20")));
+    }
+
+    public static void generatePostImageSearchUrl(Post post) {
+        String searchPhrase = post.getPlayer().getName();
+        post.getImageSearchUrls().add(String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:d", searchPhrase.replaceAll(" ", "%20")));
+        post.getImageSearchUrls().add(String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:w", searchPhrase.replaceAll(" ", "%20")));
     }
 
     public static String generatePlayerHashtags(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats) {

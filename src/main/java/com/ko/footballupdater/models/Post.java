@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -38,6 +39,10 @@ public class Post {
     @Convert(converter = StringListConverter.class)
     @Column(name = "image_urls")
     private List<String> imagesUrls;
+
+    @Transient
+    @Convert(converter = StringListConverter.class)
+    private List<String> imageSearchUrls = new ArrayList<>();
 
     // Placeholder to refactor as Java Date
     private String dateAsString;

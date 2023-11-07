@@ -17,6 +17,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+import static com.ko.footballupdater.utils.PostHelper.generatePostImageSearchUrl;
+
 @Slf4j
 @Controller
 @RequestMapping(path="/posts")
@@ -29,9 +31,9 @@ public class PostController {
     public String showPosts(Model model) {
         List<Post> posts = postService.getPosts();
 
-//        model.addAttribute("posts", posts);
         PostsCreationDto postsCreationDto = new PostsCreationDto();
         for (Post post : posts) {
+            generatePostImageSearchUrl(post);
             postsCreationDto.addPost(post);
         }
         model.addAttribute("form", postsCreationDto);

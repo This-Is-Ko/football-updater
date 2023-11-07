@@ -7,7 +7,14 @@
 </head>
     <body>
         <div class="container">
-            <h1>Posts</h1>
+            <nav class="navbar navbar-light bg-light">
+                <a class="navbar-brand" href="#">
+                    <h1>Football Updater</h1>
+                </a>
+            </nav>
+            <br>
+            <h2>Latest Posts</h2>
+            <br>
             <div class="container">
                 <form th:if="${ not#lists.isEmpty(form.posts)}" th:object="${postsForm}" method="post" th:action="@{/posts/save}">
                     <table class="table table-bordered">
@@ -17,6 +24,7 @@
                             <th>Player</th>
                             <th>Caption</th>
                             <th>Images</th>
+                            <th>Image Search</th>
                             <th>Posted</th>
                         </tr>
                         </thead>
@@ -31,13 +39,18 @@
                                 </ul>
                             </td>
                             <td>
+                                <ul th:each="imageSearchUrl : ${post.imageSearchUrls}">
+                                    <a th:href="${imageSearchUrl}"><li th:text="${imageSearchUrl}"></li></a>
+                                </ul>
+                            </td>
+                            <td>
                                 <input hidden th:name="|posts[${itemStat.index}].id|" th:value="${post.getId()}"/>
                                 <input type="checkbox" th:checked="${post.isPostedStatus()}" th:name="|posts[${itemStat.index}].postedStatus|" />
                             </td>
                         </tr>
                         </tbody>
                     </table>
-                    <button type="submit">Save Changes</button>
+                    <button class="btn btn-primary" type="submit">Save Changes</button>
                 </form>
                 <div th:if="${ #lists.isEmpty(form.posts)}">
                     <p>No posts available</p>

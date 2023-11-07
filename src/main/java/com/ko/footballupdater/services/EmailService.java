@@ -51,7 +51,7 @@ public class EmailService {
             if (!postHolder.getPost().getImagesUrls().isEmpty()) {
                 emailContent.append("Stat image(s)\n").append(PostHelper.generateS3UrlList(postHolder)).append("\n");
             }
-            emailContent.append("Google image search links\n").append(PostHelper.generatePostImageSearchUrl(postHolder)).append("\n\n\n");
+            emailContent.append("Google image search links\n").append(postHolder.getPost().getImageSearchUrls()).append("\n\n\n");
 
             // Add images to attachment - config driven
             if (mailerProperties.isAttachImages()) {

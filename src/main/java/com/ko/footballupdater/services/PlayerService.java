@@ -111,6 +111,8 @@ public class PlayerService {
                 amazonS3Service.uploadtoS3(postHolder);
                 // Generate caption
                 PostHelper.generatePostCaption(instagramPostProperies.getVersion(), postHolder);
+                // Generate image search links
+                PostHelper.generatePostImageSearchUrl(postHolder);
             } catch (Exception e) {
                 // Skip if image generation or upload fails, allows future retry
                 log.warn(postHolder.getPost().getPlayer().getName() + " - Unable to generate or upload image");
