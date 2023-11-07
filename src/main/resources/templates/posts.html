@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Posts</title>
+</head>
+<body>
+<h1>Posts</h1>
+<form th:object="${postsForm}" method="post" th:action="@{/posts/save}">
+    <table>
+        <thead>
+        <tr>
+            <th></th>
+            <th>Date</th>
+            <th>Player</th>
+            <th>Caption</th>
+            <th>Images</th>
+            <th>Posted</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="post, itemStat : ${form.posts}">
+            <td>
+                <input hidden th:name="|posts[${itemStat.index}].id|" th:value="${post.getId()}"/>
+            </td>
+            <td th:text="${post.dateAsString}"></td>
+            <td th:text="${post.player.name}"></td>
+            <td th:text="${post.caption}"></td>
+            <td>
+                <ul th:each="imageUrl : ${post.imagesUrls}">
+                    <a th:href="${imageUrl}"><li th:text="${imageUrl}"></li></a>
+                </ul>
+            </td>
+            <td>
+                <input type="checkbox" th:checked="${post.isPostedStatus()}" th:name="|posts[${itemStat.index}].postedStatus|" />
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <button type="submit">Save Changes</button>
+</form>
+</body>
+</html>
