@@ -48,7 +48,7 @@ public class PlayerService {
     private ImageGeneratorService imageGeneratorService;
 
     @Autowired
-    InstagramPostProperies instagramPostProperies;
+    private InstagramPostProperies instagramPostProperies;
 
     public Player addPlayer(Player newPlayer, DataSourceSiteName dataSourceSiteName) throws Exception {
         if (!playerRepository.findByNameEquals(newPlayer.getName()).isEmpty()) {
