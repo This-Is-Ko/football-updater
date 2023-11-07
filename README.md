@@ -6,6 +6,8 @@ These are uploaded to a S3 bucket and an email is sent to the configured email c
 
 The players and teams to check are stored in RDS MySQL database and configured with an external cron job to run at scheduled times.
 
+There is a dashboard to track which posts have been posted with the same content as the email updates. Makes it easy to view all the recent generated posts.
+
 ### Build
 To build jar use 
     
@@ -78,6 +80,29 @@ AWS S3 Uploads
     AWS_ACCESS_KEY
     AWS_SECRET_KEY
     AWS_S3_BUCKET_NAME
+
+### API
+
+API endpoints can be configured to check for a secret to prevent unauthorized access. This value can be configured with 
+
+    ENDPOINT_SECRET
+
+and needs to be passed in a custom header
+
+    Auth-Secret
+
+If no secret is set, all calls to the endpoint will be allowed.
+
+### Dashboard
+
+The dashboard can be accessed by going to
+
+    hostname:port/posts
+
+The Spring Security default login page is used and the password can be configured following the above.
+
+    DASHBOARD_PASSWORD
+
 
 ### Local MYSQL
 
