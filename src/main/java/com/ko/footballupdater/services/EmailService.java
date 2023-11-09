@@ -1,9 +1,9 @@
 package com.ko.footballupdater.services;
 
 import com.ko.footballupdater.configuration.ImageGeneratorProperies;
-import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.configuration.MailerProperties;
-import com.ko.footballupdater.models.InstagramPostHolder;
+import com.ko.footballupdater.models.Post;
+import com.ko.footballupdater.utils.DateTimeHelper;
 import com.ko.footballupdater.utils.PostHelper;
 import jakarta.activation.FileDataSource;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ public class EmailService {
     @Autowired
     private ImageGeneratorProperies imageGeneratorProperies;
 
-    public boolean sendEmailUpdate(List<InstagramPostHolder> posts){
+    public boolean sendEmailUpdate(List<Post> posts){
         // Check config for email enabled status
         if (!mailerProperties.isEnabled()) {
             return false;
@@ -45,13 +45,13 @@ public class EmailService {
         List<AttachmentResource> attachments = new ArrayList<>();
         // Create email body
         StringBuilder emailContent = new StringBuilder();
-        for (InstagramPostHolder postHolder : posts) {
-            emailContent.append("############").append(postHolder.getPost().getPlayer().getName()).append(" - ").append(postHolder.getPlayerMatchPerformanceStats().getDataSourceSiteName().toString()).append(" - ").append(postHolder.getPlayerMatchPerformanceStats().getMatch().getDateAsFormattedString()).append("############\n\n");
-            emailContent.append(postHolder.getPost().getCaption()).append("\n\n");
-            if (!postHolder.getPost().getImagesUrls().isEmpty()) {
+        for (Post postHolder : posts) {
+            emailContent.append("############").append(postHolder.getPlayer().getName()).append(" - ").append(postHolder.getPlayerMatchPerformanceStats().getDataSourceSiteName().toString()).append(" - ").append(DateTimeHelper.getDateAsFormattedString(postHolder.getPlayerMatchPerformanceStats().getMatch().getDate())).append("############\n\n");
+            emailContent.append(postHolder.getCaption()).append("\n\n");
+            if (!postHolder.getImagesUrls().isEmpty()) {
                 emailContent.append("Stat image(s)\n").append(PostHelper.generateS3UrlList(postHolder)).append("\n");
             }
-            emailContent.append("Google image search links\n").append(postHolder.getPost().getImageSearchUrls()).append("\n\n\n");
+            emailContent.append("Google image search links\n").append(postHolder.getImageSearchUrls()).append("\n\n\n");
 
             // Add images to attachment - config driven
             if (mailerProperties.isAttachImages()) {

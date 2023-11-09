@@ -5,11 +5,14 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
@@ -32,10 +35,20 @@ public class Post {
     @GeneratedValue(strategy= GenerationType.AUTO)
     private Integer id;
 
+    // Any null can be assumed as standard ALL_STAT_POST
+    @Column
+    @Enumerated(EnumType.STRING)
+    private PostType postType;
+
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "player_id")
     @JdbcTypeCode(SqlTypes.JSON)
     private Player player;
+
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "match_performance_stats_id")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private PlayerMatchPerformanceStats playerMatchPerformanceStats;
 
     @Convert(converter = StringListConverter.class)
     @Column(name = "image_urls")
@@ -44,6 +57,10 @@ public class Post {
     @Transient
     @Convert(converter = StringListConverter.class)
     private List<String> imageSearchUrls = new ArrayList<>();
+
+    @Transient
+    @Convert(converter = StringListConverter.class)
+    private List<String> imagesFileNames = new ArrayList<>();
 
     @NotNull
     private Date dateGenerated = new Date();
@@ -57,8 +74,15 @@ public class Post {
     public Post() {
     }
 
-    public Post(Player player) {
+    public Post(PostType postType, Player player) {
+        this.postType = postType;
         this.player = player;
+    }
+
+    public Post(PostType postType, Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats) {
+        this.postType = postType;
+        this.player = player;
+        this.playerMatchPerformanceStats = playerMatchPerformanceStats;
         imagesUrls = new ArrayList<>();
     }
 

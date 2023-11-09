@@ -10,7 +10,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class PostsCreationDto {
+public class PostsUpdateDto {
     private List<Post> posts;
 
     public void addPost(Post post) {

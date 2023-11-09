@@ -15,6 +15,8 @@ public interface DataSourceParser {
 
     PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document);
 
+    PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document, boolean skipLatestMatchCheck);
+
     void parseSquadDataForTeam(Team team, DataSource dataSource, List<Player> players);
 
 }

@@ -1,12 +1,35 @@
 package com.ko.footballupdater.models;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Getter
+@Setter
+@Entity
+@Table(name = "match_performance_stats")
 public class PlayerMatchPerformanceStats {
 
+    @Id
+    @GeneratedValue(strategy= GenerationType.AUTO)
+    private Integer id;
+
     private DataSourceSiteName dataSourceSiteName;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "match_id")
+    @JdbcTypeCode(SqlTypes.JSON)
     private Match match;
+
     private Integer minutesPlayed;
     private Integer goals;
     private Integer assists;
@@ -64,6 +87,9 @@ public class PlayerMatchPerformanceStats {
     private Integer gkPenaltiesAttemptedAgainst;
     private Integer gkPenaltiesScoredAgainst;
     private Integer gkPenaltiesSaved;
+
+    public PlayerMatchPerformanceStats() {
+    }
 
     // For tests
     public PlayerMatchPerformanceStats(DataSourceSiteName dataSourceSiteName) {

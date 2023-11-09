@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Football Updater | Prepare Post</title>
+    <link th:rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css} "/>
+</head>
+    <body>
+        <div class="container">
+            <nav class="navbar navbar-light bg-light">
+                <a class="navbar-brand" href="#">
+                    <h1>Football Updater</h1>
+                </a>
+            </nav>
+            <br>
+            <h2>Prepare Post</h2>
+            <br>
+            <div class="container">
+                <form th:if="${ not#lists.isEmpty(form.allStats)}" th:object="${preparePostForm}" method="post" th:action="@{/posts/generate}">
+                    <input hidden th:field="${form.postId}" th:value="${form.postId}"/>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th style="min-width:100px" >Stat type</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="statistic, itemStat : ${form.allStats}">
+                                <td>
+                                    <input hidden th:field="*{allStats[__${itemStat.index}__].name}" th:value="${statistic.name}"/>
+                                    <input hidden th:field="*{allStats[__${itemStat.index}__].value}" th:value="${statistic.value}"/>
+                                    <input type="checkbox" th:field="*{allStats[__${itemStat.index}__].selected}" />
+                                </td>
+                                <td th:text="${statistic.name}"></td>
+                                <td th:text="${statistic.value}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <br>
+                    <br>
+                    <button class="btn btn-primary" type="submit">Generate Post</button>
+                </form>
+                <div th:if="${ #lists.isEmpty(form.availableStatMap)}">
+                    <p>No stats available to select for this post</p>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

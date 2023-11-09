@@ -42,6 +42,11 @@ public class FotmobDataSource implements DataSourceParser {
 
     @Override
     public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document) {
+        return parsePlayerMatchData(player, document, false);
+    }
+
+    @Override
+    public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document, boolean skipLatestMatchCheck) {
         try {
             // Fotmob - need to get match id from player page first
             // e.g. https://www.fotmob.com/players/645995/hayley-raso
@@ -88,9 +93,12 @@ public class FotmobDataSource implements DataSourceParser {
 
             // Check whether this match is newer than last checked
             Date selectedMatchDate = dateFormat.parse(jsonNode.get("general").get("matchTimeUTCDate").textValue());
-            if (player.getCheckedStatus().getLatestCheckedMatchDate() != null && !(selectedMatchDate.compareTo(player.getCheckedStatus().getLatestCheckedMatchDate()) > 0)) {
-                log.atInfo().setMessage("Selected match is not newer than last checked").addKeyValue("player", player.getName()).log();
-                return null;
+            // Skip for manual post generate calls
+            if (!skipLatestMatchCheck) {
+                if (player.getCheckedStatus().getLatestCheckedMatchDate() != null && !(selectedMatchDate.compareTo(player.getCheckedStatus().getLatestCheckedMatchDate()) > 0)) {
+                    log.atInfo().setMessage("Selected match is not newer than last checked").addKeyValue("player", player.getName()).log();
+                    return null;
+                }
             }
 
             Match match = new Match(
