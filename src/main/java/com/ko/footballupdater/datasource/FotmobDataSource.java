@@ -42,24 +42,42 @@ public class FotmobDataSource implements DataSourceParser {
 
     @Override
     public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document) {
-        return parsePlayerMatchData(player, document, false);
+        return parsePlayerMatchData(player, document, null, false);
     }
 
     @Override
-    public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document, boolean skipLatestMatchCheck) {
+    public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document, String url, boolean skipLatestMatchCheck) {
         try {
-            // Fotmob - need to get match id from player page first
-            // e.g. https://www.fotmob.com/players/645995/hayley-raso
+            String latestMatchUrl;
+            if (url != null && url.contains("/api/")) {
+                // Datasource is api endpoint
+                // Get player data from api endpoint
+                // e.g. https://www.fotmob.com/api/newPlayerData?id=645995
+                Element jsonElement =  document.selectFirst("body");
+                if (jsonElement == null) {
+                    return null;
+                }
+                String json = jsonElement.text();
 
-            // Assume first row is the latest match
-            Elements latestMatchRow = document.selectXpath("//main/div[2]/div[1]/div[4]/section/div/article/table/tbody/tr[1]/td[2]/a");
-            if (latestMatchRow.isEmpty()) {
-                log.atInfo().setMessage("Cannot find any match results on player page").addKeyValue("player", player.getName()).log();
-                return null;
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode jsonNode = mapper.readTree(json);
+
+                // Find most recent match - formatted as /matches/ol-reign-vs-san-diego-wave-fc/jyrgdzux#4351554
+                latestMatchUrl = jsonNode.get("recentMatches").get(0).get("matchPageUrl").textValue();
+            } else {
+                // Datasource is frontend page
+                // need to get match id from player page first
+                // e.g. https://www.fotmob.com/players/645995/hayley-raso
+                // Assume first row is the latest match
+                Elements latestMatchRow = document.selectXpath("//main/div[2]/div[1]/div[4]/section/div/article/table/tbody/tr[1]/td[2]/a");
+                if (latestMatchRow.isEmpty()) {
+                    log.atInfo().setMessage("Cannot find any match results on player page").addKeyValue("player", player.getName()).log();
+                    return null;
+                }
+
+                // Extract match id from url
+                latestMatchUrl = latestMatchRow.get(0).attr("href");
             }
-
-            // Extract match id from url
-            String latestMatchUrl = latestMatchRow.get(0).attr("href");
 
             Pattern pattern = Pattern.compile("/match/(\\d+)/");
             Matcher matcher = pattern.matcher(latestMatchUrl);

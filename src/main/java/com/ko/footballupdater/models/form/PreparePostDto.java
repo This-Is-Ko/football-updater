@@ -16,6 +16,8 @@ public class PreparePostDto {
 
     private Integer postId;
 
+    private String backgroundImageUrl;
+
     private HashMap<String, String> availableStatMap;
 
     private List<StatisticEntryGenerateDto> allStats;

@@ -16,6 +16,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -107,6 +109,16 @@ public class ImageGeneratorService {
         return ImageIO.read(new File(baseImagePath));
     }
 
+    private BufferedImage setUpBaseImageWithBackgroundImageUrl(String backgroundImageUrl) throws IOException {
+        BufferedImage image = new BufferedImage(1000, 1000, BufferedImage.TYPE_INT_RGB);
+        Graphics2D imageGraphics = image.createGraphics();
+
+        URL imageUrl = URI.create(backgroundImageUrl).toURL();
+        BufferedImage downloadedImage = ImageIO.read(imageUrl);
+        imageGraphics.drawImage(downloadedImage, null,0, 0);
+        return image;
+    }
+
     private Graphics2D setUpStatsGraphicsDefaults(BufferedImage image) {
         Graphics2D graphics = image.createGraphics();
         Font font = new Font("Chakra Petch", Font.BOLD, 30);
@@ -180,11 +192,17 @@ public class ImageGeneratorService {
         return zeroValueFilter;
     }
 
-    public void generateStandoutStatsImage(Post post, List<StatisticEntryGenerateDto> selectedStats) throws Exception {
+    public void generateStandoutStatsImage(Post post, List<StatisticEntryGenerateDto> selectedStats, String backgroundImageUrl) throws Exception {
         try {
-            // Load the base image
-            String playerImageBaseFilePath = imageGeneratorProperies.getInputPath() + post.getPlayer().getName().replaceAll(" ", "") + STANDOUT_BASE_IMAGE_FILE_NAME;
-            BufferedImage image = setUpBaseImage(playerImageBaseFilePath);
+            BufferedImage image;
+            if (!backgroundImageUrl.isEmpty()) {
+                // Download and set background image
+                image = setUpBaseImageWithBackgroundImageUrl(backgroundImageUrl);
+            } else {
+                // Load the base image
+                String playerImageBaseFilePath = imageGeneratorProperies.getInputPath() + post.getPlayer().getName().replaceAll(" ", "") + STANDOUT_BASE_IMAGE_FILE_NAME;
+                image = setUpBaseImage(playerImageBaseFilePath);
+            }
 
             // Add player name to the image
             Font nikeIthacaFont = new Font("Nike Ithaca", Font.PLAIN, 47);

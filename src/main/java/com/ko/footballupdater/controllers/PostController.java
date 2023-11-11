@@ -90,7 +90,7 @@ public class PostController {
             return "redirect:/posts";
         }
         try {
-            postService.generateStandoutPost(preparePostForm.getPostId(), preparePostForm.getAllStats());
+            postService.generateStandoutPost(preparePostForm.getPostId(), preparePostForm.getAllStats(), preparePostForm.getBackgroundImageUrl());
             return "redirect:/posts";
         } catch (Exception ex) {
             log.atError().setMessage("Updating post status failed").setCause(ex).log();

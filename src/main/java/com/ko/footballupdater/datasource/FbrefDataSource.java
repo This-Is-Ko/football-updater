@@ -47,11 +47,11 @@ public class FbrefDataSource implements DataSourceParser {
 
     @Override
     public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document) {
-        return parsePlayerMatchData(player, document, false);
+        return parsePlayerMatchData(player, document, null, false);
     }
 
     @Override
-    public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document, boolean skipLatestMatchCheck) {
+    public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document, String url, boolean skipLatestMatchCheck) {
         try {
             Element tableElement = document.getElementsByClass("stats_table").first();
             if (tableElement == null) {

@@ -18,6 +18,8 @@
             <div class="container">
                 <form th:if="${ not#lists.isEmpty(form.allStats)}" th:object="${preparePostForm}" method="post" th:action="@{/posts/generate}">
                     <input hidden th:field="${form.postId}" th:value="${form.postId}"/>
+                    <label for="backgroundImageUrl">Background Image (leave blank for default): </label>
+                    <input id="backgroundImageUrl" type="text" name="backgroundImageUrl">
                     <table class="table table-bordered">
                         <thead>
                             <tr>

@@ -88,7 +88,7 @@ public class PostService {
         return preparePostDto;
     }
 
-    public Boolean generateStandoutPost(Integer postId, List<StatisticEntryGenerateDto> allStats) throws Exception {
+    public Boolean generateStandoutPost(Integer postId, List<StatisticEntryGenerateDto> allStats, String backgroundImageUrl) throws Exception {
         // Search for post with id
         Optional<Post> postSearchResult = postRepository.findById(postId);
         if (postSearchResult.isEmpty()) {
@@ -107,7 +107,7 @@ public class PostService {
         }
 
         try {
-            imageGeneratorService.generateStandoutStatsImage(newPost, filteredStats);
+            imageGeneratorService.generateStandoutStatsImage(newPost, filteredStats, backgroundImageUrl);
             // Upload stat images to s3
             amazonS3Service.uploadtoS3(newPost);
             // Generate caption
