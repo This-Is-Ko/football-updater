@@ -56,6 +56,7 @@ Datasource (Stat sources)
 Post Version
 
     IG_POST_VERSION
+    IG_POST_ACCOUNT_NAME
 
 Stat Image generator
     

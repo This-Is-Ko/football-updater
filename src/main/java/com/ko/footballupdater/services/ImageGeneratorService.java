@@ -1,6 +1,7 @@
 package com.ko.footballupdater.services;
 
 import com.ko.footballupdater.configuration.ImageGeneratorProperies;
+import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.models.ImageStatEntry;
 import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.models.Post;
@@ -27,6 +28,9 @@ public class ImageGeneratorService {
 
     @Autowired
     private ImageGeneratorProperies imageGeneratorProperies;
+
+    @Autowired
+    private InstagramPostProperies instagramPostProperies;
 
     private final int STAT_Y_COORDINATE = 350;
     private final String BASE_IMAGE_FILE_NAME = "_base_player_stat_image.jpg";
@@ -110,12 +114,26 @@ public class ImageGeneratorService {
     }
 
     private BufferedImage setUpBaseImageWithBackgroundImageUrl(String backgroundImageUrl) throws IOException {
-        BufferedImage image = new BufferedImage(1000, 1000, BufferedImage.TYPE_INT_RGB);
-        Graphics2D imageGraphics = image.createGraphics();
-
         URL imageUrl = URI.create(backgroundImageUrl).toURL();
-        BufferedImage downloadedImage = ImageIO.read(imageUrl);
-        imageGraphics.drawImage(downloadedImage, null,0, 0);
+        BufferedImage image = ImageIO.read(imageUrl);
+        Graphics2D imageGraphics = image.createGraphics();
+        int gradientHeight = 600;
+
+        // Create a gradient paint from transparent to black
+        GradientPaint gradientPaint = new GradientPaint(0, image.getHeight(), Color.BLACK, 0,
+                image.getHeight() - gradientHeight, new Color(0, 0, 0, 0));
+
+        // Set the paint to the gradient
+        imageGraphics.setPaint(gradientPaint);
+
+        // Fill the entire image with the gradient
+        imageGraphics.fillRect(0, image.getHeight() - gradientHeight, image.getWidth(), gradientHeight);
+        imageGraphics.dispose();
+
+        // Add account name to the image
+        Font accountNameFont = new Font("Nike Ithaca", Font.PLAIN, 20);
+        drawAccountName(image, accountNameFont, "IG: " + instagramPostProperies.getAccountName());
+
         return image;
     }
 
@@ -213,10 +231,23 @@ public class ImageGeneratorService {
 
             // Save the modified image
             saveImage(post, image, generateFileName(post, 1, PostType.STANDOUT_STATS_POST), 1);
-
         } catch (Exception ex) {
             log.atWarn().setMessage("Error while generating standout stat image").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
             throw new Exception(post.getPlayer().getName() + " - Error while generating stat image ", ex);
+        }
+    }
+
+    public void drawAccountName(BufferedImage image, Font font, String text) {
+        if (text != null) {
+            Graphics2D textGraphic = image.createGraphics();
+            textGraphic.setFont(font);
+            textGraphic.setColor(Color.WHITE);
+            FontMetrics metrics = textGraphic.getFontMetrics(font);
+            // Calculate X coordinate
+            int x = image.getWidth() - metrics.stringWidth(text) - 30;
+            int y = 30;
+            textGraphic.drawString(text, x, y);
+            textGraphic.dispose();
         }
     }
 
@@ -227,7 +258,7 @@ public class ImageGeneratorService {
         FontMetrics metrics = nameGraphic.getFontMetrics(font);
         // Calculate X coordinate
         int x = (image.getWidth() - metrics.stringWidth(text)) / 2;
-        int y = 950;
+        int y = image.getHeight() - 50;
         nameGraphic.drawString(text, x, y);
         nameGraphic.dispose();
     }
@@ -257,7 +288,7 @@ public class ImageGeneratorService {
         for (int i = 0; i < numSelectedStats; i++) {
             int partitionTranslation = individualPartitionSize * i;
             ImageStatEntry imageStatEntry = generateDisplayedName(selectedStats.get(i).getName(), selectedStats.get(i).getValue());
-            int nameY = 900, valueY = 850;
+            int nameY = image.getHeight()-120, valueY = image.getHeight()-170;
             int nameX = (individualPartitionSize - statNameMetrics.stringWidth(imageStatEntry.getName())) / 2 + partitionTranslation + edgeBuffer;
             statNameGraphic.drawString(imageStatEntry.getName(), nameX, nameY);
             int valueX = (individualPartitionSize - statValueMetrics.stringWidth(imageStatEntry.getValue())) / 2 + partitionTranslation + edgeBuffer;

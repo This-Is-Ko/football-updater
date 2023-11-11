@@ -15,4 +15,6 @@ public class InstagramPostProperies {
     @NotNull
     private int version;
 
+    private String accountName;
+
 }
