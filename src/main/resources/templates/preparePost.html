@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Football Updater | Prepare Post</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link th:rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css} "/>
+    <link rel="stylesheet" th:href="@{/styles/styles.css}">
+</head>
+    <body>
+        <div class="container">
+            <nav class="navbar navbar-light bg-light">
+                <a class="navbar-brand" th:href="@{/posts}">
+                    <h1>Football Updater</h1>
+                </a>
+            </nav>
+            <br>
+            <h2>Prepare Post</h2>
+            <br>
+            <div class="container">
+                <form th:if="${ not#lists.isEmpty(form.allStats)}" th:object="${preparePostForm}" method="post" th:action="@{/posts/generate}">
+                    <input hidden th:field="${form.postId}" th:value="${form.postId}"/>
+                    <div class="text-input-container">
+                        <label for="backgroundImageUrl">Background Image (leave blank for default): </label>
+                        <input id="backgroundImageUrl" type="text" name="backgroundImageUrl">
+                    </div>
+                    <div class="table-responsive table-fixed-head-stats">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th style="min-width:100px" >Stat type</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="statistic, itemStat : ${form.allStats}">
+                                    <td>
+                                        <input hidden th:field="*{allStats[__${itemStat.index}__].name}" th:value="${statistic.name}"/>
+                                        <input hidden th:field="*{allStats[__${itemStat.index}__].value}" th:value="${statistic.value}"/>
+                                        <input type="checkbox" th:field="*{allStats[__${itemStat.index}__].selected}" />
+                                    </td>
+                                    <td th:text="${statistic.name}"></td>
+                                    <td th:text="${statistic.value}"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="btn btn-primary" type="submit">Generate Post</button>
+                </form>
+                <div th:if="${ #lists.isEmpty(form.allStats)}">
+                    <p>No stats available to select for this post</p>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

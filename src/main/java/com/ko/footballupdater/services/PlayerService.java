@@ -3,10 +3,10 @@ package com.ko.footballupdater.services;
 import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.models.CheckedStatus;
 import com.ko.footballupdater.models.DataSourceSiteName;
-import com.ko.footballupdater.models.InstagramPostHolder;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Post;
+import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.repositories.PlayerRepository;
 import com.ko.footballupdater.repositories.PostRepository;
 import com.ko.footballupdater.repositories.UpdateStatusRepository;
@@ -94,7 +94,7 @@ public class PlayerService {
         UpdatePlayersResponse response = new UpdatePlayersResponse();
 
         // Find latest match data for each player
-        List<InstagramPostHolder> posts = new ArrayList<>();
+        List<Post> posts = new ArrayList<>();
 
         for (Player player : requestPlayersToUpdate) {
             PlayerMatchPerformanceStats playerMatchPerformanceStats = parsingService.parsePlayerMatchData(player);
@@ -103,22 +103,22 @@ public class PlayerService {
                 continue;
             }
             // Generate post and caption
-            InstagramPostHolder postHolder = new InstagramPostHolder(player, playerMatchPerformanceStats);
+            Post post = new Post(PostType.ALL_STAT_POST, player, playerMatchPerformanceStats);
             try {
                 // Generate stat images
-                imageGeneratorService.generatePlayerStatImage(postHolder);
+                imageGeneratorService.generatePlayerStatImage(post);
                 // Upload stat images to s3
-                amazonS3Service.uploadtoS3(postHolder);
+                amazonS3Service.uploadtoS3(post);
                 // Generate caption
-                PostHelper.generatePostCaption(instagramPostProperies.getVersion(), postHolder);
+                PostHelper.generatePostCaption(instagramPostProperies.getVersion(), post);
                 // Generate image search links
-                PostHelper.generatePostImageSearchUrl(postHolder);
+                PostHelper.generatePostImageSearchUrl(post);
             } catch (Exception e) {
                 // Skip if image generation or upload fails, allows future retry
-                log.warn(postHolder.getPost().getPlayer().getName() + " - Unable to generate or upload image");
+                log.warn(post.getPlayer().getName() + " - Unable to generate or upload image");
                 continue;
             }
-            posts.add(postHolder);
+            posts.add(post);
         }
 
         // No updates
@@ -131,23 +131,23 @@ public class PlayerService {
 
         response.setEmailSent(isEmailSent);
         // Update player checked status if email was sent
-        if (isEmailSent) {
+//        if (isEmailSent) {
             List<Player> playersToUpdate = new ArrayList<>();
             Date currentDateTime = new Date();
-            for (InstagramPostHolder postHolder : posts) {
+            for (Post post : posts) {
                 // Save post in database for dashboard use
-                postRepository.save(postHolder.getPost());
+                postRepository.save(post);
 
-                postHolder.getPost().getPlayer().getCheckedStatus().setLastChecked(currentDateTime);
-                postHolder.getPost().getPlayer().getCheckedStatus().setLatestCheckedMatchUrl(postHolder.getPlayerMatchPerformanceStats().getMatch().getUrl());
-                postHolder.getPost().getPlayer().getCheckedStatus().setLatestCheckedMatchDate(postHolder.getPlayerMatchPerformanceStats().getMatch().getDate());
-                playersToUpdate.add(postHolder.getPost().getPlayer());
+                post.getPlayer().getCheckedStatus().setLastChecked(currentDateTime);
+                post.getPlayer().getCheckedStatus().setLatestCheckedMatchUrl(post.getPlayerMatchPerformanceStats().getMatch().getUrl());
+                post.getPlayer().getCheckedStatus().setLatestCheckedMatchDate(post.getPlayerMatchPerformanceStats().getMatch().getDate());
+                playersToUpdate.add(post.getPlayer());
             }
             playerRepository.saveAll(playersToUpdate);
             // Populate response
             response.setPlayersUpdated(playersToUpdate);
             response.setNumPlayersUpdated(playersToUpdate.size());
-        }
+//        }
         return response;
     }
 }

@@ -42,19 +42,42 @@ public class FotmobDataSource implements DataSourceParser {
 
     @Override
     public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document) {
+        return parsePlayerMatchData(player, document, null, false);
+    }
+
+    @Override
+    public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document, String url, boolean skipLatestMatchCheck) {
         try {
-            // Fotmob - need to get match id from player page first
-            // e.g. https://www.fotmob.com/players/645995/hayley-raso
+            String latestMatchUrl;
+            if (url != null && url.contains("/api/")) {
+                // Datasource is api endpoint
+                // Get player data from api endpoint
+                // e.g. https://www.fotmob.com/api/newPlayerData?id=645995
+                Element jsonElement =  document.selectFirst("body");
+                if (jsonElement == null) {
+                    return null;
+                }
+                String json = jsonElement.text();
 
-            // Assume first row is the latest match
-            Elements latestMatchRow = document.selectXpath("//main/div[2]/div[1]/div[4]/section/div/article/table/tbody/tr[1]/td[2]/a");
-            if (latestMatchRow.isEmpty()) {
-                log.atInfo().setMessage("Cannot find any match results on player page").addKeyValue("player", player.getName()).log();
-                return null;
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode jsonNode = mapper.readTree(json);
+
+                // Find most recent match - formatted as /matches/ol-reign-vs-san-diego-wave-fc/jyrgdzux#4351554
+                latestMatchUrl = jsonNode.get("recentMatches").get(0).get("matchPageUrl").textValue();
+            } else {
+                // Datasource is frontend page
+                // need to get match id from player page first
+                // e.g. https://www.fotmob.com/players/645995/hayley-raso
+                // Assume first row is the latest match
+                Elements latestMatchRow = document.selectXpath("//main/div[2]/div[1]/div[4]/section/div/article/table/tbody/tr[1]/td[2]/a");
+                if (latestMatchRow.isEmpty()) {
+                    log.atInfo().setMessage("Cannot find any match results on player page").addKeyValue("player", player.getName()).log();
+                    return null;
+                }
+
+                // Extract match id from url
+                latestMatchUrl = latestMatchRow.get(0).attr("href");
             }
-
-            // Extract match id from url
-            String latestMatchUrl = latestMatchRow.get(0).attr("href");
 
             Pattern pattern = Pattern.compile("/match/(\\d+)/");
             Matcher matcher = pattern.matcher(latestMatchUrl);
@@ -88,9 +111,12 @@ public class FotmobDataSource implements DataSourceParser {
 
             // Check whether this match is newer than last checked
             Date selectedMatchDate = dateFormat.parse(jsonNode.get("general").get("matchTimeUTCDate").textValue());
-            if (player.getCheckedStatus().getLatestCheckedMatchDate() != null && !(selectedMatchDate.compareTo(player.getCheckedStatus().getLatestCheckedMatchDate()) > 0)) {
-                log.atInfo().setMessage("Selected match is not newer than last checked").addKeyValue("player", player.getName()).log();
-                return null;
+            // Skip for manual post generate calls
+            if (!skipLatestMatchCheck) {
+                if (player.getCheckedStatus().getLatestCheckedMatchDate() != null && !(selectedMatchDate.compareTo(player.getCheckedStatus().getLatestCheckedMatchDate()) > 0)) {
+                    log.atInfo().setMessage("Selected match is not newer than last checked").addKeyValue("player", player.getName()).log();
+                    return null;
+                }
             }
 
             Match match = new Match(
@@ -129,6 +155,32 @@ public class FotmobDataSource implements DataSourceParser {
                                 }
                             }
                         }
+                    } else {
+                        // No Opta linup; use fallback
+                        // Check starting lineup
+                        JsonNode starting = lineup.get("players");
+                        if (starting.isArray()) {
+                            for (JsonNode formationLine : starting) {
+                                for (JsonNode playerEntry : formationLine) {
+                                    // Match player
+                                    PlayerMatchPerformanceStats playerMatchPerformanceStats = checkPlayerAndParse(player, playerEntry, match);
+                                    if (playerMatchPerformanceStats != null) {
+                                        return playerMatchPerformanceStats;
+                                    }
+                                }
+                            }
+                        }
+                        // Check bench
+                        JsonNode bench = lineup.get("bench");
+                        if (bench.isArray()) {
+                            for (JsonNode playerEntry : bench) {
+                                // Match player
+                                PlayerMatchPerformanceStats playerMatchPerformanceStats = checkPlayerAndParse(player, playerEntry, match);
+                                if (playerMatchPerformanceStats != null) {
+                                    return playerMatchPerformanceStats;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -149,7 +201,7 @@ public class FotmobDataSource implements DataSourceParser {
         JsonNode defenseStats = null;
         JsonNode duelsStats = null;
 
-        if (stats.isArray()) {
+        if (stats != null && stats.isArray()) {
             for (JsonNode statCategory : stats) {
                 if ("top_stats".equals(statCategory.get("key").textValue())) {
                     topStats = statCategory;
@@ -161,6 +213,35 @@ public class FotmobDataSource implements DataSourceParser {
                     duelsStats = statCategory;
                 }
             }
+        } else {
+            // Doesn't contain stat array; check for goals and minutes played
+            int goals = 0;
+            int yellowCard = 0;
+            int redCard = 0;
+            if (playerEntry.get("events") != null) {
+                // Goals
+                if (playerEntry.get("events").get("g") != null) {
+                    goals = playerEntry.get("events").get("g").intValue();
+                }
+                if (playerEntry.get("events").get("yc") != null) {
+                    yellowCard = playerEntry.get("events").get("yc").intValue();
+                }
+                if (playerEntry.get("events").get("rc") != null) {
+                    redCard = playerEntry.get("events").get("rc").intValue();
+                }
+            }
+
+            int minutesPlayed;
+            int subbedOn = 0;
+            int subbedOff = 90;
+            if (playerEntry.get("timeSubbedOn") != null && playerEntry.hasNonNull("timeSubbedOn")) {
+                subbedOn = playerEntry.get("timeSubbedOn").intValue();
+            }
+            if (playerEntry.get("timeSubbedOff") != null && playerEntry.hasNonNull("timeSubbedOff")) {
+                subbedOff = playerEntry.get("timeSubbedOff").intValue();
+            }
+            minutesPlayed = subbedOff - subbedOn;
+            return new PlayerMatchPerformanceStats(dataSourceSiteName, match, minutesPlayed, goals, yellowCard, redCard);
         }
 
         // Separate stats required for goalkeepers

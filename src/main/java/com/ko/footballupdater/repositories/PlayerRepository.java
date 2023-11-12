@@ -7,6 +7,9 @@ import java.util.List;
 
 public interface PlayerRepository extends CrudRepository<Player, Integer> {
 
+    @Override
+    List<Player> findAll();
+
     List<Player> findByNameEquals(String name);
 
 }

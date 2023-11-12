@@ -63,11 +63,12 @@ public class ParsingServiceTest {
 
         Connection connection = mock(Connection.class);
         when(Jsoup.connect(anyString())).thenReturn(connection);
+        when(connection.ignoreContentType(anyBoolean())).thenReturn(connection);
         when(connection.get()).thenReturn(new Document("url"));
 
-        when(fotmobDataSource.parsePlayerMatchData(any(Player.class), any(Document.class))).thenReturn(new PlayerMatchPerformanceStats(DataSourceSiteName.FOTMOB));
+        when(fotmobDataSource.parsePlayerMatchData(any(Player.class), any(Document.class), anyString(), anyBoolean())).thenReturn(new PlayerMatchPerformanceStats(DataSourceSiteName.FOTMOB));
         when(fotmobDataSource.getDataSourceSiteName()).thenReturn(DataSourceSiteName.FOTMOB);
-        when(fbrefDataSource.parsePlayerMatchData(any(Player.class), any(Document.class))).thenReturn(new PlayerMatchPerformanceStats(DataSourceSiteName.FBREF));
+        when(fbrefDataSource.parsePlayerMatchData(any(Player.class), any(Document.class), anyString(), anyBoolean())).thenReturn(new PlayerMatchPerformanceStats(DataSourceSiteName.FBREF));
         when(fbrefDataSource.getDataSourceSiteName()).thenReturn(DataSourceSiteName.FBREF);
     }
 
@@ -160,7 +161,7 @@ public class ParsingServiceTest {
 
     @Test
     void testParsePlayerMatchData_MultipleDataSourcesAvailable_PriorityFails_Fallback_Successful() {
-        when(fotmobDataSource.parsePlayerMatchData(any(Player.class), any(Document.class))).thenReturn(null);
+        when(fotmobDataSource.parsePlayerMatchData(any(Player.class), any(Document.class), anyString(), anyBoolean())).thenReturn(null);
         // Priority FOTMOB, FBREF
         // FOTMOB failes, fallback to FBREF
         // return FOTMOB successful
@@ -189,8 +190,8 @@ public class ParsingServiceTest {
 
     @Test
     void testParsePlayerMatchData_MultipleDataSourcesAvailable_AllDataSourcesFail_Unsuccessful() {
-        when(fotmobDataSource.parsePlayerMatchData(any(Player.class), any(Document.class))).thenReturn(null);
-        when(fbrefDataSource.parsePlayerMatchData(any(Player.class), any(Document.class))).thenReturn(null);
+        when(fotmobDataSource.parsePlayerMatchData(any(Player.class), any(Document.class), anyString(), anyBoolean())).thenReturn(null);
+        when(fbrefDataSource.parsePlayerMatchData(any(Player.class), any(Document.class), anyString(), anyBoolean())).thenReturn(null);
         // Priority FOTMOB, FBREF
         // FOTMOB failes, fallback to FBREF also fails
         // return null
@@ -208,6 +209,7 @@ public class ParsingServiceTest {
     void testParsePlayerMatchData_ErrorFromJsoupConnect_AllDataSources_Unsuccessful() throws IOException {
         Connection newConnection = mock(Connection.class);
         when(Jsoup.connect(anyString())).thenReturn(newConnection);
+        when(newConnection.ignoreContentType(anyBoolean())).thenReturn(newConnection);
         when(newConnection.get()).thenThrow(new IOException("error"));
 
         Set<DataSource> dataSources = new HashSet<>();

@@ -98,6 +98,10 @@ public class ParsingService {
     }
 
     public PlayerMatchPerformanceStats parsePlayerMatchData(Player player) {
+        return parsePlayerMatchData(player, false);
+    }
+
+    public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, boolean skipLatestMatchCheck) {
         // Use data source based on config order
         // If the data source does not resolve a new match, try the next data source using match date to compare
         List<DataSource> dataSources = new ArrayList<>();
@@ -114,8 +118,8 @@ public class ParsingService {
                 for (DataSourceParser dataSourceParser : dataSourceParsers) {
                     if (dataSourceParser.getDataSourceSiteName().equals(dataSource.getSiteName())) {
                         try {
-                            Document doc = Jsoup.connect(dataSource.getUrl()).get();
-                            PlayerMatchPerformanceStats playerMatchPerformanceStats = dataSourceParser.parsePlayerMatchData(player, doc);
+                            Document doc = Jsoup.connect(dataSource.getUrl()).ignoreContentType(true).get();
+                            PlayerMatchPerformanceStats playerMatchPerformanceStats = dataSourceParser.parsePlayerMatchData(player, doc, dataSource.getUrl(), skipLatestMatchCheck);
                             if (playerMatchPerformanceStats != null) {
                                 log.atInfo().setMessage(dataSource.getSiteName() + " - Successfully parse player data").addKeyValue("player", player.getName()).log();
                                 player.getCheckedStatus().setSiteName(dataSource.getSiteName());

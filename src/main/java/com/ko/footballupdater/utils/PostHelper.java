@@ -1,6 +1,5 @@
 package com.ko.footballupdater.utils;
 
-import com.ko.footballupdater.models.InstagramPostHolder;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Post;
@@ -10,14 +9,14 @@ public class PostHelper {
     // Generate caption based on post version
     // v1 All stats in caption
     // v2 Only name, match, date, hashtags in caption
-    public static void generatePostCaption(int version, InstagramPostHolder postHolder) {
+    public static void generatePostCaption(int version, Post postHolder) {
         String caption = "";
         if (version == 2) {
-            caption = generatePostDefaultPlayerCaptionV2(postHolder.getPost().getPlayer(), postHolder.getPlayerMatchPerformanceStats());
+            caption = generatePostDefaultPlayerCaptionV2(postHolder.getPlayer(), postHolder.getPlayerMatchPerformanceStats());
         } else {
-            caption = generatePostDefaultPlayerCaption(postHolder.getPost().getPlayer(), postHolder.getPlayerMatchPerformanceStats());
+            caption = generatePostDefaultPlayerCaption(postHolder.getPlayer(), postHolder.getPlayerMatchPerformanceStats());
         }
-        postHolder.getPost().setCaption(caption);
+        postHolder.setCaption(caption);
     }
 
     // V1
@@ -26,10 +25,9 @@ public class PostHelper {
                 player.getName(),
                 playerMatchPerformanceStats.getMatch().getHomeTeamName(),
                 playerMatchPerformanceStats.getMatch().getAwayTeamName(),
-                playerMatchPerformanceStats.getMatch().getDateAsFormattedString()
+                DateTimeHelper.getDateAsFormattedString(playerMatchPerformanceStats.getMatch().getDate())
         ) + playerMatchPerformanceStats.toFormattedString() + generatePlayerHashtags(player, playerMatchPerformanceStats);
     }
-
 
     // V2
     public static String generatePostDefaultPlayerCaptionV2(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats) {
@@ -37,18 +35,23 @@ public class PostHelper {
                 player.getName(),
                 playerMatchPerformanceStats.getMatch().getHomeTeamName(),
                 playerMatchPerformanceStats.getMatch().getAwayTeamName(),
-                playerMatchPerformanceStats.getMatch().getDateAsFormattedString()
+                DateTimeHelper.getDateAsFormattedString(playerMatchPerformanceStats.getMatch().getDate())
         ) + generatePlayerHashtags(player, playerMatchPerformanceStats);
     }
 
-    public static void generatePostImageSearchUrl(InstagramPostHolder postHolder) {
-        String searchPhrase = postHolder.getPost().getPlayer().getName() + " " + postHolder.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam();
-        postHolder.getPost().getImageSearchUrls().add(String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:d", searchPhrase.replaceAll(" ", "%20")));
-        postHolder.getPost().getImageSearchUrls().add(String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:w", searchPhrase.replaceAll(" ", "%20")));
+    public static String generateMatchName(PlayerMatchPerformanceStats playerMatchPerformanceStats) {
+        return String.format("%s VS %s",
+                playerMatchPerformanceStats.getMatch().getHomeTeamName(),
+                playerMatchPerformanceStats.getMatch().getAwayTeamName()
+        );
     }
 
     public static void generatePostImageSearchUrl(Post post) {
-        String searchPhrase = post.getPlayer().getName();
+        String relevantTeam = "";
+        if (post.getPlayerMatchPerformanceStats() != null && post.getPlayerMatchPerformanceStats().getMatch() != null) {
+            relevantTeam = post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam();
+        }
+        String searchPhrase = post.getPlayer().getName() + " " + relevantTeam;
         post.getImageSearchUrls().add(String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:d", searchPhrase.replaceAll(" ", "%20")));
         post.getImageSearchUrls().add(String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:w", searchPhrase.replaceAll(" ", "%20")));
     }
@@ -67,10 +70,10 @@ public class PostHelper {
                 teamNameHashtag;
     }
 
-    public static String generateS3UrlList(InstagramPostHolder postHolder) {
+    public static String generateS3UrlList(Post postHolder) {
         StringBuilder builder = new StringBuilder();
-        if (!postHolder.getPost().getImagesUrls().isEmpty()) {
-            for (String url : postHolder.getPost().getImagesUrls()) {
+        if (!postHolder.getImagesUrls().isEmpty()) {
+            for (String url : postHolder.getImagesUrls()) {
                 builder.append(url).append("\n");
             }
         }

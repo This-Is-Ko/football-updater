@@ -47,6 +47,11 @@ public class FbrefDataSource implements DataSourceParser {
 
     @Override
     public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document) {
+        return parsePlayerMatchData(player, document, null, false);
+    }
+
+    @Override
+    public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document, String url, boolean skipLatestMatchCheck) {
         try {
             Element tableElement = document.getElementsByClass("stats_table").first();
             if (tableElement == null) {
@@ -77,7 +82,7 @@ public class FbrefDataSource implements DataSourceParser {
                 String latestMatchUrl = resultRow.select("th[data-stat=date] > a").attr("href");
 
                 // Check if match is new
-                Date selectedMatchDate = null;
+                Date selectedMatchDate;
                 if (!resultRow.select("th[data-stat=date] > a").text().isEmpty()) {
                     selectedMatchDate = dateFormat.parse(resultRow.select("th[data-stat=date] > a").text());
                 } else {
@@ -85,18 +90,21 @@ public class FbrefDataSource implements DataSourceParser {
                     return null;
                 }
 
-                if (player.getCheckedStatus() != null) {
-                    if (player.getCheckedStatus().getLatestCheckedMatchDate() != null && !(selectedMatchDate.compareTo(player.getCheckedStatus().getLatestCheckedMatchDate()) > 0)) {
-                        log.atInfo().setMessage("Selected match is not newer than last checked").addKeyValue("player", player.getName()).log();
-                        return null;
-                    } else if (player.getCheckedStatus().getLatestCheckedMatchUrl() != null && player.getCheckedStatus().getLatestCheckedMatchUrl().equals(latestMatchUrl)) {
-                        // No new updates
-                        log.atInfo().setMessage("latestMatchUrl matches last checked").addKeyValue("player", player.getName()).log();
+                // Skip for manual post generate calls
+                if (!skipLatestMatchCheck) {
+                    if (player.getCheckedStatus() != null) {
+                        if (player.getCheckedStatus().getLatestCheckedMatchDate() != null && !(selectedMatchDate.compareTo(player.getCheckedStatus().getLatestCheckedMatchDate()) > 0)) {
+                            log.atInfo().setMessage("Selected match is not newer than last checked").addKeyValue("player", player.getName()).log();
+                            return null;
+                        } else if (player.getCheckedStatus().getLatestCheckedMatchUrl() != null && player.getCheckedStatus().getLatestCheckedMatchUrl().equals(latestMatchUrl)) {
+                            // No new updates
+                            log.atInfo().setMessage("latestMatchUrl matches last checked").addKeyValue("player", player.getName()).log();
+                            return null;
+                        }
+                    } else {
+                        log.atInfo().setMessage(player.getName() + " - CheckedStatus is null").addKeyValue("player", player.getName()).log();
                         return null;
                     }
-                } else {
-                    log.atInfo().setMessage(player.getName() + " - CheckedStatus is null").addKeyValue("player", player.getName()).log();
-                    return null;
                 }
 
                 String homeTeam, awayTeam, relevantTeam;
