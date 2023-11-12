@@ -7,6 +7,7 @@ import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.form.StatisticEntryGenerateDto;
 import com.ko.footballupdater.utils.DateTimeHelper;
+import com.ko.footballupdater.utils.PostHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -128,24 +129,6 @@ public class ImageGeneratorService {
         imageGraphics.drawImage(downloadedImage, 0 , 0, null);
         imageGraphics.dispose();
 
-        Graphics2D gradientGraphics = background.createGraphics();
-        int gradientHeight = 600;
-
-        // Create a gradient paint from transparent to black
-        GradientPaint gradientPaint = new GradientPaint(0, background.getHeight(), Color.BLACK, 0,
-                background.getHeight() - gradientHeight, new Color(0, 0, 0, 0));
-
-        // Set the paint to the gradient
-        gradientGraphics.setPaint(gradientPaint);
-
-        // Fill the entire image with the gradient
-        gradientGraphics.fillRect(0, background.getHeight() - gradientHeight, background.getWidth(), gradientHeight);
-        gradientGraphics.dispose();
-
-        // Add account name to the image
-        Font accountNameFont = new Font("Nike Ithaca", Font.PLAIN, 20);
-        drawAccountName(background, accountNameFont, "IG: " + instagramPostProperies.getAccountName());
-
         return background;
     }
 
@@ -228,18 +211,35 @@ public class ImageGeneratorService {
             if (!backgroundImageUrl.isEmpty()) {
                 // Download and set background image
                 image = setUpBaseImageWithBackgroundImageUrl(backgroundImageUrl);
+
+                // Add gradient
+                drawGradient(image);
+
+                // Add account name
+                Font accountNameFont = new Font("Nike Ithaca", Font.PLAIN, 20);
+                drawAccountName(image, accountNameFont, "@" + instagramPostProperies.getAccountName());
             } else {
                 // Load the base image
                 String playerImageBaseFilePath = imageGeneratorProperies.getInputPath() + post.getPlayer().getName().replaceAll(" ", "") + STANDOUT_BASE_IMAGE_FILE_NAME;
                 image = setUpBaseImage(playerImageBaseFilePath);
             }
 
-            // Add player name to the image
+            // Add player name
             Font nikeIthacaFont = new Font("Nike Ithaca", Font.PLAIN, 47);
-            drawCenteredName(image, nikeIthacaFont, post.getPlayer().getName().toUpperCase());
+            drawXCenteredText(image, nikeIthacaFont, post.getPlayer().getName().toUpperCase(), image.getHeight() - 350);
 
-            // Match stats to image
+            // Add match stats
             drawSplitStats(image, selectedStats);
+
+            // Add match name
+            String matchName = PostHelper.generateMatchName(post.getPlayerMatchPerformanceStats());
+            Font matchNameFont = new Font("Chakra Petch", Font.BOLD, 30);
+            drawXCenteredText(image, matchNameFont, matchName, image.getHeight() - 60);
+
+            // Add match date
+            String matchDateString = DateTimeHelper.getDateAsFormattedString(post.getPlayerMatchPerformanceStats().getMatch().getDate());
+            Font matchDateFont = new Font("Chakra Petch", Font.BOLD, 20);
+            drawXCenteredText(image, matchDateFont, matchDateString, image.getHeight() - 30);
 
             // Save the modified image
             saveImage(post, image, generateFileName(post, 1, PostType.STANDOUT_STATS_POST), 1);
@@ -247,6 +247,22 @@ public class ImageGeneratorService {
             log.atWarn().setMessage("Error while generating standout stat image").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
             throw new Exception(post.getPlayer().getName() + " - Error while generating stat image ", ex);
         }
+    }
+
+    public void drawGradient(BufferedImage image) {
+        Graphics2D gradientGraphics = image.createGraphics();
+        int gradientHeight = 600;
+
+        // Create a gradient paint from transparent to black
+        GradientPaint gradientPaint = new GradientPaint(0, image.getHeight(), Color.BLACK, 0,
+                image.getHeight() - gradientHeight, new Color(0, 0, 0, 0));
+
+        // Set the paint to the gradient
+        gradientGraphics.setPaint(gradientPaint);
+
+        // Fill the entire image with the gradient
+        gradientGraphics.fillRect(0, image.getHeight() - gradientHeight, image.getWidth(), gradientHeight);
+        gradientGraphics.dispose();
     }
 
     public void drawAccountName(BufferedImage image, Font font, String text) {
@@ -263,14 +279,13 @@ public class ImageGeneratorService {
         }
     }
 
-    public void drawCenteredName(BufferedImage image, Font font, String text) {
+    public void drawXCenteredText(BufferedImage image, Font font, String text, int y) {
         Graphics2D nameGraphic = image.createGraphics();
         nameGraphic.setFont(font);
         nameGraphic.setColor(Color.WHITE);
         FontMetrics metrics = nameGraphic.getFontMetrics(font);
         // Calculate X coordinate
         int x = (image.getWidth() - metrics.stringWidth(text)) / 2;
-        int y = image.getHeight() - 50;
         nameGraphic.drawString(text, x, y);
         nameGraphic.dispose();
     }
@@ -279,6 +294,9 @@ public class ImageGeneratorService {
         int numSelectedStats = selectedStats.size();
         // Add buffer on edges of image
         int edgeBuffer = 10;
+        if (numSelectedStats < 3 && image.getWidth() > 900) {
+            edgeBuffer = 200;
+        }
         int individualPartitionSize = (image.getWidth() - (edgeBuffer * 2)) / numSelectedStats;
 
         // Set up stat name graphics

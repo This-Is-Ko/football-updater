@@ -39,6 +39,13 @@ public class PostHelper {
         ) + generatePlayerHashtags(player, playerMatchPerformanceStats);
     }
 
+    public static String generateMatchName(PlayerMatchPerformanceStats playerMatchPerformanceStats) {
+        return String.format("%s VS %s",
+                playerMatchPerformanceStats.getMatch().getHomeTeamName(),
+                playerMatchPerformanceStats.getMatch().getAwayTeamName()
+        );
+    }
+
     public static void generatePostImageSearchUrl(Post post) {
         String relevantTeam = "";
         if (post.getPlayerMatchPerformanceStats() != null && post.getPlayerMatchPerformanceStats().getMatch() != null) {

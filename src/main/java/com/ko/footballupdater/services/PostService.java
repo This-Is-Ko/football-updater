@@ -17,6 +17,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -40,6 +41,13 @@ public class PostService {
 
     @Autowired
     private InstagramPostProperies instagramPostProperies;
+
+    final Map<String, String> CUSTOM_FIELD_NAME_MAPPING = Map.of(
+            "goals", "goal",
+            "yellowCards", "yellowCard",
+            "redCards", "redCard"
+    );
+
 
     public List<Post> getPosts() {
         return postRepository.findAllByOrderByDateGeneratedDesc();
@@ -73,14 +81,19 @@ public class PostService {
         }
         for (Field field : post.getPlayerMatchPerformanceStats().getClass().getDeclaredFields()) {
             field.setAccessible(true); // Make the private field accessible
+            String fieldName = field.getName();
             try {
                 // Skip match object
-                if (field.getName().equals("match") || field.getName().equals("id")) {
+                if (fieldName.equals("match") || fieldName.equals("id")) {
                     continue;
                 }
                 Object value = field.get(post.getPlayerMatchPerformanceStats()); // Get the field's value
                 if (value != null) {
-                    allStats.add(new StatisticEntryGenerateDto(field.getName(), value.toString(), false));
+                    // Change name for grammar
+                    if (CUSTOM_FIELD_NAME_MAPPING.containsKey(fieldName) && (int) value == 1) {
+                        fieldName = CUSTOM_FIELD_NAME_MAPPING.get(fieldName);
+                    }
+                    allStats.add(new StatisticEntryGenerateDto(fieldName, value.toString(), false));
                     availableStatMap.put(field.getName(), value.toString());
                 }
             } catch (IllegalAccessException ex) {
@@ -89,7 +102,6 @@ public class PostService {
         }
         preparePostDto.setAvailableStatMap(availableStatMap);
         preparePostDto.setAllStats(allStats);
-        preparePostDto.setSelectedStats(new ArrayList<>());
 
         return preparePostDto;
     }

@@ -22,8 +22,4 @@ public class PreparePostDto {
 
     private List<StatisticEntryGenerateDto> allStats;
 
-    private List<StatisticEntryGenerateDto> selectedStats;
-
-//    private List<String> selectedStats;
-
 }

@@ -44,7 +44,7 @@
                     <button class="btn btn-primary" type="submit">Generate Post</button>
                     <br>
                 </form>
-                <div th:if="${ #lists.isEmpty(form.availableStatMap)}">
+                <div th:if="${ #lists.isEmpty(form.allStats)}">
                     <p>No stats available to select for this post</p>
                 </div>
             </div>
