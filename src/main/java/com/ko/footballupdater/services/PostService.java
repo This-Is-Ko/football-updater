@@ -42,12 +42,18 @@ public class PostService {
     private InstagramPostProperies instagramPostProperies;
 
     public List<Post> getPosts() {
-        List<Post> postsList = postRepository.findAllByOrderByDateGeneratedDesc();
-        return postsList;
+        return postRepository.findAllByOrderByDateGeneratedDesc();
     }
 
     public void updatePostPostedStatus(List<Post> postsToSave) {
         postsToSave.forEach(post -> postRepository.updatePostSetPostedStatusForId(post.isPostedStatus(), post.getId()));
+    }
+
+    public void deletePost(Integer postId) throws Exception {
+        postRepository.deleteById(postId);
+        if (postRepository.existsById(postId)) {
+            throw new Exception("Post was not deleted");
+        }
     }
 
     public PreparePostDto prepareDtoForGeneratePost(Integer postId) throws Exception {

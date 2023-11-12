@@ -40,12 +40,12 @@ public class Post {
     @Enumerated(EnumType.STRING)
     private PostType postType;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "player_id")
     @JdbcTypeCode(SqlTypes.JSON)
     private Player player;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "match_performance_stats_id")
     @JdbcTypeCode(SqlTypes.JSON)
     private PlayerMatchPerformanceStats playerMatchPerformanceStats;

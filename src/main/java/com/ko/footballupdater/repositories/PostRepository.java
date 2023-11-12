@@ -18,4 +18,5 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
     @Query("update Post p set p.postedStatus = :postedStatus where p.id = :id")
     void updatePostSetPostedStatusForId(@Param("postedStatus") boolean postedStatus, @Param("id") int id);
 
+
 }

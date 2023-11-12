@@ -64,6 +64,22 @@ public class PostController {
     }
 
     /**
+     * Delete selected post
+     * @return redirect to posts view
+     */
+    @GetMapping("/delete")
+    public String deletePost(@RequestParam Integer postId) {
+        try {
+            postService.deletePost(postId);
+            return "redirect:/posts";
+        } catch (Exception ex) {
+            log.atError().setMessage("Deleting post status failed").setCause(ex).log();
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Deleting post status failed", ex);
+        }
+    }
+
+    /**
      * Display setup to generate post
      * @return generate post view
      */
