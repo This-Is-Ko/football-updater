@@ -1,4 +1,8 @@
 .table-fixed-head          { overflow: auto; height: 75vh; margin-bottom: 20px }
 .table-fixed-head thead th { position: sticky; top: 0; z-index: 1; }
 
+.table-fixed-head-stats          { overflow: auto; margin-top: 20px; margin-bottom: 20px }
+.table-fixed-head-stats thead th { position: sticky; top: 0; z-index: 1; }
+
 .action-button             { margin-bottom: 10px }
+.text-input-container      { margin-bottom: 10px }
