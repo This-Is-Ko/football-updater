@@ -115,26 +115,38 @@ public class ImageGeneratorService {
 
     private BufferedImage setUpBaseImageWithBackgroundImageUrl(String backgroundImageUrl) throws IOException {
         URL imageUrl = URI.create(backgroundImageUrl).toURL();
-        BufferedImage image = ImageIO.read(imageUrl);
-        Graphics2D imageGraphics = image.createGraphics();
+        BufferedImage downloadedImage = ImageIO.read(imageUrl);
+
+        // Scale image down to height of 1000 - change width proportionally
+        float scale = 1;
+        if (downloadedImage.getHeight() > 1000) {
+            scale = (float) 1000 /downloadedImage.getHeight();
+        }
+        BufferedImage background = new BufferedImage((int) (scale * downloadedImage.getWidth()), (int) (scale * downloadedImage.getHeight()), BufferedImage.TYPE_INT_RGB);
+        Graphics2D imageGraphics = background.createGraphics();
+        imageGraphics.scale(scale, scale);
+        imageGraphics.drawImage(downloadedImage, 0 , 0, null);
+        imageGraphics.dispose();
+
+        Graphics2D gradientGraphics = background.createGraphics();
         int gradientHeight = 600;
 
         // Create a gradient paint from transparent to black
-        GradientPaint gradientPaint = new GradientPaint(0, image.getHeight(), Color.BLACK, 0,
-                image.getHeight() - gradientHeight, new Color(0, 0, 0, 0));
+        GradientPaint gradientPaint = new GradientPaint(0, background.getHeight(), Color.BLACK, 0,
+                background.getHeight() - gradientHeight, new Color(0, 0, 0, 0));
 
         // Set the paint to the gradient
-        imageGraphics.setPaint(gradientPaint);
+        gradientGraphics.setPaint(gradientPaint);
 
         // Fill the entire image with the gradient
-        imageGraphics.fillRect(0, image.getHeight() - gradientHeight, image.getWidth(), gradientHeight);
-        imageGraphics.dispose();
+        gradientGraphics.fillRect(0, background.getHeight() - gradientHeight, background.getWidth(), gradientHeight);
+        gradientGraphics.dispose();
 
         // Add account name to the image
         Font accountNameFont = new Font("Nike Ithaca", Font.PLAIN, 20);
-        drawAccountName(image, accountNameFont, "IG: " + instagramPostProperies.getAccountName());
+        drawAccountName(background, accountNameFont, "IG: " + instagramPostProperies.getAccountName());
 
-        return image;
+        return background;
     }
 
     private Graphics2D setUpStatsGraphicsDefaults(BufferedImage image) {

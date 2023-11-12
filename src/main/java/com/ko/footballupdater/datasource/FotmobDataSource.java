@@ -155,6 +155,32 @@ public class FotmobDataSource implements DataSourceParser {
                                 }
                             }
                         }
+                    } else {
+                        // No Opta linup; use fallback
+                        // Check starting lineup
+                        JsonNode starting = lineup.get("players");
+                        if (starting.isArray()) {
+                            for (JsonNode formationLine : starting) {
+                                for (JsonNode playerEntry : formationLine) {
+                                    // Match player
+                                    PlayerMatchPerformanceStats playerMatchPerformanceStats = checkPlayerAndParse(player, playerEntry, match);
+                                    if (playerMatchPerformanceStats != null) {
+                                        return playerMatchPerformanceStats;
+                                    }
+                                }
+                            }
+                        }
+                        // Check bench
+                        JsonNode bench = lineup.get("bench");
+                        if (bench.isArray()) {
+                            for (JsonNode playerEntry : bench) {
+                                // Match player
+                                PlayerMatchPerformanceStats playerMatchPerformanceStats = checkPlayerAndParse(player, playerEntry, match);
+                                if (playerMatchPerformanceStats != null) {
+                                    return playerMatchPerformanceStats;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -175,7 +201,7 @@ public class FotmobDataSource implements DataSourceParser {
         JsonNode defenseStats = null;
         JsonNode duelsStats = null;
 
-        if (stats.isArray()) {
+        if (stats != null && stats.isArray()) {
             for (JsonNode statCategory : stats) {
                 if ("top_stats".equals(statCategory.get("key").textValue())) {
                     topStats = statCategory;
@@ -187,6 +213,35 @@ public class FotmobDataSource implements DataSourceParser {
                     duelsStats = statCategory;
                 }
             }
+        } else {
+            // Doesn't contain stat array; check for goals and minutes played
+            int goals = 0;
+            int yellowCard = 0;
+            int redCard = 0;
+            if (playerEntry.get("events") != null) {
+                // Goals
+                if (playerEntry.get("events").get("g") != null) {
+                    goals = playerEntry.get("events").get("g").intValue();
+                }
+                if (playerEntry.get("events").get("yc") != null) {
+                    yellowCard = playerEntry.get("events").get("yc").intValue();
+                }
+                if (playerEntry.get("events").get("rc") != null) {
+                    redCard = playerEntry.get("events").get("rc").intValue();
+                }
+            }
+
+            int minutesPlayed;
+            int subbedOn = 0;
+            int subbedOff = 90;
+            if (playerEntry.get("timeSubbedOn") != null && playerEntry.hasNonNull("timeSubbedOn")) {
+                subbedOn = playerEntry.get("timeSubbedOn").intValue();
+            }
+            if (playerEntry.get("timeSubbedOff") != null && playerEntry.hasNonNull("timeSubbedOff")) {
+                subbedOff = playerEntry.get("timeSubbedOff").intValue();
+            }
+            minutesPlayed = subbedOff - subbedOn;
+            return new PlayerMatchPerformanceStats(dataSourceSiteName, match, minutesPlayed, goals, yellowCard, redCard);
         }
 
         // Separate stats required for goalkeepers

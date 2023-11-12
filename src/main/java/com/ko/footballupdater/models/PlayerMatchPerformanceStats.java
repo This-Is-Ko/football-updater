@@ -96,6 +96,15 @@ public class PlayerMatchPerformanceStats {
         this.dataSourceSiteName = dataSourceSiteName;
     }
 
+    public PlayerMatchPerformanceStats(DataSourceSiteName dataSourceSiteName, Match match, Integer minutesPlayed, Integer goals, Integer yellowCards, Integer redCards) {
+        this.dataSourceSiteName = dataSourceSiteName;
+        this.match = match;
+        this.minutesPlayed = minutesPlayed;
+        this.goals = goals;
+        this.yellowCards = yellowCards;
+        this.redCards = redCards;
+    }
+
     // Used by FOTMOB goalkeepers
     public PlayerMatchPerformanceStats(DataSourceSiteName dataSourceSiteName, Match match, Integer minutesPlayed, Integer touches, String passingAccuracyAll, String longBallAccuracyAll, Integer gkGoalsAgainst, String gkSavesAll, Integer gkPunches, Integer gkThrows, Integer gkHighClaim, Integer gkRecoveries) {
         this.dataSourceSiteName = dataSourceSiteName;

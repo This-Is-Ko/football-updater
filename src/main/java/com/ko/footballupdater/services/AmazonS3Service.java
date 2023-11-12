@@ -27,7 +27,7 @@ public class AmazonS3Service {
     @Autowired
     private AmazonS3 s3Client;
 
-    public void uploadtoS3(Post post) {
+    public void uploadtoS3(Post post) throws Exception {
         if (!amazonS3Properties.isEnabled()) {
             return;
         }
@@ -55,6 +55,7 @@ public class AmazonS3Service {
                 // Amazon S3 couldn't be contacted for a response, or the client
                 // couldn't parse the response from Amazon S3.
                 log.atWarn().setMessage("Error attempting to upload").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
+                throw new Exception("Error attempting to upload");
             }
         } else {
             log.atInfo().setMessage(post.getPlayer().getName() + " - No images to upload").log();
