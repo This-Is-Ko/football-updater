@@ -1,12 +1,21 @@
 # Football Updater
 
-Check for player match performance data from their latest game and generate images which contain their statistic for the selected game.
+Check for player match performance data from their latest game and generate images which contain their statistics for the selected game.
 
 These are uploaded to a S3 bucket and an email is sent to the configured email containing a generated post caption, S3 file links and Google Image search links for recent photos for the player.
 
-The players and teams to check are stored in RDS MySQL database and configured with an external cron job to run at scheduled times.
+Hosted on an EC2 instance, players/teams to check are stored in RDS MySQL database and configured with an external cron job to run at scheduled times.
 
-There is a dashboard to track which posts have been posted with the same content as the email updates. Makes it easy to view all the recent generated posts.
+Included a dashboard to track which posts have been posted with the same content in additional to the email notifications.
+
+From this dashboard, posts can be marked as posted, or deleted, and generate different post types for standout statistics.
+
+Posts page: 
+    ![image](https://github.com/This-Is-Ko/football-updater/assets/52279273/598b68d1-ebaf-4de6-9c91-f5ee94cb3f3a)
+
+Generate custom post page: 
+    ![image](https://github.com/This-Is-Ko/football-updater/assets/52279273/1c07c116-db01-4cfa-a1a9-f0008c8c0b19)
+
 
 ### Build
 To build jar use 
@@ -96,7 +105,7 @@ If no secret is set, all calls to the endpoint will be allowed.
 
 ### Dashboard
 
-The dashboard can be accessed by going to
+The dashboard can be accessed at
 
     hostname:port/posts
 
