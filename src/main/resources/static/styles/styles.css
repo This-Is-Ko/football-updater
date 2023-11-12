@@ -1,0 +1,4 @@
+.table-fixed-head          { overflow: auto; height: 75vh; margin-bottom: 20px }
+.table-fixed-head thead th { position: sticky; top: 0; z-index: 1; }
+
+.action-button             { margin-bottom: 10px }

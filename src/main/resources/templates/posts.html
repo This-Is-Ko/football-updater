@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
     <title>Football Updater | Posts</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link th:rel="stylesheet" th:href="@{webjars/bootstrap/5.3.2/css/bootstrap.min.css} "/>
+    <link rel="stylesheet" th:href="@{/styles/styles.css}">
 </head>
     <body>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
@@ -11,69 +13,73 @@
 
         <div class="container">
             <nav class="navbar navbar-light bg-light">
-                <a class="navbar-brand" href="#">
+                <a class="navbar-brand" th:href="@{/posts}">
                     <h1>Football Updater</h1>
                 </a>
             </nav>
             <br>
             <h2>Latest Posts</h2>
             <br>
-            <div class="container">
+            <div>
                 <form th:if="${ not#lists.isEmpty(form.posts)}" th:object="${postsForm}" method="post" th:action="@{/posts/save}">
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th style="min-width:100px" >Date</th>
-                                <th>Player</th>
-                                <th>Caption</th>
-                                <th style="max-width:300px">Images</th>
-                                <th>Image Search</th>
-                                <th>Posted</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="post, itemStat : ${form.posts}">
-                                <td style="min-width:100px" th:text="${#dates.format(post.dateGenerated, 'dd-MM-yyyy hh:mm:ss')}"></td>
-                                <td th:text="${post.player.name}"></td>
-                                <td th:text="${post.caption}"></td>
-                                <td>
-                                    <ul th:each="imageUrl : ${post.imagesUrls}">
-                                        <a th:href="${imageUrl}"><li th:text="${imageUrl}"></li></a>
-                                    </ul>
-                                </td>
-                                <td>
-                                    <ul th:each="imageSearchUrl : ${post.imageSearchUrls}">
-                                        <a th:href="${imageSearchUrl}"><li th:text="${imageSearchUrl}"></li></a>
-                                    </ul>
-                                </td>
-                                <td>
-                                    <input hidden th:name="|posts[${itemStat.index}].id|" th:value="${post.getId()}"/>
-                                    <input type="checkbox" th:checked="${post.isPostedStatus()}" th:name="|posts[${itemStat.index}].postedStatus|" />
-                                </td>
-                                <td>
-                                    <a class="btn btn-primary" th:href="@{/posts/prepare?postId={id}(id=${post.id})}">Custom post</a>
-                                    <br>
-                                    <a type="button" class="btn btn-danger" data-toggle="modal" th:data-target="'#delete-confirm-modal' + ${post.id}">Delete</a>
+                    <div class="table-responsive table-fixed-head">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th style="min-width:100px" >Date</th>
+                                    <th>Player</th>
+                                    <th>Caption</th>
+                                    <th style="max-width:300px">Images</th>
+                                    <th>Image Search</th>
+                                    <th>Posted</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="post, itemStat : ${form.posts}">
+                                    <td style="min-width:100px">
+                                        <p th:text="${#dates.format(post.dateGenerated, 'dd-MM-yyyy hh:mm:ss')}"></p>
+                                        <p th:text="${post.postType}"></p>
+                                    </td>
+                                    <td th:text="${post.player.name}"></td>
+                                    <td th:text="${post.caption}"></td>
+                                    <td>
+                                        <ul th:each="imageUrl, imageIter : ${post.imagesUrls}">
+                                            <a th:href="${imageUrl}"><li th:text="'Image_' + ${imageIter.index}"></li></a>
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <ul th:each="imageSearchUrl, searchIter : ${post.imageSearchUrls}">
+                                            <a th:href="${imageSearchUrl}"><li th:text="'Search_' + ${searchIter.index}"></li></a>
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <input hidden th:name="|posts[${itemStat.index}].id|" th:value="${post.getId()}"/>
+                                        <input type="checkbox" th:checked="${post.isPostedStatus()}" th:name="|posts[${itemStat.index}].postedStatus|" />
+                                    </td>
+                                    <td>
+                                        <a class="btn btn-primary action-button" th:href="@{/posts/prepare?postId={id}(id=${post.id})}">Custom post</a>
+                                        <br>
+                                        <a type="button action-button" class="btn btn-danger" data-toggle="modal" th:data-target="'#delete-confirm-modal' + ${post.id}">Delete</a>
 
-                                    <div th:id="'delete-confirm-modal' + ${post.id}" class="modal" tabindex="-1" role="dialog">
-                                        <div class="modal-dialog" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Are you sure you want to delete post?</h5>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <a class="btn btn-danger" th:href="@{/posts/delete?postId={id}(id=${post.id})}">Delete</a>
-                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                        <div th:id="'delete-confirm-modal' + ${post.id}" class="modal" tabindex="-1" role="dialog">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Are you sure you want to delete post?</h5>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <a class="btn btn-danger" th:href="@{/posts/delete?postId={id}(id=${post.id})}">Delete</a>
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                     <button class="btn btn-primary" type="submit">Save Changes</button>
                 </form>
                 <div th:if="${ #lists.isEmpty(form.posts)}">
