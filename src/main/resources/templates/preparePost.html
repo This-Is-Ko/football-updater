@@ -14,12 +14,16 @@
                     <h1>Football Updater</h1>
                 </a>
             </nav>
-            <br>
-            <h2>Prepare Post</h2>
-            <br>
             <div class="container">
+                <br>
+                <h2>Prepare Post</h2>
+                <br>
                 <form th:if="${ not#lists.isEmpty(form.allStats)}" th:object="${preparePostForm}" method="post" th:action="@{/posts/generate}">
-                    <input hidden th:field="${form.postId}" th:value="${form.postId}"/>
+                    <input hidden th:field="${form.postId}" th:value="${form.post.id}"/>
+                    <h4>Image search links: </h4>
+                    <ul th:each="imageSearchUrl, searchIter : ${form.post.imageSearchUrls}">
+                        <a th:href="${imageSearchUrl}" target="_blank" rel="noopener noreferrer"><li th:text="'Search_' + ${searchIter.index}"></li></a>
+                    </ul>
                     <div class="text-input-container">
                         <label for="backgroundImageUrl">Background Image (leave blank for default): </label>
                         <input id="backgroundImageUrl" type="text" name="backgroundImageUrl">

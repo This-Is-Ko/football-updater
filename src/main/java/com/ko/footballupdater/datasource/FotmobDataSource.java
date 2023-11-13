@@ -139,6 +139,7 @@ public class FotmobDataSource implements DataSourceParser {
                                     // Match player
                                     PlayerMatchPerformanceStats playerMatchPerformanceStats = checkPlayerAndParse(player, playerEntry, match);
                                     if (playerMatchPerformanceStats != null) {
+                                        populateRelevantTeam(lineup, playerMatchPerformanceStats);
                                         return playerMatchPerformanceStats;
                                     }
                                 }
@@ -151,6 +152,7 @@ public class FotmobDataSource implements DataSourceParser {
                                 // Match player
                                 PlayerMatchPerformanceStats playerMatchPerformanceStats = checkPlayerAndParse(player, playerEntry, match);
                                 if (playerMatchPerformanceStats != null) {
+                                    populateRelevantTeam(lineup, playerMatchPerformanceStats);
                                     return playerMatchPerformanceStats;
                                 }
                             }
@@ -165,6 +167,7 @@ public class FotmobDataSource implements DataSourceParser {
                                     // Match player
                                     PlayerMatchPerformanceStats playerMatchPerformanceStats = checkPlayerAndParse(player, playerEntry, match);
                                     if (playerMatchPerformanceStats != null) {
+                                        populateRelevantTeam(lineup, playerMatchPerformanceStats);
                                         return playerMatchPerformanceStats;
                                     }
                                 }
@@ -177,6 +180,7 @@ public class FotmobDataSource implements DataSourceParser {
                                 // Match player
                                 PlayerMatchPerformanceStats playerMatchPerformanceStats = checkPlayerAndParse(player, playerEntry, match);
                                 if (playerMatchPerformanceStats != null) {
+                                    populateRelevantTeam(lineup, playerMatchPerformanceStats);
                                     return playerMatchPerformanceStats;
                                 }
                             }
@@ -314,6 +318,12 @@ public class FotmobDataSource implements DataSourceParser {
             return statContainer.get("stats").get(stateName).get("value").textValue();
         } catch (Exception ex) {
             return defaultValue;
+        }
+    }
+
+    private void populateRelevantTeam(JsonNode lineupObject, PlayerMatchPerformanceStats playerMatchPerformanceStats) {
+        if (lineupObject.hasNonNull("teamName")) {
+            playerMatchPerformanceStats.getMatch().setRelevantTeam(lineupObject.get("teamName").asText());
         }
     }
 

@@ -110,7 +110,7 @@ public class PlayerService {
                 // Upload stat images to s3
                 amazonS3Service.uploadtoS3(post);
                 // Generate caption
-                PostHelper.generatePostCaption(instagramPostProperies.getVersion(), post);
+                PostHelper.generatePostCaption(instagramPostProperies.getVersion(), post, instagramPostProperies.getDefaultHashtags());
                 // Generate image search links
                 PostHelper.generatePostImageSearchUrl(post);
             } catch (Exception e) {

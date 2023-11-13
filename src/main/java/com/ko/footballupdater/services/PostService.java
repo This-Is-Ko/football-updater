@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.ko.footballupdater.utils.PostHelper.generatePostImageSearchUrl;
+
 @Slf4j
 @Service
 public class PostService {
@@ -44,12 +46,16 @@ public class PostService {
 
     final Map<String, String> CUSTOM_FIELD_NAME_MAPPING = Map.of(
             "goals", "goal",
+            "assists", "assist",
             "yellowCards", "yellowCard",
             "redCards", "redCard"
     );
 
 
-    public List<Post> getPosts() {
+    public List<Post> getPosts(Boolean postedStatus) {
+        if (postedStatus != null) {
+            return postRepository.findByPostedStatus(postedStatus);
+        }
         return postRepository.findAllByOrderByDateGeneratedDesc();
     }
 
@@ -73,8 +79,9 @@ public class PostService {
             throw new Exception("Post id not found");
         }
         Post post = postSearchResult.get();
+        generatePostImageSearchUrl(post);
+        preparePostDto.setPost(post);
 
-        HashMap<String, String> availableStatMap = new HashMap<>();
         List<StatisticEntryGenerateDto> allStats = new ArrayList<>();
         if (post.getPlayerMatchPerformanceStats() == null) {
             throw new Exception("Post doesn't contain match performance stats object");
@@ -94,21 +101,19 @@ public class PostService {
                         fieldName = CUSTOM_FIELD_NAME_MAPPING.get(fieldName);
                     }
                     allStats.add(new StatisticEntryGenerateDto(fieldName, value.toString(), false));
-                    availableStatMap.put(field.getName(), value.toString());
                 }
             } catch (IllegalAccessException ex) {
                 log.atError().setMessage("Error while converting stat fields and values to map").setCause(ex).log();
             }
         }
-        preparePostDto.setAvailableStatMap(availableStatMap);
         preparePostDto.setAllStats(allStats);
 
         return preparePostDto;
     }
 
-    public Boolean generateStandoutPost(Integer postId, List<StatisticEntryGenerateDto> allStats, String backgroundImageUrl) throws Exception {
+    public void generateStandoutPost(PreparePostDto preparePostForm) throws Exception {
         // Search for post with id
-        Optional<Post> postSearchResult = postRepository.findById(postId);
+        Optional<Post> postSearchResult = postRepository.findById(preparePostForm.getPostId());
         if (postSearchResult.isEmpty()) {
             throw new Exception("Post id not found");
         }
@@ -116,7 +121,7 @@ public class PostService {
         Post newPost = new Post(PostType.STANDOUT_STATS_POST, existingPost.getPlayer(), existingPost.getPlayerMatchPerformanceStats());
 
         // Only use selected stats
-        List<StatisticEntryGenerateDto> filteredStats = allStats.stream()
+        List<StatisticEntryGenerateDto> filteredStats = preparePostForm.getAllStats().stream()
                 .filter(StatisticEntryGenerateDto::isSelected)
                 .toList();
 
@@ -125,11 +130,12 @@ public class PostService {
         }
 
         try {
-            imageGeneratorService.generateStandoutStatsImage(newPost, filteredStats, backgroundImageUrl);
+            // Generate standout post image
+            imageGeneratorService.generateStandoutStatsImage(newPost, filteredStats, preparePostForm.getBackgroundImageUrl(), preparePostForm.getForceScaleImage());
             // Upload stat images to s3
             amazonS3Service.uploadtoS3(newPost);
             // Generate caption
-            PostHelper.generatePostCaption(instagramPostProperies.getVersion(), newPost);
+            PostHelper.generatePostCaption(instagramPostProperies.getVersion(), newPost, instagramPostProperies.getDefaultHashtags());
             // Save post
             postRepository.save(newPost);
             log.atInfo().setMessage("Successfully created standout stat image and saved").addKeyValue("player", newPost.getPlayer().getName()).log();
@@ -137,6 +143,5 @@ public class PostService {
             // Skip if image generation or upload fails, allows future retry
             log.warn(newPost.getPlayer().getName() + " - Unable to generate or upload image");
         }
-        return true;
     }
 }

@@ -1,42 +1,44 @@
 package com.ko.footballupdater.utils;
 
+import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Post;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class PostHelper {
 
     // Generate caption based on post version
     // v1 All stats in caption
     // v2 Only name, match, date, hashtags in caption
-    public static void generatePostCaption(int version, Post postHolder) {
+    public static void generatePostCaption(int version, Post postHolder, String additionalHashtags) {
         String caption = "";
         if (version == 2) {
-            caption = generatePostDefaultPlayerCaptionV2(postHolder.getPlayer(), postHolder.getPlayerMatchPerformanceStats());
+            caption = generatePostDefaultPlayerCaptionV2(postHolder.getPlayer(), postHolder.getPlayerMatchPerformanceStats(), additionalHashtags);
         } else {
-            caption = generatePostDefaultPlayerCaption(postHolder.getPlayer(), postHolder.getPlayerMatchPerformanceStats());
+            caption = generatePostDefaultPlayerCaption(postHolder.getPlayer(), postHolder.getPlayerMatchPerformanceStats(), additionalHashtags);
         }
         postHolder.setCaption(caption);
     }
 
     // V1
-    public static String generatePostDefaultPlayerCaption(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats) {
+    public static String generatePostDefaultPlayerCaption(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats, String additionalHashtags) {
         return String.format("%s stats in %s vs %s on %s\n",
                 player.getName(),
                 playerMatchPerformanceStats.getMatch().getHomeTeamName(),
                 playerMatchPerformanceStats.getMatch().getAwayTeamName(),
                 DateTimeHelper.getDateAsFormattedString(playerMatchPerformanceStats.getMatch().getDate())
-        ) + playerMatchPerformanceStats.toFormattedString() + generatePlayerHashtags(player, playerMatchPerformanceStats);
+        ) + playerMatchPerformanceStats.toFormattedString() + generatePlayerHashtags(player, playerMatchPerformanceStats, additionalHashtags);
     }
 
     // V2
-    public static String generatePostDefaultPlayerCaptionV2(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats) {
+    public static String generatePostDefaultPlayerCaptionV2(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats, String additionalHashtags) {
         return String.format("%s stats in %s vs %s on %s\n",
                 player.getName(),
                 playerMatchPerformanceStats.getMatch().getHomeTeamName(),
                 playerMatchPerformanceStats.getMatch().getAwayTeamName(),
                 DateTimeHelper.getDateAsFormattedString(playerMatchPerformanceStats.getMatch().getDate())
-        ) + generatePlayerHashtags(player, playerMatchPerformanceStats);
+        ) + generatePlayerHashtags(player, playerMatchPerformanceStats, additionalHashtags);
     }
 
     public static String generateMatchName(PlayerMatchPerformanceStats playerMatchPerformanceStats) {
@@ -56,17 +58,13 @@ public class PostHelper {
         post.getImageSearchUrls().add(String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:w", searchPhrase.replaceAll(" ", "%20")));
     }
 
-    public static String generatePlayerHashtags(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats) {
+    public static String generatePlayerHashtags(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats, String additionalHashtags) {
         String teamNameHashtag = "";
         if (playerMatchPerformanceStats.getMatch().getRelevantTeam() != null && !playerMatchPerformanceStats.getMatch().getRelevantTeam().isEmpty()) {
             teamNameHashtag = "#" + playerMatchPerformanceStats.getMatch().getRelevantTeam().replaceAll(" ", "");
         }
-        return "#" + player.getName().replaceAll(" ", "") + " " +
-                "#upthetillies " +
-                "#matildas " +
-                "#womensfootball " +
-                "#womenssoccer" +
-                "#woso " +
+        return "\n\n#" + player.getName().replaceAll(" ", "") + " " +
+                (additionalHashtags != null ? additionalHashtags + " " : "") +
                 teamNameHashtag;
     }
 

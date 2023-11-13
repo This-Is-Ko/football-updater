@@ -114,13 +114,13 @@ public class ImageGeneratorService {
         return ImageIO.read(new File(baseImagePath));
     }
 
-    private BufferedImage setUpBaseImageWithBackgroundImageUrl(String backgroundImageUrl) throws IOException {
+    private BufferedImage setUpBaseImageWithBackgroundImageUrl(String backgroundImageUrl, Boolean forceScaleImage) throws IOException {
         URL imageUrl = URI.create(backgroundImageUrl).toURL();
         BufferedImage downloadedImage = ImageIO.read(imageUrl);
 
         // Scale image down to height of 1000 - change width proportionally
         float scale = 1;
-        if (downloadedImage.getHeight() > 1000) {
+        if (forceScaleImage || downloadedImage.getHeight() > 1000) {
             scale = (float) 1000 /downloadedImage.getHeight();
         }
         BufferedImage background = new BufferedImage((int) (scale * downloadedImage.getWidth()), (int) (scale * downloadedImage.getHeight()), BufferedImage.TYPE_INT_RGB);
@@ -205,12 +205,12 @@ public class ImageGeneratorService {
         return zeroValueFilter;
     }
 
-    public void generateStandoutStatsImage(Post post, List<StatisticEntryGenerateDto> selectedStats, String backgroundImageUrl) throws Exception {
+    public void generateStandoutStatsImage(Post post, List<StatisticEntryGenerateDto> selectedStats, String backgroundImageUrl, Boolean forceScaleImage) throws Exception {
         try {
             BufferedImage image;
             if (!backgroundImageUrl.isEmpty()) {
                 // Download and set background image
-                image = setUpBaseImageWithBackgroundImageUrl(backgroundImageUrl);
+                image = setUpBaseImageWithBackgroundImageUrl(backgroundImageUrl, forceScaleImage);
 
                 // Add gradient
                 drawGradient(image);

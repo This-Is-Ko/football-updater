@@ -14,6 +14,8 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
 
     List<Post> findAllByOrderByDateGeneratedDesc();
 
+    List<Post> findByPostedStatus(boolean postedStatus);
+
     @Modifying
     @Query("update Post p set p.postedStatus = :postedStatus where p.id = :id")
     void updatePostSetPostedStatusForId(@Param("postedStatus") boolean postedStatus, @Param("id") int id);

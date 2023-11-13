@@ -2,6 +2,7 @@ package com.ko.footballupdater.models.form;
 
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
+import com.ko.footballupdater.models.Post;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -16,9 +17,11 @@ public class PreparePostDto {
 
     private Integer postId;
 
+    private Post post;
+
     private String backgroundImageUrl;
 
-    private HashMap<String, String> availableStatMap;
+    private Boolean forceScaleImage = false;
 
     private List<StatisticEntryGenerateDto> allStats;
 

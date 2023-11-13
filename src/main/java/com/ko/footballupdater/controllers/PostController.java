@@ -4,6 +4,8 @@ import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.form.PostsUpdateDto;
 import com.ko.footballupdater.models.form.PreparePostDto;
 import com.ko.footballupdater.services.PostService;
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.Null;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -34,8 +36,8 @@ public class PostController {
      * @return posts view
      */
     @GetMapping("")
-    public String getPosts(Model model) {
-        List<Post> posts = postService.getPosts();
+    public String getPosts(Model model, @RequestParam @Nullable Boolean postedStatus) {
+        List<Post> posts = postService.getPosts(postedStatus);
 
         PostsUpdateDto postsUpdateDto = new PostsUpdateDto();
         for (Post post : posts) {
@@ -105,7 +107,7 @@ public class PostController {
             return "redirect:/posts";
         }
         try {
-            postService.generateStandoutPost(preparePostForm.getPostId(), preparePostForm.getAllStats(), preparePostForm.getBackgroundImageUrl());
+            postService.generateStandoutPost(preparePostForm);
             return "redirect:/posts";
         } catch (Exception ex) {
             log.atError().setMessage("Updating post status failed").setCause(ex).log();

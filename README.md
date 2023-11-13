@@ -66,6 +66,7 @@ Post Version
 
     IG_POST_VERSION
     IG_POST_ACCOUNT_NAME
+    IG_POST_DEFAULT_HASHTAGS
 
 Stat Image generator
     
@@ -112,6 +113,8 @@ The dashboard can be accessed at
 The Spring Security default login page is used and the password can be configured following the above.
 
     DASHBOARD_PASSWORD
+
+Favicon from https://iconscout.com/free-icon/soccer-8
 
 
 ### Local MYSQL

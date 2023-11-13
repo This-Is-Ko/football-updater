@@ -95,6 +95,9 @@ public class PlayerMatchPerformanceStats {
     public PlayerMatchPerformanceStats(DataSourceSiteName dataSourceSiteName) {
         this.dataSourceSiteName = dataSourceSiteName;
     }
+    public PlayerMatchPerformanceStats(Match match) {
+        this.match = match;
+    }
 
     public PlayerMatchPerformanceStats(DataSourceSiteName dataSourceSiteName, Match match, Integer minutesPlayed, Integer goals, Integer yellowCards, Integer redCards) {
         this.dataSourceSiteName = dataSourceSiteName;
