@@ -40,6 +40,9 @@ public class FotmobDataSource implements DataSourceParser {
     private final String API_MATCH_BASE_URL = "/api/matchDetails?matchId=";
     private final String GOALKEEPER_FOTMOB_STRING_SHORT = "GK";
 
+    String STRING_STAT_FIRST_NUMBER_REGEX = "^(\\d+)";
+    String STRING_STAT_SECOND_NUMBER_REGEX = "/(\\d+)\\s";
+
     @Override
     public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document) {
         return parsePlayerMatchData(player, document, null, false);
@@ -254,19 +257,22 @@ public class FotmobDataSource implements DataSourceParser {
             if (topStats == null) {
                 return null;
             }
-            return new PlayerMatchPerformanceStats(dataSourceSiteName,
-                    match,
-                    getStatIntegerOrDefault(topStats, "Minutes played", 0),
-                    getStatIntegerOrDefault(topStats, "Touches", 0),
-                    getStatStringOrDefault(topStats, "Accurate passes", "0"),
-                    getStatStringOrDefault(topStats, "Accurate long balls", "0"),
-                    getStatIntegerOrDefault(topStats, "Goals conceded", 0),
-                    getStatStringOrDefault(topStats, "Saves", "0"),
-                    getStatIntegerOrDefault(topStats, "Punches", 0),
-                    getStatIntegerOrDefault(topStats, "Throws", 0),
-                    getStatIntegerOrDefault(topStats, "High claim", 0),
-                    getStatIntegerOrDefault(topStats, "Recoveries", 0)
-                    );
+            return PlayerMatchPerformanceStats.builder()
+                    .dataSourceSiteName(dataSourceSiteName)
+                    .match(match)
+                    .minutesPlayed(getStatIntegerOrDefault(topStats, "Minutes played", 0))
+                    .touches(getStatIntegerOrDefault(topStats, "Touches", 0))
+                    .passesAttempted(parseStatString(topStats, "Accurate passes", STRING_STAT_SECOND_NUMBER_REGEX))
+                    .passesCompleted(parseStatString(topStats, "Accurate passes", STRING_STAT_FIRST_NUMBER_REGEX))
+                    .longBallsAttempted(parseStatString(topStats, "Accurate long balls", STRING_STAT_SECOND_NUMBER_REGEX))
+                    .longBallsCompleted(parseStatString(topStats, "Accurate long balls", STRING_STAT_FIRST_NUMBER_REGEX))
+                    .gkGoalsAgainst(getStatIntegerOrDefault(topStats, "Goals conceded", 0))
+                    .gkSaves(parseStatString(topStats, "Saves", STRING_STAT_FIRST_NUMBER_REGEX))
+                    .gkPunches(getStatIntegerOrDefault(topStats, "Punches", 0))
+                    .gkThrows(getStatIntegerOrDefault(topStats, "Throws", 0))
+                    .gkHighClaim(getStatIntegerOrDefault(topStats, "High claim", 0))
+                    .gkRecoveries(getStatIntegerOrDefault(topStats, "Recoveries", 0))
+                    .build();
         }
 
         // Outfield players require all stats
@@ -275,32 +281,37 @@ public class FotmobDataSource implements DataSourceParser {
             return null;
         }
 
-        return new PlayerMatchPerformanceStats(
-            dataSourceSiteName,
-            match,
-            getStatIntegerOrDefault(topStats, "Minutes played", 0),
-            getStatIntegerOrDefault(topStats, "Goals", 0),
-            getStatIntegerOrDefault(topStats, "Assists", 0),
-            getStatIntegerOrDefault(topStats, "Total shots", 0),
-            getStatIntegerOrDefault(attackStats, "Blocked shots", 0),
-            getStatIntegerOrDefault(duelsStats, "Fouls committed", 0),
-            getStatIntegerOrDefault(duelsStats, "Was fouled", 0),
-            getStatIntegerOrDefault(attackStats, "Offsides", 0),
-            getStatStringOrDefault(attackStats, "Accurate crosses", "0"),
-            getStatIntegerOrDefault(attackStats, "Dispossessed", 0),
-            getStatIntegerOrDefault(attackStats, "Touches", 0),
-            getStatStringOrDefault(defenseStats, "Tackles won", "0"),
-            getStatIntegerOrDefault(defenseStats, "Defensive actions", 0),
-            getStatIntegerOrDefault(defenseStats, "Recoveries", 0),
-            getStatIntegerOrDefault(duelsStats, "Duels won", 0),
-            getStatIntegerOrDefault(duelsStats, "Duels lost", 0),
-            getStatIntegerOrDefault(duelsStats, "Ground duels won", 0),
-            getStatIntegerOrDefault(duelsStats, "Aerial duels won", 0),
-            getStatIntegerOrDefault(topStats, "Chances created", 0),
-            getStatStringOrDefault(topStats, "Accurate passes", "0"),
-            getStatIntegerOrDefault(attackStats, "Passes into final third", 0),
-            getStatStringOrDefault(attackStats, "Successful dribbles", "0")
-            );
+
+        return PlayerMatchPerformanceStats.builder()
+                .dataSourceSiteName(dataSourceSiteName)
+                .match(match)
+                .minutesPlayed(getStatIntegerOrDefault(topStats, "Minutes played", 0))
+                .goals(getStatIntegerOrDefault(topStats, "Goals", 0))
+                .assists(getStatIntegerOrDefault(topStats, "Assists", 0))
+                .shots(getStatIntegerOrDefault(topStats, "Total shots", 0))
+                .shotsBlocked(getStatIntegerOrDefault(attackStats, "Blocked shots", 0))
+                .fouls(getStatIntegerOrDefault(duelsStats, "Fouls committed", 0))
+                .fouled(getStatIntegerOrDefault(duelsStats, "Was fouled", 0))
+                .offsides(getStatIntegerOrDefault(attackStats, "Offsides", 0))
+                .crosses(parseStatString(attackStats, "Accurate crosses", STRING_STAT_SECOND_NUMBER_REGEX))
+                .crossesSuccessful(parseStatString(attackStats, "Accurate crosses", STRING_STAT_FIRST_NUMBER_REGEX))
+                .dispossessed(getStatIntegerOrDefault(attackStats, "Dispossessed", 0))
+                .touches(getStatIntegerOrDefault(attackStats, "Touches", 0))
+                .tackles(parseStatString(defenseStats, "Tackles won", STRING_STAT_SECOND_NUMBER_REGEX))
+                .tacklesWon(parseStatString(defenseStats, "Tackles won", STRING_STAT_FIRST_NUMBER_REGEX))
+                .defensiveActions(getStatIntegerOrDefault(defenseStats, "Defensive actions", 0))
+                .recoveries(getStatIntegerOrDefault(defenseStats, "Recoveries", 0))
+                .duelsWon(getStatIntegerOrDefault(duelsStats, "Duels won", 0))
+                .duelsLost(getStatIntegerOrDefault(duelsStats, "Duels lost", 0))
+                .groundDuelsWon(getStatIntegerOrDefault(duelsStats, "Ground duels won", 0))
+                .aerialDuelsWon(getStatIntegerOrDefault(duelsStats, "Aerial duels won", 0))
+                .chancesCreatedAll(getStatIntegerOrDefault(topStats, "Chances created", 0))
+                .passesAttempted(parseStatString(topStats, "Accurate passes", STRING_STAT_SECOND_NUMBER_REGEX))
+                .passesCompleted(parseStatString(topStats, "Accurate passes", STRING_STAT_FIRST_NUMBER_REGEX))
+                .passesIntoFinalThird(getStatIntegerOrDefault(attackStats, "Passes into final third", 0))
+                .carries(parseStatString(attackStats, "Successful dribbles", STRING_STAT_SECOND_NUMBER_REGEX))
+                .carriesSuccessful(parseStatString(attackStats, "Successful dribbles", STRING_STAT_FIRST_NUMBER_REGEX))
+                .build();
     }
 
     private int getStatIntegerOrDefault(JsonNode statContainer, String stateName, int defaultValue) {
@@ -319,6 +330,22 @@ public class FotmobDataSource implements DataSourceParser {
         } catch (Exception ex) {
             return defaultValue;
         }
+    }
+
+    /**
+     * Convert string values into separate values
+     *  e.g. 37/40 (93%) into 37, 40, 93%
+     */
+    private Integer parseStatString(JsonNode statContainer, String stateName, String matchRegex) {
+        String statString = getStatStringOrDefault(statContainer, stateName, null);
+        if (statString != null) {
+            Pattern pattern = Pattern.compile(matchRegex);
+            Matcher matcher = pattern.matcher(statString);
+            if (matcher.find()) {
+                return Integer.valueOf(matcher.group(1));
+            }
+        }
+        return null;
     }
 
     private void populateRelevantTeam(JsonNode lineupObject, PlayerMatchPerformanceStats playerMatchPerformanceStats) {

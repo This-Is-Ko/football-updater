@@ -51,7 +51,7 @@ public class Post {
     private PlayerMatchPerformanceStats playerMatchPerformanceStats;
 
     @Convert(converter = StringListConverter.class)
-    @Column(name = "image_urls")
+    @Column(name = "image_urls", length = 10000)
     private List<String> imagesUrls;
 
     @Transient

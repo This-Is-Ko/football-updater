@@ -243,6 +243,9 @@ public class ImageGeneratorService {
 
             // Save the modified image
             saveImage(post, image, generateFileName(post, 1, PostType.STANDOUT_STATS_POST), 1);
+        } catch (IOException ex) {
+            log.atWarn().setMessage("Unable to find/read image file").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
+            throw new Exception(post.getPlayer().getName() + " - Unable to find/read image file ", ex);
         } catch (Exception ex) {
             log.atWarn().setMessage("Error while generating standout stat image").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
             throw new Exception(post.getPlayer().getName() + " - Error while generating stat image ", ex);

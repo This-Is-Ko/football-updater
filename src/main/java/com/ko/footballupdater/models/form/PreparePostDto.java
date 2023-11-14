@@ -25,4 +25,6 @@ public class PreparePostDto {
 
     private List<StatisticEntryGenerateDto> allStats;
 
+    private String error;
+
 }

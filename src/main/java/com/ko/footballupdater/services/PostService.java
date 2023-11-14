@@ -117,8 +117,11 @@ public class PostService {
         if (postSearchResult.isEmpty()) {
             throw new Exception("Post id not found");
         }
-        Post existingPost = postSearchResult.get();
-        Post newPost = new Post(PostType.STANDOUT_STATS_POST, existingPost.getPlayer(), existingPost.getPlayerMatchPerformanceStats());
+
+        // Update existing post type to reflect new type
+        Post post = postSearchResult.get();
+        post.setPostType(PostType.STANDOUT_STATS_POST);
+        post.setImagesUrls(new ArrayList<>(post.getImagesUrls()));
 
         // Only use selected stats
         List<StatisticEntryGenerateDto> filteredStats = preparePostForm.getAllStats().stream()
@@ -126,22 +129,25 @@ public class PostService {
                 .toList();
 
         if (filteredStats.isEmpty()) {
+            preparePostForm.setPost(post);
             throw new Exception("No stat selected, unable to generate standout stat image");
         }
 
         try {
             // Generate standout post image
-            imageGeneratorService.generateStandoutStatsImage(newPost, filteredStats, preparePostForm.getBackgroundImageUrl(), preparePostForm.getForceScaleImage());
+            imageGeneratorService.generateStandoutStatsImage(post, filteredStats, preparePostForm.getBackgroundImageUrl(), preparePostForm.getForceScaleImage());
             // Upload stat images to s3
-            amazonS3Service.uploadtoS3(newPost);
+            amazonS3Service.uploadtoS3(post);
             // Generate caption
-            PostHelper.generatePostCaption(instagramPostProperies.getVersion(), newPost, instagramPostProperies.getDefaultHashtags());
+            PostHelper.generatePostCaption(instagramPostProperies.getVersion(), post, instagramPostProperies.getDefaultHashtags());
             // Save post
-            postRepository.save(newPost);
-            log.atInfo().setMessage("Successfully created standout stat image and saved").addKeyValue("player", newPost.getPlayer().getName()).log();
-        } catch (Exception e) {
+            postRepository.save(post);
+            log.atInfo().setMessage("Successfully created standout stat image and saved").addKeyValue("player", post.getPlayer().getName()).log();
+        } catch (Exception ex) {
+            preparePostForm.setPost(post);
             // Skip if image generation or upload fails, allows future retry
-            log.warn(newPost.getPlayer().getName() + " - Unable to generate or upload image");
+            log.atWarn().setMessage("Something went wrong while creating standout post").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
+            throw new Exception("Something went wrong while creating standout post: " + ex.getMessage());
         }
     }
 }

@@ -15,18 +15,24 @@
                 </a>
             </nav>
             <div class="container">
+                <form th:if="${ not#lists.isEmpty(form.allStats)}" th:object="${preparePostForm}" method="post" th:action="@{/posts/generate}">
+                <div class="alert alert-danger" role="alert" th:if="${ not#strings.isEmpty(form.error)}" th:text="${form.error}">
+                </div>
                 <br>
                 <h2>Prepare Post</h2>
                 <br>
-                <form th:if="${ not#lists.isEmpty(form.allStats)}" th:object="${preparePostForm}" method="post" th:action="@{/posts/generate}">
                     <input hidden th:field="${form.postId}" th:value="${form.post.id}"/>
                     <h4>Image search links: </h4>
                     <ul th:each="imageSearchUrl, searchIter : ${form.post.imageSearchUrls}">
                         <a th:href="${imageSearchUrl}" target="_blank" rel="noopener noreferrer"><li th:text="'Search_' + ${searchIter.index}"></li></a>
                     </ul>
-                    <div class="text-input-container">
+                    <div class="col-xs-4 text-input-container">
                         <label for="backgroundImageUrl">Background Image (leave blank for default): </label>
-                        <input id="backgroundImageUrl" type="text" name="backgroundImageUrl">
+                        <input id="backgroundImageUrl" type="text" name="backgroundImageUrl" size="100">
+                    </div>
+                    <div>
+                        <label for="forceScaleImage">Select to scale image regardless of original size</label>
+                        <input id="forceScaleImage" type="checkbox" th:field="${form.forceScaleImage}" th:checked="${forceScaleImage}"/>
                     </div>
                     <div class="table-responsive table-fixed-head-stats">
                         <table class="table table-bordered">

@@ -102,7 +102,7 @@ public class PostController {
      * @return redirect to posts view
      */
     @PostMapping("/generate")
-    public String generatePost(@ModelAttribute PreparePostDto preparePostForm, BindingResult result) {
+    public String generatePost(Model model, @ModelAttribute PreparePostDto preparePostForm, BindingResult result) {
         if (result.hasErrors()) {
             return "redirect:/posts";
         }
@@ -111,8 +111,10 @@ public class PostController {
             return "redirect:/posts";
         } catch (Exception ex) {
             log.atError().setMessage("Updating post status failed").setCause(ex).log();
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Updating post status failed", ex);
+            preparePostForm.setError(ex.getMessage());
+            model.addAttribute("form", preparePostForm);
+            model.addAttribute("preparePostForm", preparePostForm);
+            return "redirect:/posts/prepare?postId=" + preparePostForm.getPostId();
         }
     }
 }
