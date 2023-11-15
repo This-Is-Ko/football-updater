@@ -9,30 +9,39 @@
 </head>
     <body>
         <div class="container">
-            <nav class="navbar navbar-light bg-light">
-                <a class="navbar-brand" th:href="@{/posts}">
-                    <h1>Football Updater</h1>
-                </a>
-            </nav>
-            <div class="container">
+            <div th:replace="~{fragments/header.html :: header}"></div>
+            <div>
                 <form th:if="${ not#lists.isEmpty(form.allStats)}" th:object="${preparePostForm}" method="post" th:action="@{/posts/generate}">
-                <div class="alert alert-danger" role="alert" th:if="${ not#strings.isEmpty(form.error)}" th:text="${form.error}">
-                </div>
-                <br>
-                <h2>Prepare Post</h2>
-                <br>
+                    <br>
+                    <h2>Prepare Post</h2>
+                    <br>
                     <input hidden th:field="${form.postId}" th:value="${form.post.id}"/>
-                    <h4>Image search links: </h4>
-                    <ul th:each="imageSearchUrl, searchIter : ${form.post.imageSearchUrls}">
-                        <a th:href="${imageSearchUrl}" target="_blank" rel="noopener noreferrer"><li th:text="'Search_' + ${searchIter.index}"></li></a>
-                    </ul>
-                    <div class="col-xs-4 text-input-container">
-                        <label for="backgroundImageUrl">Background Image (leave blank for default): </label>
-                        <input id="backgroundImageUrl" type="text" name="backgroundImageUrl" size="100">
+                    <div class="mb-3">
+                        <h4>Image search links: </h4>
+                        <ul class="list-group" th:each="imageSearchUrl, searchIter : ${form.post.imageSearchUrls}">
+                            <a th:href="${imageSearchUrl}" target="_blank" rel="noopener noreferrer"><li class="list-group-item" th:text="'Search_' + ${searchIter.index}"></li></a>
+                        </ul>
                     </div>
-                    <div>
-                        <label for="forceScaleImage">Select to scale image regardless of original size</label>
-                        <input id="forceScaleImage" type="checkbox" th:field="${form.forceScaleImage}" th:checked="${forceScaleImage}"/>
+                    <hr>
+                    <div class="mb-3">
+                        <label for="backgroundImageUrl" class="form-label">Background Image (leave blank for default): </label>
+                        <div class="input-group mb-3">
+                            <input id="backgroundImageUrl" type="text" class="form-control" name="imageGenParams.backgroundImageUrl" size="100">
+                        </div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <label for="forceScaleImage">Select to scale image to 1000 pixel height regardless of original size</label>
+                        <input id="forceScaleImage" type="checkbox" class="form-check-input" th:field="${form.imageGenParams.forceScaleImage}" th:checked="${forceScaleImage}"/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="horizontalTranslation" class="form-label">Horizontal translation (Select if image is wider than 1000 pixels) </label>
+                        <div class="input-group mb-3">
+                            <select id="horizontalTranslation" class="form-select" th:field="${form.imageGenParams.imageHorizontalTranslation}">
+                                <option th:value="'CENTER'" th:text="Center" selected="selected"></option>
+                                <option th:value="'LEFT'" th:text="Left"></option>
+                                <option th:value="'RIGHT'" th:text="Right"></option>
+                            </select>
+                        </div>
                     </div>
                     <div class="table-responsive table-fixed-head-stats">
                         <table class="table table-bordered">

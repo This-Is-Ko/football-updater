@@ -135,7 +135,7 @@ public class PostService {
 
         try {
             // Generate standout post image
-            imageGeneratorService.generateStandoutStatsImage(post, filteredStats, preparePostForm.getBackgroundImageUrl(), preparePostForm.getForceScaleImage());
+            imageGeneratorService.generateStandoutStatsImage(post, filteredStats, preparePostForm.getImageGenParams());
             // Upload stat images to s3
             amazonS3Service.uploadtoS3(post);
             // Generate caption

@@ -5,6 +5,8 @@ import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.models.ImageStatEntry;
 import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.models.Post;
+import com.ko.footballupdater.models.form.HorizontalTranslation;
+import com.ko.footballupdater.models.form.ImageGenParams;
 import com.ko.footballupdater.models.form.StatisticEntryGenerateDto;
 import com.ko.footballupdater.utils.DateTimeHelper;
 import com.ko.footballupdater.utils.PostHelper;
@@ -114,20 +116,42 @@ public class ImageGeneratorService {
         return ImageIO.read(new File(baseImagePath));
     }
 
-    private BufferedImage setUpBaseImageWithBackgroundImageUrl(String backgroundImageUrl, Boolean forceScaleImage) throws IOException {
-        URL imageUrl = URI.create(backgroundImageUrl).toURL();
+    private BufferedImage setUpBaseImageWithBackgroundImageUrl(ImageGenParams imageGenParams) throws IOException {
+        URL imageUrl = URI.create(imageGenParams.getBackgroundImageUrl()).toURL();
         BufferedImage downloadedImage = ImageIO.read(imageUrl);
 
         // Scale image down to height of 1000 - change width proportionally
+        // Force scale if set in request
         float scale = 1;
-        if (forceScaleImage || downloadedImage.getHeight() > 1000) {
+        if (imageGenParams.getForceScaleImage() || downloadedImage.getHeight() > 1000) {
             scale = (float) 1000 /downloadedImage.getHeight();
         }
-        BufferedImage background = new BufferedImage((int) (scale * downloadedImage.getWidth()), (int) (scale * downloadedImage.getHeight()), BufferedImage.TYPE_INT_RGB);
-        Graphics2D imageGraphics = background.createGraphics();
-        imageGraphics.scale(scale, scale);
-        imageGraphics.drawImage(downloadedImage, 0 , 0, null);
-        imageGraphics.dispose();
+
+        BufferedImage background;
+        // No horizontal translation, directly draw image
+        if (imageGenParams.getImageHorizontalTranslation() == null || HorizontalTranslation.CENTER.equals(imageGenParams.getImageHorizontalTranslation())) {
+            background = new BufferedImage((int) (scale * downloadedImage.getWidth()), (int) (scale * downloadedImage.getHeight()), BufferedImage.TYPE_INT_RGB);
+            Graphics2D imageGraphics = background.createGraphics();
+            imageGraphics.scale(scale, scale);
+            imageGraphics.drawImage(downloadedImage, 0 , 0, null);
+            imageGraphics.dispose();
+        }
+        // Requires horizontal translation as subject is not center of image
+        // Since we are moving the image, default to 1000 pixel size
+        else {
+            background = new BufferedImage(1000, 1000, BufferedImage.TYPE_INT_RGB);
+            Graphics2D imageGraphics = background.createGraphics();
+            imageGraphics.scale(scale, scale);
+            if (HorizontalTranslation.LEFT.equals(imageGenParams.getImageHorizontalTranslation())) {
+                // Top left will remain 0,0
+                imageGraphics.drawImage(downloadedImage, 0 , 0, null);
+            } else {
+                // Top left will need to be drawn off-canvas and right side of image will appear at center
+                int xTranslation = (int) ((downloadedImage.getWidth() * scale) - 1000);
+                imageGraphics.drawImage(downloadedImage, -xTranslation , 0, null);
+            }
+            imageGraphics.dispose();
+        }
 
         return background;
     }
@@ -205,12 +229,12 @@ public class ImageGeneratorService {
         return zeroValueFilter;
     }
 
-    public void generateStandoutStatsImage(Post post, List<StatisticEntryGenerateDto> selectedStats, String backgroundImageUrl, Boolean forceScaleImage) throws Exception {
+    public void generateStandoutStatsImage(Post post, List<StatisticEntryGenerateDto> selectedStats, ImageGenParams imageGenParams) throws Exception {
         try {
             BufferedImage image;
-            if (!backgroundImageUrl.isEmpty()) {
+            if (imageGenParams != null && imageGenParams.getBackgroundImageUrl() != null && !imageGenParams.getBackgroundImageUrl().isEmpty()) {
                 // Download and set background image
-                image = setUpBaseImageWithBackgroundImageUrl(backgroundImageUrl, forceScaleImage);
+                image = setUpBaseImageWithBackgroundImageUrl(imageGenParams);
 
                 // Add gradient
                 drawGradient(image);

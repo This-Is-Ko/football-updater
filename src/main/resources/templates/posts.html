@@ -9,13 +9,8 @@
     <link rel="icon" type="image/x-icon" th:href="@{/images/favicon.ico}">
 </head>
     <body>
-
         <div class="container">
-            <nav class="navbar navbar-light bg-light">
-                <a class="navbar-brand" th:href="@{/posts}">
-                    <h1>Football Updater</h1>
-                </a>
-            </nav>
+            <div th:replace="~{fragments/header.html :: header}"></div>
             <br>
             <h2>Latest Posts</h2>
             <br>
