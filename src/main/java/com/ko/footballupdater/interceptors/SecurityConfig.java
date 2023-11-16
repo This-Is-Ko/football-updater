@@ -27,7 +27,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/favicon.ico").permitAll()
+                        .requestMatchers("/images/favicon.ico").permitAll()
                         .requestMatchers("/api/**").permitAll()
                         .requestMatchers("/posts/**").permitAll()
                         .anyRequest().authenticated()
