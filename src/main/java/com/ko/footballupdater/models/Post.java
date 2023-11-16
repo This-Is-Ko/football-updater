@@ -45,7 +45,7 @@ public class Post {
     @JdbcTypeCode(SqlTypes.JSON)
     private Player player;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "match_performance_stats_id")
     @JdbcTypeCode(SqlTypes.JSON)
     private PlayerMatchPerformanceStats playerMatchPerformanceStats;

@@ -1,13 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>Football Updater | Posts</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link th:rel="stylesheet" th:href="@{webjars/bootstrap/5.3.2/css/bootstrap.min.css} "/>
-    <link rel="stylesheet" th:href="@{/styles/styles.css}">
-    <link rel="icon" type="image/x-icon" th:href="@{/images/favicon.ico}">
-</head>
+    <head th:insert="~{fragments/head.html :: head (title='Football Updater | Posts')}">
+    </head>
     <body>
         <div class="container">
             <div th:replace="~{fragments/header.html :: header}"></div>
@@ -88,8 +82,8 @@
             </div>
         </div>
 
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<!--        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>-->
+<!--        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>-->
         <script>
             function copyCaptionToClipboard(index) {
                 var copyText = document.getElementById("post-caption-" + index);

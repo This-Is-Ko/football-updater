@@ -9,6 +9,7 @@ import com.ko.footballupdater.models.Match;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Team;
+import com.ko.footballupdater.utils.StatHelper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -248,7 +249,15 @@ public class FotmobDataSource implements DataSourceParser {
                 subbedOff = playerEntry.get("timeSubbedOff").intValue();
             }
             minutesPlayed = subbedOff - subbedOn;
-            return new PlayerMatchPerformanceStats(dataSourceSiteName, match, minutesPlayed, goals, yellowCard, redCard);
+
+            return PlayerMatchPerformanceStats.builder()
+                    .dataSourceSiteName(dataSourceSiteName)
+                    .match(match)
+                    .minutesPlayed(minutesPlayed)
+                    .goals(goals)
+                    .yellowCards(yellowCard)
+                    .redCards(redCard)
+                    .build();
         }
 
         // Separate stats required for goalkeepers
@@ -260,18 +269,18 @@ public class FotmobDataSource implements DataSourceParser {
             return PlayerMatchPerformanceStats.builder()
                     .dataSourceSiteName(dataSourceSiteName)
                     .match(match)
-                    .minutesPlayed(getStatIntegerOrDefault(topStats, "Minutes played", 0))
-                    .touches(getStatIntegerOrDefault(topStats, "Touches", 0))
+                    .minutesPlayed(getStatIntegerOrDefault(topStats, "Minutes played"))
+                    .touches(getStatIntegerOrDefault(topStats, "Touches"))
                     .passesAttempted(parseStatString(topStats, "Accurate passes", STRING_STAT_SECOND_NUMBER_REGEX))
                     .passesCompleted(parseStatString(topStats, "Accurate passes", STRING_STAT_FIRST_NUMBER_REGEX))
                     .longBallsAttempted(parseStatString(topStats, "Accurate long balls", STRING_STAT_SECOND_NUMBER_REGEX))
                     .longBallsCompleted(parseStatString(topStats, "Accurate long balls", STRING_STAT_FIRST_NUMBER_REGEX))
-                    .gkGoalsAgainst(getStatIntegerOrDefault(topStats, "Goals conceded", 0))
+                    .gkGoalsAgainst(getStatIntegerOrDefault(topStats, "Goals conceded"))
                     .gkSaves(parseStatString(topStats, "Saves", STRING_STAT_FIRST_NUMBER_REGEX))
-                    .gkPunches(getStatIntegerOrDefault(topStats, "Punches", 0))
-                    .gkThrows(getStatIntegerOrDefault(topStats, "Throws", 0))
-                    .gkHighClaim(getStatIntegerOrDefault(topStats, "High claim", 0))
-                    .gkRecoveries(getStatIntegerOrDefault(topStats, "Recoveries", 0))
+                    .gkPunches(getStatIntegerOrDefault(topStats, "Punches"))
+                    .gkThrows(getStatIntegerOrDefault(topStats, "Throws"))
+                    .gkHighClaim(getStatIntegerOrDefault(topStats, "High claim"))
+                    .gkRecoveries(getStatIntegerOrDefault(topStats, "Recoveries"))
                     .build();
         }
 
@@ -282,53 +291,57 @@ public class FotmobDataSource implements DataSourceParser {
         }
 
 
-        return PlayerMatchPerformanceStats.builder()
+        PlayerMatchPerformanceStats playerMatchPerformanceStats = PlayerMatchPerformanceStats.builder()
                 .dataSourceSiteName(dataSourceSiteName)
                 .match(match)
-                .minutesPlayed(getStatIntegerOrDefault(topStats, "Minutes played", 0))
-                .goals(getStatIntegerOrDefault(topStats, "Goals", 0))
-                .assists(getStatIntegerOrDefault(topStats, "Assists", 0))
-                .shots(getStatIntegerOrDefault(topStats, "Total shots", 0))
-                .shotsBlocked(getStatIntegerOrDefault(attackStats, "Blocked shots", 0))
-                .fouls(getStatIntegerOrDefault(duelsStats, "Fouls committed", 0))
-                .fouled(getStatIntegerOrDefault(duelsStats, "Was fouled", 0))
-                .offsides(getStatIntegerOrDefault(attackStats, "Offsides", 0))
+                .minutesPlayed(getStatIntegerOrDefault(topStats, "Minutes played"))
+                .goals(getStatIntegerOrDefault(topStats, "Goals"))
+                .assists(getStatIntegerOrDefault(topStats, "Assists"))
+                .shots(getStatIntegerOrDefault(topStats, "Total shots"))
+                .shotsBlocked(getStatIntegerOrDefault(attackStats, "Blocked shots"))
+                .fouls(getStatIntegerOrDefault(duelsStats, "Fouls committed"))
+                .fouled(getStatIntegerOrDefault(duelsStats, "Was fouled"))
+                .offsides(getStatIntegerOrDefault(attackStats, "Offsides"))
                 .crosses(parseStatString(attackStats, "Accurate crosses", STRING_STAT_SECOND_NUMBER_REGEX))
                 .crossesSuccessful(parseStatString(attackStats, "Accurate crosses", STRING_STAT_FIRST_NUMBER_REGEX))
-                .dispossessed(getStatIntegerOrDefault(attackStats, "Dispossessed", 0))
-                .touches(getStatIntegerOrDefault(attackStats, "Touches", 0))
+                .dispossessed(getStatIntegerOrDefault(attackStats, "Dispossessed"))
+                .touches(getStatIntegerOrDefault(attackStats, "Touches"))
                 .tackles(parseStatString(defenseStats, "Tackles won", STRING_STAT_SECOND_NUMBER_REGEX))
                 .tacklesWon(parseStatString(defenseStats, "Tackles won", STRING_STAT_FIRST_NUMBER_REGEX))
-                .defensiveActions(getStatIntegerOrDefault(defenseStats, "Defensive actions", 0))
-                .recoveries(getStatIntegerOrDefault(defenseStats, "Recoveries", 0))
-                .duelsWon(getStatIntegerOrDefault(duelsStats, "Duels won", 0))
-                .duelsLost(getStatIntegerOrDefault(duelsStats, "Duels lost", 0))
-                .groundDuelsWon(getStatIntegerOrDefault(duelsStats, "Ground duels won", 0))
-                .aerialDuelsWon(getStatIntegerOrDefault(duelsStats, "Aerial duels won", 0))
-                .chancesCreatedAll(getStatIntegerOrDefault(topStats, "Chances created", 0))
+                .defensiveActions(getStatIntegerOrDefault(defenseStats, "Defensive actions"))
+                .recoveries(getStatIntegerOrDefault(defenseStats, "Recoveries"))
+                .duelsWon(getStatIntegerOrDefault(duelsStats, "Duels won"))
+                .duelsLost(getStatIntegerOrDefault(duelsStats, "Duels lost"))
+                .groundDuelsWon(getStatIntegerOrDefault(duelsStats, "Ground duels won"))
+                .aerialDuelsWon(getStatIntegerOrDefault(duelsStats, "Aerial duels won"))
+                .chancesCreatedAll(getStatIntegerOrDefault(topStats, "Chances created"))
                 .passesAttempted(parseStatString(topStats, "Accurate passes", STRING_STAT_SECOND_NUMBER_REGEX))
                 .passesCompleted(parseStatString(topStats, "Accurate passes", STRING_STAT_FIRST_NUMBER_REGEX))
-                .passesIntoFinalThird(getStatIntegerOrDefault(attackStats, "Passes into final third", 0))
+                .passesIntoFinalThird(getStatIntegerOrDefault(attackStats, "Passes into final third"))
                 .carries(parseStatString(attackStats, "Successful dribbles", STRING_STAT_SECOND_NUMBER_REGEX))
                 .carriesSuccessful(parseStatString(attackStats, "Successful dribbles", STRING_STAT_FIRST_NUMBER_REGEX))
                 .build();
+
+        StatHelper.populateStatPercentages(playerMatchPerformanceStats);
+
+        return playerMatchPerformanceStats;
     }
 
-    private int getStatIntegerOrDefault(JsonNode statContainer, String stateName, int defaultValue) {
+    private int getStatIntegerOrDefault(JsonNode statContainer, String stateName) {
         // Return default if stat is no found
         try {
             return statContainer.get("stats").get(stateName).get("value").intValue();
         } catch (Exception ex) {
-            return defaultValue;
+            return 0;
         }
     }
 
-    private String getStatStringOrDefault(JsonNode statContainer, String stateName, String defaultValue) {
+    private String getStatStringOrDefault(JsonNode statContainer, String stateName) {
         // Return default if stat is no found
         try {
             return statContainer.get("stats").get(stateName).get("value").textValue();
         } catch (Exception ex) {
-            return defaultValue;
+            return null;
         }
     }
 
@@ -337,7 +350,7 @@ public class FotmobDataSource implements DataSourceParser {
      *  e.g. 37/40 (93%) into 37, 40, 93%
      */
     private Integer parseStatString(JsonNode statContainer, String stateName, String matchRegex) {
-        String statString = getStatStringOrDefault(statContainer, stateName, null);
+        String statString = getStatStringOrDefault(statContainer, stateName);
         if (statString != null) {
             Pattern pattern = Pattern.compile(matchRegex);
             Matcher matcher = pattern.matcher(statString);

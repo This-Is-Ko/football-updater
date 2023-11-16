@@ -129,7 +129,7 @@ public class ImageGeneratorService {
 
         BufferedImage background;
         // No horizontal translation, directly draw image
-        if (imageGenParams.getImageHorizontalTranslation() == null || HorizontalTranslation.CENTER.equals(imageGenParams.getImageHorizontalTranslation())) {
+        if (imageGenParams.getImageHorizontalTranslation() == null || HorizontalTranslation.NONE.equals(imageGenParams.getImageHorizontalTranslation())) {
             background = new BufferedImage((int) (scale * downloadedImage.getWidth()), (int) (scale * downloadedImage.getHeight()), BufferedImage.TYPE_INT_RGB);
             Graphics2D imageGraphics = background.createGraphics();
             imageGraphics.scale(scale, scale);
@@ -142,13 +142,19 @@ public class ImageGeneratorService {
             background = new BufferedImage(1000, 1000, BufferedImage.TYPE_INT_RGB);
             Graphics2D imageGraphics = background.createGraphics();
             imageGraphics.scale(scale, scale);
-            if (HorizontalTranslation.LEFT.equals(imageGenParams.getImageHorizontalTranslation())) {
+            if (HorizontalTranslation.CENTER.equals(imageGenParams.getImageHorizontalTranslation())) {
+                // Top left may need to be drawn off-canvas in order to center
+                int xTranslation = (int) ((downloadedImage.getWidth() * scale) - 1000) / 2;
+                imageGraphics.drawImage(downloadedImage, -xTranslation, 0, null);
+            } else if (HorizontalTranslation.LEFT.equals(imageGenParams.getImageHorizontalTranslation())) {
                 // Top left will remain 0,0
-                imageGraphics.drawImage(downloadedImage, 0 , 0, null);
-            } else {
+                // horizontal offset will move image towards the left
+                imageGraphics.drawImage(downloadedImage, imageGenParams.getImageHorizontalOffset(), 0, null);
+            } else if(HorizontalTranslation.RIGHT.equals(imageGenParams.getImageHorizontalTranslation())) {
                 // Top left will need to be drawn off-canvas and right side of image will appear at center
+                // horizontal offset will move image towards the right
                 int xTranslation = (int) ((downloadedImage.getWidth() * scale) - 1000);
-                imageGraphics.drawImage(downloadedImage, -xTranslation , 0, null);
+                imageGraphics.drawImage(downloadedImage, -xTranslation + imageGenParams.getImageHorizontalOffset(), 0, null);
             }
             imageGraphics.dispose();
         }
