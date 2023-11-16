@@ -7,6 +7,7 @@ import com.ko.footballupdater.models.Match;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Team;
+import com.ko.footballupdater.utils.StatHelper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -118,46 +119,49 @@ public class FbrefDataSource implements DataSourceParser {
                     relevantTeam = awayTeam;
                 }
 
-                return new PlayerMatchPerformanceStats(
-                        dataSourceSiteName,
-                        new Match(latestMatchUrl, selectedMatchDate, homeTeam, awayTeam, relevantTeam),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=minutes]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=goals]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=assists]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=pens_made]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=pens_won]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=shots]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=shots_on_target]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=cards_yellow]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=cards_red]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=fouls]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=fouled]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=offsides]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=crosses]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=touches]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=tackles]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=tackles_won]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=interceptions]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=blocks]").text()),
-                        parseFloatOrNull(resultRow.select("td[data-stat=xg]").text()),
-                        parseFloatOrNull(resultRow.select("td[data-stat=xg_assist]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=sca]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=gca]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=passes_completed]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=passes]").text()),
-                        parseFloatOrNull(resultRow.select("td[data-stat=passes_pct]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=progressive_passes]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=carries]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=progressive_carries]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=take_ons]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=take_ons_won]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=gk_shots_on_target_against]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=gk_goals_against]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=gk_saves]").text()),
-                        parseFloatOrNull(resultRow.select("td[data-stat=gk_save_pct]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=gk_pens_att]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=gk_pens_allowed]").text()),
-                        parseIntegerOrNull(resultRow.select("td[data-stat=gk_pens_saved]").text()));
+                PlayerMatchPerformanceStats playerMatchPerformanceStats = PlayerMatchPerformanceStats.builder()
+                        .dataSourceSiteName(dataSourceSiteName)
+                        .match(new Match(latestMatchUrl, selectedMatchDate, homeTeam, awayTeam, relevantTeam))
+                        .minutesPlayed(parseIntegerOrNull(resultRow.select("td[data-stat=minutes]").text()))
+                        .goals(parseIntegerOrNull(resultRow.select("td[data-stat=goals]").text()))
+                        .assists(parseIntegerOrNull(resultRow.select("td[data-stat=assists]").text()))
+                        .penaltiesScored(parseIntegerOrNull(resultRow.select("td[data-stat=pens_made]").text()))
+                        .penaltiesWon(parseIntegerOrNull(resultRow.select("td[data-stat=pens_won]").text()))
+                        .shots(parseIntegerOrNull(resultRow.select("td[data-stat=shots]").text()))
+                        .shotsOnTarget(parseIntegerOrNull(resultRow.select("td[data-stat=shots_on_target]").text()))
+                        .yellowCards(parseIntegerOrNull(resultRow.select("td[data-stat=cards_yellow]").text()))
+                        .redCards(parseIntegerOrNull(resultRow.select("td[data-stat=cards_red]").text()))
+                        .fouls(parseIntegerOrNull(resultRow.select("td[data-stat=fouls]").text()))
+                        .fouled(parseIntegerOrNull(resultRow.select("td[data-stat=fouled]").text()))
+                        .offsides(parseIntegerOrNull(resultRow.select("td[data-stat=offsides]").text()))
+                        .crosses(parseIntegerOrNull(resultRow.select("td[data-stat=crosses]").text()))
+                        .touches(parseIntegerOrNull(resultRow.select("td[data-stat=touches]").text()))
+                        .tackles(parseIntegerOrNull(resultRow.select("td[data-stat=tackles]").text()))
+                        .tacklesWon(parseIntegerOrNull(resultRow.select("td[data-stat=tackles_won]").text()))
+                        .interceptions(parseIntegerOrNull(resultRow.select("td[data-stat=interceptions]").text()))
+                        .blocks(parseIntegerOrNull(resultRow.select("td[data-stat=blocks]").text()))
+                        .xg(parseFloatOrNull(resultRow.select("td[data-stat=xg]").text()))
+                        .xg_assist(parseFloatOrNull(resultRow.select("td[data-stat=xg_assist]").text()))
+                        .shotCreatingActions(parseIntegerOrNull(resultRow.select("td[data-stat=sca]").text()))
+                        .goalCreatingActions(parseIntegerOrNull(resultRow.select("td[data-stat=gca]").text()))
+                        .passesCompleted(parseIntegerOrNull(resultRow.select("td[data-stat=passes_completed]").text()))
+                        .passesAttempted(parseIntegerOrNull(resultRow.select("td[data-stat=passes]").text()))
+                        .progressivePasses(parseIntegerOrNull(resultRow.select("td[data-stat=progressive_passes]").text()))
+                        .carries(parseIntegerOrNull(resultRow.select("td[data-stat=carries]").text()))
+                        .progressiveCarries(parseIntegerOrNull(resultRow.select("td[data-stat=progressive_carries]").text()))
+                        .takesOnsAttempted(parseIntegerOrNull(resultRow.select("td[data-stat=take_ons]").text()))
+                        .takesOnsCompleted(parseIntegerOrNull(resultRow.select("td[data-stat=take_ons_won]").text()))
+                        .gkShotsOnTargetAgainst(parseIntegerOrNull(resultRow.select("td[data-stat=gk_shots_on_target_against]").text()))
+                        .gkGoalsAgainst(parseIntegerOrNull(resultRow.select("td[data-stat=gk_goals_against]").text()))
+                        .gkSaves(parseIntegerOrNull(resultRow.select("td[data-stat=gk_saves]").text()))
+                        .gkSavePercentage(parseFloatOrNull(resultRow.select("td[data-stat=gk_save_pct]").text()))
+                        .gkPenaltiesAttemptedAgainst(parseIntegerOrNull(resultRow.select("td[data-stat=gk_pens_att]").text()))
+                        .gkPenaltiesScoredAgainst(parseIntegerOrNull(resultRow.select("td[data-stat=gk_pens_allowed]").text()))
+                        .gkPenaltiesSaved(parseIntegerOrNull(resultRow.select("td[data-stat=gk_pens_saved]").text()))
+                        .build();
+
+                StatHelper.populateStatPercentages(playerMatchPerformanceStats);
+                return playerMatchPerformanceStats;
             }
             log.atInfo().setMessage(player.getName() + " " + "Unable to update player, checked all games").addKeyValue("player", player.getName()).log();
         } catch (Exception ex) {

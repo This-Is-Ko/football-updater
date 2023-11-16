@@ -45,13 +45,13 @@ public class Post {
     @JdbcTypeCode(SqlTypes.JSON)
     private Player player;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "match_performance_stats_id")
     @JdbcTypeCode(SqlTypes.JSON)
     private PlayerMatchPerformanceStats playerMatchPerformanceStats;
 
     @Convert(converter = StringListConverter.class)
-    @Column(name = "image_urls")
+    @Column(name = "image_urls", length = 10000)
     private List<String> imagesUrls;
 
     @Transient

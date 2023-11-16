@@ -5,6 +5,8 @@ import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.models.ImageStatEntry;
 import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.models.Post;
+import com.ko.footballupdater.models.form.HorizontalTranslation;
+import com.ko.footballupdater.models.form.ImageGenParams;
 import com.ko.footballupdater.models.form.StatisticEntryGenerateDto;
 import com.ko.footballupdater.utils.DateTimeHelper;
 import com.ko.footballupdater.utils.PostHelper;
@@ -114,20 +116,48 @@ public class ImageGeneratorService {
         return ImageIO.read(new File(baseImagePath));
     }
 
-    private BufferedImage setUpBaseImageWithBackgroundImageUrl(String backgroundImageUrl) throws IOException {
-        URL imageUrl = URI.create(backgroundImageUrl).toURL();
+    private BufferedImage setUpBaseImageWithBackgroundImageUrl(ImageGenParams imageGenParams) throws IOException {
+        URL imageUrl = URI.create(imageGenParams.getBackgroundImageUrl()).toURL();
         BufferedImage downloadedImage = ImageIO.read(imageUrl);
 
         // Scale image down to height of 1000 - change width proportionally
+        // Force scale if set in request
         float scale = 1;
-        if (downloadedImage.getHeight() > 1000) {
+        if (imageGenParams.getForceScaleImage() || downloadedImage.getHeight() > 1000) {
             scale = (float) 1000 /downloadedImage.getHeight();
         }
-        BufferedImage background = new BufferedImage((int) (scale * downloadedImage.getWidth()), (int) (scale * downloadedImage.getHeight()), BufferedImage.TYPE_INT_RGB);
-        Graphics2D imageGraphics = background.createGraphics();
-        imageGraphics.scale(scale, scale);
-        imageGraphics.drawImage(downloadedImage, 0 , 0, null);
-        imageGraphics.dispose();
+
+        BufferedImage background;
+        // No horizontal translation, directly draw image
+        if (imageGenParams.getImageHorizontalTranslation() == null || HorizontalTranslation.NONE.equals(imageGenParams.getImageHorizontalTranslation())) {
+            background = new BufferedImage((int) (scale * downloadedImage.getWidth()), (int) (scale * downloadedImage.getHeight()), BufferedImage.TYPE_INT_RGB);
+            Graphics2D imageGraphics = background.createGraphics();
+            imageGraphics.scale(scale, scale);
+            imageGraphics.drawImage(downloadedImage, 0 , 0, null);
+            imageGraphics.dispose();
+        }
+        // Requires horizontal translation as subject is not center of image
+        // Since we are moving the image, default to 1000 pixel size
+        else {
+            background = new BufferedImage(1000, 1000, BufferedImage.TYPE_INT_RGB);
+            Graphics2D imageGraphics = background.createGraphics();
+            imageGraphics.scale(scale, scale);
+            if (HorizontalTranslation.CENTER.equals(imageGenParams.getImageHorizontalTranslation())) {
+                // Top left may need to be drawn off-canvas in order to center
+                int xTranslation = (int) ((downloadedImage.getWidth() * scale) - 1000) / 2;
+                imageGraphics.drawImage(downloadedImage, -xTranslation, 0, null);
+            } else if (HorizontalTranslation.LEFT.equals(imageGenParams.getImageHorizontalTranslation())) {
+                // Top left will remain 0,0
+                // horizontal offset will move image towards the left
+                imageGraphics.drawImage(downloadedImage, imageGenParams.getImageHorizontalOffset(), 0, null);
+            } else if(HorizontalTranslation.RIGHT.equals(imageGenParams.getImageHorizontalTranslation())) {
+                // Top left will need to be drawn off-canvas and right side of image will appear at center
+                // horizontal offset will move image towards the right
+                int xTranslation = (int) ((downloadedImage.getWidth() * scale) - 1000);
+                imageGraphics.drawImage(downloadedImage, -xTranslation + imageGenParams.getImageHorizontalOffset(), 0, null);
+            }
+            imageGraphics.dispose();
+        }
 
         return background;
     }
@@ -205,12 +235,12 @@ public class ImageGeneratorService {
         return zeroValueFilter;
     }
 
-    public void generateStandoutStatsImage(Post post, List<StatisticEntryGenerateDto> selectedStats, String backgroundImageUrl) throws Exception {
+    public void generateStandoutStatsImage(Post post, List<StatisticEntryGenerateDto> selectedStats, ImageGenParams imageGenParams) throws Exception {
         try {
             BufferedImage image;
-            if (!backgroundImageUrl.isEmpty()) {
+            if (imageGenParams != null && imageGenParams.getBackgroundImageUrl() != null && !imageGenParams.getBackgroundImageUrl().isEmpty()) {
                 // Download and set background image
-                image = setUpBaseImageWithBackgroundImageUrl(backgroundImageUrl);
+                image = setUpBaseImageWithBackgroundImageUrl(imageGenParams);
 
                 // Add gradient
                 drawGradient(image);
@@ -243,6 +273,9 @@ public class ImageGeneratorService {
 
             // Save the modified image
             saveImage(post, image, generateFileName(post, 1, PostType.STANDOUT_STATS_POST), 1);
+        } catch (IOException ex) {
+            log.atWarn().setMessage("Unable to find/read image file").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
+            throw new Exception(post.getPlayer().getName() + " - Unable to find/read image file ", ex);
         } catch (Exception ex) {
             log.atWarn().setMessage("Error while generating standout stat image").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
             throw new Exception(post.getPlayer().getName() + " - Error while generating stat image ", ex);

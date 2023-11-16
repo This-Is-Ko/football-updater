@@ -17,4 +17,6 @@ public class InstagramPostProperies {
 
     private String accountName;
 
+    private String defaultHashtags;
+
 }

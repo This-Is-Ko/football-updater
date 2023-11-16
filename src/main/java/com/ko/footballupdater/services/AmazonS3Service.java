@@ -43,6 +43,10 @@ public class AmazonS3Service {
                     s3Client.putObject(request);
                     String imageUrl = s3Client.getUrl(amazonS3Properties.getBucketName(), imageFileName).toString();
                     log.atInfo().setMessage("Successfully uploaded image " + imageFileName + " to S3 @ " + imageUrl).addKeyValue("player", post.getPlayer().getName()).log();
+
+                    // Remove if url exists and add to end of list, keeps the order of the urls to be oldest to newest
+                    // Prevents duplicates of the same url
+                    post.getImagesUrls().remove(imageUrl);
                     post.getImagesUrls().add(imageUrl);
 
                     cleanUpFile(file);

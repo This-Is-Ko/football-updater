@@ -1,28 +1,49 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>Football Updater | Prepare Post</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link th:rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.2/css/bootstrap.min.css} "/>
-    <link rel="stylesheet" th:href="@{/styles/styles.css}">
-</head>
+    <head th:insert="~{fragments/head.html :: head (title='Football Updater | Prepare Post')}">
+    </head>
     <body>
         <div class="container">
-            <nav class="navbar navbar-light bg-light">
-                <a class="navbar-brand" th:href="@{/posts}">
-                    <h1>Football Updater</h1>
-                </a>
-            </nav>
-            <br>
-            <h2>Prepare Post</h2>
-            <br>
-            <div class="container">
+            <div th:replace="~{fragments/header.html :: header}"></div>
+            <div>
                 <form th:if="${ not#lists.isEmpty(form.allStats)}" th:object="${preparePostForm}" method="post" th:action="@{/posts/generate}">
-                    <input hidden th:field="${form.postId}" th:value="${form.postId}"/>
-                    <div class="text-input-container">
-                        <label for="backgroundImageUrl">Background Image (leave blank for default): </label>
-                        <input id="backgroundImageUrl" type="text" name="backgroundImageUrl">
+                    <br>
+                    <h2>Prepare Post</h2>
+                    <br>
+                    <input hidden th:field="${form.postId}" th:value="${form.post.id}"/>
+                    <div class="mb-3">
+                        <h4>Image search links: </h4>
+                        <ul class="list-group" th:each="imageSearchUrl, searchIter : ${form.post.imageSearchUrls}">
+                            <a th:href="${imageSearchUrl}" target="_blank" rel="noopener noreferrer"><li class="list-group-item" th:text="'Search_' + ${searchIter.index}"></li></a>
+                        </ul>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <label for="backgroundImageUrl" class="form-label">Background Image (leave blank for default): </label>
+                        <div class="input-group mb-3">
+                            <input id="backgroundImageUrl" type="text" class="form-control" name="imageGenParams.backgroundImageUrl" size="100">
+                        </div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <label for="forceScaleImage">Select to scale image to 1000 pixel height regardless of original size</label>
+                        <input id="forceScaleImage" type="checkbox" class="form-check-input" th:field="${form.imageGenParams.forceScaleImage}" th:checked="${forceScaleImage}"/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="horizontalTranslation" class="form-label">Horizontal translation (Select if image is wider than 1000 pixels) </label>
+                        <div class="input-group mb-3">
+                            <select id="horizontalTranslation" class="form-select" th:field="${form.imageGenParams.imageHorizontalTranslation}">
+                                <option th:value="'NONE'" th:text="None" selected="selected"></option>
+                                <option th:value="'CENTER'" th:text="Center"></option>
+                                <option th:value="'LEFT'" th:text="Left"></option>
+                                <option th:value="'RIGHT'" th:text="Right"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="imageHorizontalOffset" class="form-label">Horizontal offset (leave blank for 0): </label>
+                        <div class="input-group mb-3">
+                            <input id="imageHorizontalOffset" type="number" step="10" min="0" class="form-control" name="imageGenParams.imageHorizontalOffset" size="100">
+                        </div>
                     </div>
                     <div class="table-responsive table-fixed-head-stats">
                         <table class="table table-bordered">
@@ -46,7 +67,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <button class="btn btn-primary" type="submit">Generate Post</button>
+                    <button class="btn btn-primary action-button" type="submit">Generate Post</button>
                 </form>
                 <div th:if="${ #lists.isEmpty(form.allStats)}">
                     <p>No stats available to select for this post</p>

@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -44,11 +45,14 @@ public class PlayerMatchPerformanceStats {
     private Integer fouled;
     private Integer offsides;
     private Integer crosses;
+    private Integer crossesSuccessful;
+    private Integer crossesSuccessPercentage;
     private String crossingAccuracyAll;
     private Integer dispossessed;
     private Integer touches;
     private Integer tackles;
     private Integer tacklesWon;
+    private Integer tacklesSuccessPercentage;
     private String tacklingSuccessAll;
     private Integer interceptions;
     private Integer blocks;
@@ -65,12 +69,16 @@ public class PlayerMatchPerformanceStats {
     private Integer chancesCreatedAll;
     private Integer passesCompleted;
     private Integer passesAttempted;
-    private Float passesSuccessPercentage;
+    private Integer passesSuccessPercentage;
     private String passingAccuracyAll;
+    private Integer longBallsAttempted;
+    private Integer longBallsCompleted;
     private String longBallAccuracyAll;
     private Integer progressivePasses;
     private Integer passesIntoFinalThird;
     private Integer carries;
+    private Integer carriesSuccessful;
+    private Integer carriesSuccessPercentage;
     private Integer progressiveCarries;
     private String carriesSuccessAll;
     private Integer takesOnsAttempted;
@@ -95,62 +103,13 @@ public class PlayerMatchPerformanceStats {
     public PlayerMatchPerformanceStats(DataSourceSiteName dataSourceSiteName) {
         this.dataSourceSiteName = dataSourceSiteName;
     }
-
-    public PlayerMatchPerformanceStats(DataSourceSiteName dataSourceSiteName, Match match, Integer minutesPlayed, Integer goals, Integer yellowCards, Integer redCards) {
-        this.dataSourceSiteName = dataSourceSiteName;
+    public PlayerMatchPerformanceStats(Match match) {
         this.match = match;
-        this.minutesPlayed = minutesPlayed;
-        this.goals = goals;
-        this.yellowCards = yellowCards;
-        this.redCards = redCards;
     }
 
-    // Used by FOTMOB goalkeepers
-    public PlayerMatchPerformanceStats(DataSourceSiteName dataSourceSiteName, Match match, Integer minutesPlayed, Integer touches, String passingAccuracyAll, String longBallAccuracyAll, Integer gkGoalsAgainst, String gkSavesAll, Integer gkPunches, Integer gkThrows, Integer gkHighClaim, Integer gkRecoveries) {
-        this.dataSourceSiteName = dataSourceSiteName;
-        this.match = match;
-        this.minutesPlayed = minutesPlayed;
-        this.touches = touches;
-        this.passingAccuracyAll = passingAccuracyAll;
-        this.longBallAccuracyAll = longBallAccuracyAll;
-        this.gkGoalsAgainst = gkGoalsAgainst;
-        this.gkSavesAll = gkSavesAll;
-        this.gkPunches = gkPunches;
-        this.gkThrows = gkThrows;
-        this.gkHighClaim = gkHighClaim;
-        this.gkRecoveries = gkRecoveries;
-    }
-
-    // Used by FOTMOB outfield players
-    public PlayerMatchPerformanceStats(DataSourceSiteName dataSourceSiteName, Match match, Integer minutesPlayed, Integer goals, Integer assists, Integer shots, Integer shotsBlocked, Integer fouls, Integer fouled, Integer offsides, String crossingAccuracyAll, Integer dispossessed, Integer touches, String tacklingSuccessAll, Integer defensiveActions, Integer recoveries, Integer duelsWon, Integer duelsLost, Integer groundDuelsWon, Integer aerialDuelsWon, Integer chancesCreatedAll, String passingAccuracyAll, Integer passesIntoFinalThird, String carriesSuccessAll) {
-        this.dataSourceSiteName = dataSourceSiteName;
-        this.match = match;
-        this.minutesPlayed = minutesPlayed;
-        this.goals = goals;
-        this.assists = assists;
-        this.shots = shots;
-        this.shotsBlocked = shotsBlocked;
-        this.fouls = fouls;
-        this.fouled = fouled;
-        this.offsides = offsides;
-        this.crossingAccuracyAll = crossingAccuracyAll;
-        this.dispossessed = dispossessed;
-        this.touches = touches;
-        this.tacklingSuccessAll = tacklingSuccessAll;
-        this.defensiveActions = defensiveActions;
-        this.recoveries = recoveries;
-        this.duelsWon = duelsWon;
-        this.duelsLost = duelsLost;
-        this.groundDuelsWon = groundDuelsWon;
-        this.aerialDuelsWon = aerialDuelsWon;
-        this.chancesCreatedAll = chancesCreatedAll;
-        this.passingAccuracyAll = passingAccuracyAll;
-        this.passesIntoFinalThird = passesIntoFinalThird;
-        this.carriesSuccessAll = carriesSuccessAll;
-    }
-
-    // Used by FBREF
-    public PlayerMatchPerformanceStats(DataSourceSiteName dataSourceSiteName, Match match, Integer minutesPlayed, Integer goals, Integer assists, Integer penaltiesScored, Integer penaltiesWon, Integer shots, Integer shotsOnTarget, Integer yellowCards, Integer redCards, Integer fouls, Integer fouled, Integer offsides, Integer crosses, Integer touches, Integer tackles, Integer tacklesWon, Integer interceptions, Integer blocks, Float xg, Float xg_assist, Integer shotCreatingActions, Integer goalCreatingActions, Integer passesCompleted, Integer passesAttempted, Float passesSuccessPercentage, Integer progressivePasses, Integer carries, Integer progressiveCarries, Integer takesOnsAttempted, Integer takesOnsCompleted, Integer gkShotsOnTargetAgainst, Integer gkGoalsAgainst, Integer gkSaves, Float gkSavePercentage, Integer gkPenaltiesAttemptedAgainst, Integer gkPenaltiesScoredAgainst, Integer gkPenaltiesSaved) {
+    @Builder
+    public PlayerMatchPerformanceStats(Integer id, DataSourceSiteName dataSourceSiteName, Match match, Integer minutesPlayed, Integer goals, Integer assists, Integer penaltiesScored, Integer penaltiesWon, Integer shots, Integer shotsOnTarget, Integer shotsBlocked, Integer yellowCards, Integer redCards, Integer fouls, Integer fouled, Integer offsides, Integer crosses, Integer crossesSuccessful, String crossingAccuracyAll, Integer dispossessed, Integer touches, Integer tackles, Integer tacklesWon, String tacklingSuccessAll, Integer interceptions, Integer blocks, Integer defensiveActions, Integer recoveries, Integer duelsWon, Integer duelsLost, Integer groundDuelsWon, Integer aerialDuelsWon, Float xg, Float xg_assist, Integer shotCreatingActions, Integer goalCreatingActions, Integer chancesCreatedAll, Integer passesCompleted, Integer passesAttempted, String passingAccuracyAll, Integer longBallsAttempted, Integer longBallsCompleted, String longBallAccuracyAll, Integer progressivePasses, Integer passesIntoFinalThird, Integer carries, Integer carriesSuccessful, Integer progressiveCarries, String carriesSuccessAll, Integer takesOnsAttempted, Integer takesOnsCompleted, Integer gkShotsOnTargetAgainst, Integer gkGoalsAgainst, Integer gkSaves, Float gkSavePercentage, String gkSavesAll, Integer gkPunches, Integer gkThrows, Integer gkHighClaim, Integer gkRecoveries, Integer gkPenaltiesAttemptedAgainst, Integer gkPenaltiesScoredAgainst, Integer gkPenaltiesSaved) {
+        this.id = id;
         this.dataSourceSiteName = dataSourceSiteName;
         this.match = match;
         this.minutesPlayed = minutesPlayed;
@@ -160,33 +119,56 @@ public class PlayerMatchPerformanceStats {
         this.penaltiesWon = penaltiesWon;
         this.shots = shots;
         this.shotsOnTarget = shotsOnTarget;
+        this.shotsBlocked = shotsBlocked;
         this.yellowCards = yellowCards;
         this.redCards = redCards;
         this.fouls = fouls;
         this.fouled = fouled;
         this.offsides = offsides;
         this.crosses = crosses;
+        this.crossesSuccessful = crossesSuccessful;
+        this.crossingAccuracyAll = crossingAccuracyAll;
+        this.dispossessed = dispossessed;
         this.touches = touches;
         this.tackles = tackles;
         this.tacklesWon = tacklesWon;
+        this.tacklingSuccessAll = tacklingSuccessAll;
         this.interceptions = interceptions;
         this.blocks = blocks;
+        this.defensiveActions = defensiveActions;
+        this.recoveries = recoveries;
+        this.duelsWon = duelsWon;
+        this.duelsLost = duelsLost;
+        this.groundDuelsWon = groundDuelsWon;
+        this.aerialDuelsWon = aerialDuelsWon;
         this.xg = xg;
         this.xg_assist = xg_assist;
         this.shotCreatingActions = shotCreatingActions;
         this.goalCreatingActions = goalCreatingActions;
+        this.chancesCreatedAll = chancesCreatedAll;
         this.passesCompleted = passesCompleted;
         this.passesAttempted = passesAttempted;
-        this.passesSuccessPercentage = passesSuccessPercentage;
+        this.passingAccuracyAll = passingAccuracyAll;
+        this.longBallsAttempted = longBallsAttempted;
+        this.longBallsCompleted = longBallsCompleted;
+        this.longBallAccuracyAll = longBallAccuracyAll;
         this.progressivePasses = progressivePasses;
+        this.passesIntoFinalThird = passesIntoFinalThird;
         this.carries = carries;
+        this.carriesSuccessful = carriesSuccessful;
         this.progressiveCarries = progressiveCarries;
+        this.carriesSuccessAll = carriesSuccessAll;
         this.takesOnsAttempted = takesOnsAttempted;
         this.takesOnsCompleted = takesOnsCompleted;
         this.gkShotsOnTargetAgainst = gkShotsOnTargetAgainst;
         this.gkGoalsAgainst = gkGoalsAgainst;
         this.gkSaves = gkSaves;
         this.gkSavePercentage = gkSavePercentage;
+        this.gkSavesAll = gkSavesAll;
+        this.gkPunches = gkPunches;
+        this.gkThrows = gkThrows;
+        this.gkHighClaim = gkHighClaim;
+        this.gkRecoveries = gkRecoveries;
         this.gkPenaltiesAttemptedAgainst = gkPenaltiesAttemptedAgainst;
         this.gkPenaltiesScoredAgainst = gkPenaltiesScoredAgainst;
         this.gkPenaltiesSaved = gkPenaltiesSaved;
@@ -300,9 +282,6 @@ public class PlayerMatchPerformanceStats {
         }
         if (passesAttempted != null) {
             builder.append("Passes Attempted: ").append(passesAttempted).append("\n");
-        }
-        if (passesSuccessPercentage != null) {
-            builder.append("Pass Success Percentage: ").append(passesSuccessPercentage).append("\n");
         }
         if (passingAccuracyAll != null) {
             builder.append("Passing Accuracy: ").append(passingAccuracyAll).append("\n");
