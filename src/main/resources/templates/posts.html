@@ -11,6 +11,9 @@
             <div th:if="${param.postedStatus == null}">
                 <a class="btn btn-secondary btn-sm action-button" th:href="@{/posts?postedStatus=false}">Not posted only</a>
             </div>
+            <div th:if="${facebook != null}">
+                <a class="btn btn-primary" th:href="${facebook.loginUri}">Login</a>
+            </div>
             <div>
                 <form th:if="${ not#lists.isEmpty(form.posts)}" th:object="${postsForm}" method="post" th:action="@{/posts/save}">
                     <div class="table-responsive table-fixed-head">
@@ -53,10 +56,10 @@
                                     <td>
                                         <a class="btn btn-primary action-button full-width-button" th:onclick="'copyCaptionToClipboard(' + ${itemStat.index} + ')'" onclick="">Copy caption</a>
                                         <a class="btn btn-primary action-button full-width-button" th:href="@{/posts/prepare?postId={id}(id=${post.id})}">Custom post</a>
-                                        <br>
-                                        <a type="button" class="btn btn-danger full-width-button" data-toggle="modal" th:data-target="'#delete-confirm-modal' + ${post.id}">Delete</a>
+                                        <a class="btn btn-primary action-button full-width-button" th:href="@{/posts/prepare-upload?postId={id}(id=${post.id})}">Upload post</a>
+                                        <a type="button" class="btn btn-danger full-width-button" data-toggle="modal" th:data-target="'#delete-confirm-modal-' + ${post.id}">Delete</a>
 
-                                        <div th:id="'delete-confirm-modal' + ${post.id}" class="modal" tabindex="-1" role="dialog">
+                                        <div th:id="'delete-confirm-modal-' + ${post.id}" class="modal" tabindex="-1" role="dialog">
                                             <div class="modal-dialog" role="document">
                                                 <div class="modal-content">
                                                     <div class="modal-header">
@@ -82,8 +85,8 @@
             </div>
         </div>
 
-<!--        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>-->
-<!--        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>-->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
         <script>
             function copyCaptionToClipboard(index) {
                 var copyText = document.getElementById("post-caption-" + index);

@@ -1,11 +1,13 @@
 package com.ko.footballupdater.controllers;
 
 import com.ko.footballupdater.models.Post;
+import com.ko.footballupdater.models.form.ImageUrlEntry;
 import com.ko.footballupdater.models.form.PostsUpdateDto;
 import com.ko.footballupdater.models.form.PreparePostDto;
+import com.ko.footballupdater.models.form.UploadPostDto;
+import com.ko.footballupdater.services.FacebookApiService;
 import com.ko.footballupdater.services.PostService;
 import jakarta.annotation.Nullable;
-import jakarta.validation.constraints.Null;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.ko.footballupdater.utils.PostHelper.generatePostImageSearchUrl;
@@ -30,6 +33,9 @@ public class PostController {
 
     @Autowired
     private PostService postService;
+
+    @Autowired
+    private FacebookApiService facebookApiService;
 
     /**
      * Display all generated posts
@@ -45,6 +51,8 @@ public class PostController {
             postsUpdateDto.addPost(post);
         }
         model.addAttribute("form", postsUpdateDto);
+
+        model.addAttribute("facebook", facebookApiService.prepareFacebookApiDto());
         return "posts";
     }
 
@@ -115,6 +123,48 @@ public class PostController {
             model.addAttribute("form", preparePostForm);
             model.addAttribute("preparePostForm", preparePostForm);
             return "redirect:/posts/prepare?postId=" + preparePostForm.getPostId();
+        }
+    }
+
+    /**
+     * Generate post image from selected stats
+     * @return redirect to posts view
+     */
+    @GetMapping("/prepare-upload")
+    public String prepareUploadPost(Model model, @RequestParam Integer postId) {
+        try {
+            UploadPostDto uploadPostDto = new UploadPostDto();
+            uploadPostDto.setPost(postService.getPostById(postId));
+            uploadPostDto.setPostId(postId);
+            List<ImageUrlEntry> imageUrls = new ArrayList<>();
+            for (int i = 0; i < uploadPostDto.getPost().getImagesUrls().size(); i++) {
+                imageUrls.add(new ImageUrlEntry(i+1, uploadPostDto.getPost().getImagesUrls().get(i)));
+            }
+            uploadPostDto.setImageUrls(imageUrls);
+            model.addAttribute("form", uploadPostDto);
+            model.addAttribute("uploadPostForm", uploadPostDto);
+            return "uploadPost";
+        } catch (Exception ex) {
+            log.atError().setMessage("Preparing post to upload").setCause(ex).log();
+            return "redirect:/posts";
+        }
+    }
+
+    /**
+     * Generate post image from selected stats
+     * @return redirect to posts view
+     */
+    @PostMapping("/upload")
+    public String uploadPost(Model model, @ModelAttribute UploadPostDto uploadPostForm, BindingResult result) {
+        if (result.hasErrors()) {
+            return "redirect:/posts";
+        }
+        try {
+            postService.uploadPost(uploadPostForm);
+            return "redirect:/posts";
+        } catch (Exception ex) {
+            log.atError().setMessage("Updating post status failed").setCause(ex).log();
+            return "redirect:/posts";
         }
     }
 }

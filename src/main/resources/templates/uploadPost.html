@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head th:insert="~{fragments/head.html :: head (title='Football Updater | Upload Post')}">
+    </head>
+    <body>
+        <div class="container">
+            <div th:replace="~{fragments/header.html :: header}"></div>
+            <br>
+            <h2>Upload Post</h2>
+            <br>
+            <div th:if="${facebook != null}">
+                <a class="btn btn-primary" th:href="${facebook.loginUri}">Login</a>
+            </div>
+            <div>
+                <form th:if="${ form.post != null AND not#lists.isEmpty(form.imageUrls) }" th:object="${uploadPostForm}" method="post" th:action="@{/posts/upload}">
+                    <input hidden th:field="${form.postId}" th:value="${form.post.id}"/>
+                    <div class="table-responsive table-fixed-head">
+                        <table
+                                id="post-table"
+                                class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th style="min-width:100px" >Number</th>
+                                    <th>Image</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="imageEntry, itemStat : ${ form.imageUrls }">
+                                    <td style="min-width:100px">
+                                        <input th:field="*{imageUrls[__${itemStat.index}__].imageIndex}" type="number" class="form-control" size="100">
+                                    </td>
+                                    <td>
+                                        <input hidden th:field="*{imageUrls[__${itemStat.index}__].url}"/>
+                                        <img th:src="${imageEntry.url}" width="300px">
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="btn btn-primary action-button" type="submit">Upload</button>
+                </form>
+                <div th:if="${ form.post == null OR form.imageUrls == null }">
+                    <p>No posts available</p>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <script>
+            function copyCaptionToClipboard(index) {
+                var copyText = document.getElementById("post-caption-" + index);
+                navigator.clipboard.writeText(copyText.innerText);
+                alert("Copied caption: " + copyText.innerText);
+            }
+        </script>
+    </body>
+</html>

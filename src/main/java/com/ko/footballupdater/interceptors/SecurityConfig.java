@@ -30,6 +30,7 @@ public class SecurityConfig {
                         .requestMatchers("/images/favicon.ico").permitAll()
                         .requestMatchers("/api/**").permitAll()
                         .requestMatchers("/posts/**").permitAll()
+                        .requestMatchers("/facebook/auth").permitAll()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())

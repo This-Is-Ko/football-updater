@@ -4,8 +4,10 @@ package com.ko.footballupdater.services;
 import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.PostType;
+import com.ko.footballupdater.models.form.ImageUrlEntry;
 import com.ko.footballupdater.models.form.PreparePostDto;
 import com.ko.footballupdater.models.form.StatisticEntryGenerateDto;
+import com.ko.footballupdater.models.form.UploadPostDto;
 import com.ko.footballupdater.repositories.PlayerRepository;
 import com.ko.footballupdater.repositories.PostRepository;
 import com.ko.footballupdater.utils.PostHelper;
@@ -15,10 +17,13 @@ import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.ko.footballupdater.utils.PostHelper.generatePostImageSearchUrl;
 
@@ -42,6 +47,9 @@ public class PostService {
     private AmazonS3Service amazonS3Service;
 
     @Autowired
+    private FacebookApiService facebookApiService;
+
+    @Autowired
     private InstagramPostProperies instagramPostProperies;
 
     final Map<String, String> CUSTOM_FIELD_NAME_MAPPING = Map.of(
@@ -57,6 +65,14 @@ public class PostService {
             return postRepository.findByPostedStatus(postedStatus);
         }
         return postRepository.findAllByOrderByDateGeneratedDesc();
+    }
+
+    public Post getPostById(Integer postId) throws Exception {
+        Optional<Post> postSearchResult = postRepository.findById(postId);
+        if (postSearchResult.isEmpty()) {
+            throw new Exception("Post id not found");
+        }
+        return postSearchResult.get();
     }
 
     public void updatePostPostedStatus(List<Post> postsToSave) {
@@ -149,5 +165,36 @@ public class PostService {
             log.atWarn().setMessage("Something went wrong while creating standout post").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
             throw new Exception("Something went wrong while creating standout post: " + ex.getMessage());
         }
+    }
+
+    public void uploadPost(UploadPostDto uploadPostForm) throws Exception {
+        Post post = getPostById(uploadPostForm.getPostId());
+
+        // TODO Check list doesn't contain duplicate non-zero index values
+        // Extract non-zero image indices
+        Set<Integer> nonZeroIndices = uploadPostForm.getImageUrls().stream()
+                .map(ImageUrlEntry::getImageIndex)
+                .filter(index -> index != null && index != 0)
+                .collect(Collectors.toSet());
+
+        // Check for duplicates
+        Set<Integer> uniqueIndices = new HashSet<>();
+        for (Integer index : nonZeroIndices) {
+            if (!uniqueIndices.add(index)) {
+                throw new Exception("Cannot upload due to duplicate index values");
+            }
+        }
+
+        // Extract selected images - index as 0 will not be uploaded
+        // Reorder in ascending order based on index
+        List<ImageUrlEntry> imagesToUpload = uploadPostForm.getImageUrls().stream()
+                .filter(entry -> entry.getImageIndex() != null && entry.getImageIndex() != 0)
+                .sorted(Comparator.comparingInt(ImageUrlEntry::getImageIndex))
+                .toList();
+
+        facebookApiService.postToInstagram(post, imagesToUpload);
+
+        post.setPostedStatus(true);
+        postRepository.save(post);
     }
 }
