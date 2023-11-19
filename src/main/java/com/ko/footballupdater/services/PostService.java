@@ -170,7 +170,6 @@ public class PostService {
     public void uploadPost(UploadPostDto uploadPostForm) throws Exception {
         Post post = getPostById(uploadPostForm.getPostId());
 
-        // TODO Check list doesn't contain duplicate non-zero index values
         // Extract non-zero image indices
         Set<Integer> nonZeroIndices = uploadPostForm.getImageUrls().stream()
                 .map(ImageUrlEntry::getImageIndex)
