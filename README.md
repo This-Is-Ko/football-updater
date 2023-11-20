@@ -2,19 +2,24 @@
 
 Check for player match performance data from their latest game and generate images which contain their statistics for the selected game.
 
-These are uploaded to a S3 bucket and an email is sent to the configured email containing a generated post caption, S3 file links and Google Image search links for recent photos for the player.
+These are uploaded to a S3 bucket and displayed on dashboard to track which posts generated and posted, containing a generated post caption, S3 file links and Google Image search links for recent photos for the player.
+
+From this dashboard, posts can be managed with features such as uploading directly to Instagram (with editable captions and image order), generating unique images to display standout statistics, tracking uploaded/pending posts and deleting.
+
+The custom image generator allows custom backgrounds to be inserted and select what stats to include on the image.
 
 Hosted on an EC2 instance, players/teams to check are stored in RDS MySQL database and configured with an external cron job to run at scheduled times.
 
-Included a dashboard to track which posts have been posted with the same content in additional to the email notifications.
-
-From this dashboard, posts can be marked as posted, or deleted, and generate different post types for standout statistics.
+An email notification is also sent to the configured email when new posts are generated.
 
 Posts page: 
-    ![image](https://github.com/This-Is-Ko/football-updater/assets/52279273/598b68d1-ebaf-4de6-9c91-f5ee94cb3f3a)
+    ![image](https://github.com/This-Is-Ko/football-updater/assets/52279273/e0eced21-642f-42e5-ac63-d3613b827b8b)
 
 Generate custom post page: 
-    ![image](https://github.com/This-Is-Ko/football-updater/assets/52279273/1c07c116-db01-4cfa-a1a9-f0008c8c0b19)
+    ![image](https://github.com/This-Is-Ko/football-updater/assets/52279273/90e5a368-9831-4777-a36a-c8e4e658f605)
+
+Upload to Instagram page:
+    ![image](https://github.com/This-Is-Ko/football-updater/assets/52279273/136ff159-ddf6-4e9f-bf3a-f437b95f8556)
 
 
 ### Build
@@ -122,6 +127,14 @@ The dashboard can be accessed at
 The Spring Security default login page is used and the password can be configured following the above.
 
     DASHBOARD_PASSWORD
+
+The Facebook API config needs to be set up in order to use the uploader. Other features all work without the Facebook login setup.
+
+Create an app in the Facebook developer portal and configure the clientId, secret and redirectUris. The instagram account will need to be linked and accountId also configured.
+
+Instagram publishing follows the flow reccommended by Facebook seen here https://developers.facebook.com/docs/instagram-api/guides/content-publishing#carousel-posts
+
+Due to Facebook's security rules, to run in a environment which is not "localhost", SSL needs to be configured (to use HTTPS connection) and a custom domain is required. 
 
 Favicon from https://iconscout.com/free-icon/soccer-8
 
