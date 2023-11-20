@@ -4,20 +4,19 @@ import com.ko.footballupdater.models.Post;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 @Setter
-public class PreparePostDto {
+public class UploadPostDto {
 
     private Integer postId;
 
     private Post post;
 
-    private ImageGenParams imageGenParams = new ImageGenParams();
+    private List<ImageUrlEntry> imageUrls = new ArrayList<>();
 
-    private List<StatisticEntryGenerateDto> allStats;
-
-    private String error;
+    private String caption;
 
 }

@@ -6,7 +6,7 @@
         <div class="container">
             <div th:replace="~{fragments/header.html :: header}"></div>
             <div>
-                <form th:if="${ not#lists.isEmpty(form.allStats)}" th:object="${preparePostForm}" method="post" th:action="@{/posts/generate}">
+                <form th:if="${ not#lists.isEmpty(form.allStats)}" th:object="${prepareStandoutImageForm}" method="post" th:action="@{/posts/generate}">
                     <br>
                     <h2>Prepare Post</h2>
                     <br>
@@ -32,10 +32,10 @@
                         <label for="horizontalTranslation" class="form-label">Horizontal translation (Select if image is wider than 1000 pixels) </label>
                         <div class="input-group mb-3">
                             <select id="horizontalTranslation" class="form-select" th:field="${form.imageGenParams.imageHorizontalTranslation}">
-                                <option th:value="'NONE'" th:text="None" selected="selected"></option>
-                                <option th:value="'CENTER'" th:text="Center"></option>
+                                <option th:value="'CENTER'" th:text="Center" selected="selected"></option>
                                 <option th:value="'LEFT'" th:text="Left"></option>
                                 <option th:value="'RIGHT'" th:text="Right"></option>
+                                <option th:value="'NONE'" th:text="None"></option>
                             </select>
                         </div>
                     </div>

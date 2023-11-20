@@ -149,12 +149,20 @@ public class ImageGeneratorService {
             } else if (HorizontalTranslation.LEFT.equals(imageGenParams.getImageHorizontalTranslation())) {
                 // Top left will remain 0,0
                 // horizontal offset will move image towards the left
-                imageGraphics.drawImage(downloadedImage, imageGenParams.getImageHorizontalOffset(), 0, null);
+                int horizontalOffset = 0;
+                if (imageGenParams.getImageHorizontalOffset() != null) {
+                    horizontalOffset = imageGenParams.getImageHorizontalOffset();
+                }
+                imageGraphics.drawImage(downloadedImage, horizontalOffset, 0, null);
             } else if(HorizontalTranslation.RIGHT.equals(imageGenParams.getImageHorizontalTranslation())) {
                 // Top left will need to be drawn off-canvas and right side of image will appear at center
                 // horizontal offset will move image towards the right
                 int xTranslation = (int) ((downloadedImage.getWidth() * scale) - 1000);
-                imageGraphics.drawImage(downloadedImage, -xTranslation + imageGenParams.getImageHorizontalOffset(), 0, null);
+                int horizontalOffset = 0;
+                if (imageGenParams.getImageHorizontalOffset() != null) {
+                    horizontalOffset = imageGenParams.getImageHorizontalOffset();
+                }
+                imageGraphics.drawImage(downloadedImage, -xTranslation + horizontalOffset, 0, null);
             }
             imageGraphics.dispose();
         }
@@ -256,10 +264,16 @@ public class ImageGeneratorService {
 
             // Add player name
             Font nikeIthacaFont = new Font("Nike Ithaca", Font.PLAIN, 47);
-            drawXCenteredText(image, nikeIthacaFont, post.getPlayer().getName().toUpperCase(), image.getHeight() - 350);
+            if (!selectedStats.isEmpty()) {
+                drawXCenteredText(image, nikeIthacaFont, post.getPlayer().getName().toUpperCase(), image.getHeight() - 350);
+            } else {
+                drawXCenteredText(image, nikeIthacaFont, post.getPlayer().getName().toUpperCase(), image.getHeight() - 100);
+            }
 
             // Add match stats
-            drawSplitStats(image, selectedStats);
+            if (!selectedStats.isEmpty()){
+                drawSplitStats(image, selectedStats);
+            }
 
             // Add match name
             String matchName = PostHelper.generateMatchName(post.getPlayerMatchPerformanceStats());

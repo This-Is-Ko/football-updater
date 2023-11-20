@@ -108,7 +108,7 @@ public class PlayerService {
                 // Generate stat images
                 imageGeneratorService.generatePlayerStatImage(post);
                 // Upload stat images to s3
-                amazonS3Service.uploadtoS3(post);
+                amazonS3Service.uploadToS3(post);
                 // Generate caption
                 PostHelper.generatePostCaption(instagramPostProperies.getVersion(), post, instagramPostProperies.getDefaultHashtags());
                 // Generate image search links

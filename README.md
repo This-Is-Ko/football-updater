@@ -92,6 +92,15 @@ AWS S3 Uploads
     AWS_SECRET_KEY
     AWS_S3_BUCKET_NAME
 
+Facebook and Instagram API
+
+    FACEBOOK_API_CLIENT_ID
+    FACEBOOK_API_CLIENT_SECRET
+    FACEBOOK_API_RESPONSE_TYPE
+    FACEBOOK_API_SCOPE
+    FACEBOOK_API_REDIRECT_URI
+    FACEBOOK_API_INSTAGRAM_USER_ID
+
 ### API
 
 API endpoints can be configured to check for a secret to prevent unauthorized access. This value can be configured with 

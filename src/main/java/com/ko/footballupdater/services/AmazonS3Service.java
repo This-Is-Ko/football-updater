@@ -27,7 +27,11 @@ public class AmazonS3Service {
     @Autowired
     private AmazonS3 s3Client;
 
-    public void uploadtoS3(Post post) throws Exception {
+    public void uploadToS3(Post post) throws Exception {
+        uploadToS3(post, false);
+    }
+
+    public void uploadToS3(Post post, Boolean addToFront) throws Exception {
         if (!amazonS3Properties.isEnabled()) {
             return;
         }
@@ -47,7 +51,13 @@ public class AmazonS3Service {
                     // Remove if url exists and add to end of list, keeps the order of the urls to be oldest to newest
                     // Prevents duplicates of the same url
                     post.getImagesUrls().remove(imageUrl);
-                    post.getImagesUrls().add(imageUrl);
+                    // Add to front of image url list  if addToFront=true
+                    // Allows the default order of images in post upload to be standoutImage then allStatImage
+                    if (addToFront) {
+                        post.getImagesUrls().add(0, imageUrl);
+                    } else {
+                        post.getImagesUrls().add(imageUrl);
+                    }
 
                     cleanUpFile(file);
                 }

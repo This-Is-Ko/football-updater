@@ -61,9 +61,9 @@ public class PostHelper {
     public static String generatePlayerHashtags(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats, String additionalHashtags) {
         String teamNameHashtag = "";
         if (playerMatchPerformanceStats.getMatch().getRelevantTeam() != null && !playerMatchPerformanceStats.getMatch().getRelevantTeam().isEmpty()) {
-            teamNameHashtag = "#" + playerMatchPerformanceStats.getMatch().getRelevantTeam().replaceAll(" ", "");
+            teamNameHashtag = "#" + playerMatchPerformanceStats.getMatch().getRelevantTeam().replaceAll(" ", "").replaceAll("-", "");
         }
-        return "\n\n#" + player.getName().replaceAll(" ", "") + " " +
+        return "\n\n#" + player.getName().replaceAll(" ", "").replaceAll("-", "") + " " +
                 (additionalHashtags != null ? additionalHashtags + " " : "") +
                 teamNameHashtag;
     }
