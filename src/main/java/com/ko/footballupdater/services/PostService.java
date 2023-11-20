@@ -146,7 +146,7 @@ public class PostService {
 
         if (filteredStats.isEmpty()) {
             prepareStandoutImageDto.setPost(post);
-            throw new Exception("No stat selected, unable to generate standout stat image");
+            log.atInfo().setMessage("No stat selected, unable to generate standout stat image").log();
         }
 
         try {
