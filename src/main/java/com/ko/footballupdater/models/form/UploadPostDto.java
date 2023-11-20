@@ -17,4 +17,6 @@ public class UploadPostDto {
 
     private List<ImageUrlEntry> imageUrls = new ArrayList<>();
 
+    private String caption;
+
 }

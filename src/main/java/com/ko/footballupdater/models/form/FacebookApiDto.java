@@ -7,6 +7,8 @@ import lombok.Setter;
 @Setter
 public class FacebookApiDto {
 
+    private Boolean currentlyLoggedIn;
+
     private String loginUri;
 
 }

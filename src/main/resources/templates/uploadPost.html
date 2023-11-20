@@ -8,8 +8,10 @@
             <br>
             <h2>Upload Post</h2>
             <br>
-            <div th:if="${facebook != null}">
-                <a class="btn btn-primary" th:href="${facebook.loginUri}">Login</a>
+            <div class="d-flex flex-row justify-content-between">
+                <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == false AND facebookStatus.loginUri != null}" class="btn btn-primary btn-sm action-button" th:href="${facebookStatus.loginUri}">Login to Facebook</a>
+                <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == false AND facebookStatus.loginUri == null}" class="btn btn-primary btn-sm action-button disabled" th:href="${facebookStatus.loginUri}">Login to Facebook unavailable</a>
+                <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == true}" class="btn btn-success btn-sm action-button disabled" th:href="${facebookStatus.loginUri}">Logged In</a>
             </div>
             <div>
                 <form th:if="${ form.post != null AND not#lists.isEmpty(form.imageUrls) }" th:object="${uploadPostForm}" method="post" th:action="@{/posts/upload}">
@@ -37,10 +39,16 @@
                             </tbody>
                         </table>
                     </div>
+                    <div class="mb-3">
+                        <div>
+                            <label for="caption">Caption:</label>
+                            <textarea id="caption" name="caption" rows="4" th:text="${form.post.caption}" class="form-control"></textarea>
+                        </div>
+                    </div>
                     <button class="btn btn-primary action-button" type="submit">Upload</button>
                 </form>
                 <div th:if="${ form.post == null OR form.imageUrls == null }">
-                    <p>No posts available</p>
+                    <p>Cannot find post or images</p>
                 </div>
             </div>
         </div>

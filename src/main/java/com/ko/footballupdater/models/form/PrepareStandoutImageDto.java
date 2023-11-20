@@ -8,7 +8,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class PreparePostDto {
+public class PrepareStandoutImageDto {
 
     private Integer postId;
 

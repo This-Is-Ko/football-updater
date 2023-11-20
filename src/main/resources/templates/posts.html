@@ -8,11 +8,11 @@
             <br>
             <h2>Latest Posts</h2>
             <br>
-            <div th:if="${param.postedStatus == null}">
-                <a class="btn btn-secondary btn-sm action-button" th:href="@{/posts?postedStatus=false}">Not posted only</a>
-            </div>
-            <div th:if="${facebook != null}">
-                <a class="btn btn-primary" th:href="${facebook.loginUri}">Login</a>
+            <div class="d-flex flex-row justify-content-between">
+                <a th:if="${param.postedStatus == null}" class="btn btn-secondary btn-sm action-button" th:href="@{/posts?postedStatus=false}">Filter not posted only</a>
+                <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == false AND facebookStatus.loginUri != null}" class="btn btn-primary btn-sm action-button" th:href="${facebookStatus.loginUri}">Login to Facebook</a>
+                <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == false AND facebookStatus.loginUri == null}" class="btn btn-primary btn-sm action-button disabled" th:href="${facebookStatus.loginUri}">Login to Facebook unavailable</a>
+                <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == true}" class="btn btn-success btn-sm action-button disabled" th:href="${facebookStatus.loginUri}">Logged In</a>
             </div>
             <div>
                 <form th:if="${ not#lists.isEmpty(form.posts)}" th:object="${postsForm}" method="post" th:action="@{/posts/save}">
@@ -54,9 +54,10 @@
                                         <input type="checkbox" th:checked="${post.isPostedStatus()}" th:name="|posts[${itemStat.index}].postedStatus|" />
                                     </td>
                                     <td>
-                                        <a class="btn btn-primary action-button full-width-button" th:onclick="'copyCaptionToClipboard(' + ${itemStat.index} + ')'" onclick="">Copy caption</a>
-                                        <a class="btn btn-primary action-button full-width-button" th:href="@{/posts/prepare?postId={id}(id=${post.id})}">Custom post</a>
-                                        <a class="btn btn-primary action-button full-width-button" th:href="@{/posts/prepare-upload?postId={id}(id=${post.id})}">Upload post</a>
+                                        <a class="btn btn-primary action-button full-width-button" th:href="@{/posts/prepare-standout-image?postId={id}(id=${post.id})}">Custom image</a>
+                                        <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == true}" class="btn btn-primary action-button full-width-button" th:href="@{/posts/prepare-upload?postId={id}(id=${post.id})}">Upload post</a>
+                                        <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == false}" class="btn btn-primary action-button full-width-button disabled" th:href="@{/posts/prepare-upload?postId={id}(id=${post.id})}">Upload post</a>
+                                        <a class="btn btn-secondary action-button full-width-button" th:onclick="'copyCaptionToClipboard(' + ${itemStat.index} + ')'" onclick="">Copy caption</a>
                                         <a type="button" class="btn btn-danger full-width-button" data-toggle="modal" th:data-target="'#delete-confirm-modal-' + ${post.id}">Delete</a>
 
                                         <div th:id="'delete-confirm-modal-' + ${post.id}" class="modal" tabindex="-1" role="dialog">

@@ -3,7 +3,7 @@ package com.ko.footballupdater.controllers;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.form.ImageUrlEntry;
 import com.ko.footballupdater.models.form.PostsUpdateDto;
-import com.ko.footballupdater.models.form.PreparePostDto;
+import com.ko.footballupdater.models.form.PrepareStandoutImageDto;
 import com.ko.footballupdater.models.form.UploadPostDto;
 import com.ko.footballupdater.services.FacebookApiService;
 import com.ko.footballupdater.services.PostService;
@@ -51,8 +51,7 @@ public class PostController {
             postsUpdateDto.addPost(post);
         }
         model.addAttribute("form", postsUpdateDto);
-
-        model.addAttribute("facebook", facebookApiService.prepareFacebookApiDto());
+        model.addAttribute("facebookStatus", facebookApiService.prepareFacebookApiDto());
         return "posts";
     }
 
@@ -89,17 +88,17 @@ public class PostController {
     }
 
     /**
-     * Display setup to generate post
-     * @return generate post view
+     * Display setup to generate standout iamge
+     * @return generate standout image view
      */
-    @GetMapping("/prepare")
-    public String preparePost(Model model, @RequestParam Integer postId) {
+    @GetMapping("/prepare-standout-image")
+    public String preparePostStandoutImage(Model model, @RequestParam Integer postId) {
         try {
-            PreparePostDto preparePostDto = postService.prepareDtoForGeneratePost(postId);
-            preparePostDto.setPostId(postId);
-            model.addAttribute("form", preparePostDto);
-            model.addAttribute("preparePostForm", preparePostDto);
-            return "preparePost";
+            PrepareStandoutImageDto prepareStandoutImageDto = postService.prepareDtoForGeneratePost(postId);
+            prepareStandoutImageDto.setPostId(postId);
+            model.addAttribute("form", prepareStandoutImageDto);
+            model.addAttribute("prepareStandoutImageForm", prepareStandoutImageDto);
+            return "prepareStandoutImage";
         } catch (Exception ex) {
             return "error";
         }
@@ -110,25 +109,25 @@ public class PostController {
      * @return redirect to posts view
      */
     @PostMapping("/generate")
-    public String generatePost(Model model, @ModelAttribute PreparePostDto preparePostForm, BindingResult result) {
+    public String generatePost(Model model, @ModelAttribute PrepareStandoutImageDto prepareStandoutImageForm, BindingResult result) {
         if (result.hasErrors()) {
             return "redirect:/posts";
         }
         try {
-            postService.generateStandoutPost(preparePostForm);
+            postService.generateStandoutPost(prepareStandoutImageForm);
             return "redirect:/posts";
         } catch (Exception ex) {
             log.atError().setMessage("Updating post status failed").setCause(ex).log();
-            preparePostForm.setError(ex.getMessage());
-            model.addAttribute("form", preparePostForm);
-            model.addAttribute("preparePostForm", preparePostForm);
-            return "redirect:/posts/prepare?postId=" + preparePostForm.getPostId();
+            prepareStandoutImageForm.setError(ex.getMessage());
+            model.addAttribute("form", prepareStandoutImageForm);
+            model.addAttribute("prepareStandoutImageForm", prepareStandoutImageForm);
+            return "redirect:/posts/prepare?postId=" + prepareStandoutImageForm.getPostId();
         }
     }
 
     /**
-     * Generate post image from selected stats
-     * @return redirect to posts view
+     * Display page with current post info
+     * @return redirect to upload post view
      */
     @GetMapping("/prepare-upload")
     public String prepareUploadPost(Model model, @RequestParam Integer postId) {
@@ -143,6 +142,7 @@ public class PostController {
             uploadPostDto.setImageUrls(imageUrls);
             model.addAttribute("form", uploadPostDto);
             model.addAttribute("uploadPostForm", uploadPostDto);
+            model.addAttribute("facebookStatus", facebookApiService.prepareFacebookApiDto());
             return "uploadPost";
         } catch (Exception ex) {
             log.atError().setMessage("Preparing post to upload").setCause(ex).log();
@@ -151,7 +151,7 @@ public class PostController {
     }
 
     /**
-     * Generate post image from selected stats
+     * Upload images and caption to instagram
      * @return redirect to posts view
      */
     @PostMapping("/upload")

@@ -5,7 +5,7 @@ import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.models.form.ImageUrlEntry;
-import com.ko.footballupdater.models.form.PreparePostDto;
+import com.ko.footballupdater.models.form.PrepareStandoutImageDto;
 import com.ko.footballupdater.models.form.StatisticEntryGenerateDto;
 import com.ko.footballupdater.models.form.UploadPostDto;
 import com.ko.footballupdater.repositories.PlayerRepository;
@@ -86,8 +86,8 @@ public class PostService {
         }
     }
 
-    public PreparePostDto prepareDtoForGeneratePost(Integer postId) throws Exception {
-        PreparePostDto preparePostDto = new PreparePostDto();
+    public PrepareStandoutImageDto prepareDtoForGeneratePost(Integer postId) throws Exception {
+        PrepareStandoutImageDto prepareStandoutImageDto = new PrepareStandoutImageDto();
 
         // Search for post with id
         Optional<Post> postSearchResult = postRepository.findById(postId);
@@ -96,7 +96,7 @@ public class PostService {
         }
         Post post = postSearchResult.get();
         generatePostImageSearchUrl(post);
-        preparePostDto.setPost(post);
+        prepareStandoutImageDto.setPost(post);
 
         List<StatisticEntryGenerateDto> allStats = new ArrayList<>();
         if (post.getPlayerMatchPerformanceStats() == null) {
@@ -122,14 +122,14 @@ public class PostService {
                 log.atError().setMessage("Error while converting stat fields and values to map").setCause(ex).log();
             }
         }
-        preparePostDto.setAllStats(allStats);
+        prepareStandoutImageDto.setAllStats(allStats);
 
-        return preparePostDto;
+        return prepareStandoutImageDto;
     }
 
-    public void generateStandoutPost(PreparePostDto preparePostForm) throws Exception {
+    public void generateStandoutPost(PrepareStandoutImageDto prepareStandoutImageDto) throws Exception {
         // Search for post with id
-        Optional<Post> postSearchResult = postRepository.findById(preparePostForm.getPostId());
+        Optional<Post> postSearchResult = postRepository.findById(prepareStandoutImageDto.getPostId());
         if (postSearchResult.isEmpty()) {
             throw new Exception("Post id not found");
         }
@@ -140,27 +140,27 @@ public class PostService {
         post.setImagesUrls(new ArrayList<>(post.getImagesUrls()));
 
         // Only use selected stats
-        List<StatisticEntryGenerateDto> filteredStats = preparePostForm.getAllStats().stream()
+        List<StatisticEntryGenerateDto> filteredStats = prepareStandoutImageDto.getAllStats().stream()
                 .filter(StatisticEntryGenerateDto::isSelected)
                 .toList();
 
         if (filteredStats.isEmpty()) {
-            preparePostForm.setPost(post);
+            prepareStandoutImageDto.setPost(post);
             throw new Exception("No stat selected, unable to generate standout stat image");
         }
 
         try {
             // Generate standout post image
-            imageGeneratorService.generateStandoutStatsImage(post, filteredStats, preparePostForm.getImageGenParams());
+            imageGeneratorService.generateStandoutStatsImage(post, filteredStats, prepareStandoutImageDto.getImageGenParams());
             // Upload stat images to s3
-            amazonS3Service.uploadtoS3(post);
+            amazonS3Service.uploadToS3(post, true);
             // Generate caption
             PostHelper.generatePostCaption(instagramPostProperies.getVersion(), post, instagramPostProperies.getDefaultHashtags());
             // Save post
             postRepository.save(post);
             log.atInfo().setMessage("Successfully created standout stat image and saved").addKeyValue("player", post.getPlayer().getName()).log();
         } catch (Exception ex) {
-            preparePostForm.setPost(post);
+            prepareStandoutImageDto.setPost(post);
             // Skip if image generation or upload fails, allows future retry
             log.atWarn().setMessage("Something went wrong while creating standout post").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
             throw new Exception("Something went wrong while creating standout post: " + ex.getMessage());
@@ -191,7 +191,7 @@ public class PostService {
                 .sorted(Comparator.comparingInt(ImageUrlEntry::getImageIndex))
                 .toList();
 
-        facebookApiService.postToInstagram(post, imagesToUpload);
+        facebookApiService.postToInstagram(post, imagesToUpload, uploadPostForm.getCaption());
 
         post.setPostedStatus(true);
         postRepository.save(post);

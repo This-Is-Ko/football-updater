@@ -52,8 +52,25 @@ public class FacebookApiService {
 
     public FacebookApiDto prepareFacebookApiDto() {
         FacebookApiDto facebookApiDto = new FacebookApiDto();
-        facebookApiDto.setLoginUri(generateLoginString());
+        if (isTokenValid()) {
+            facebookApiDto.setCurrentlyLoggedIn(true);
+        } else {
+            facebookApiDto.setCurrentlyLoggedIn(false);
+            facebookApiDto.setLoginUri(generateLoginString());
+        }
         return facebookApiDto;
+    }
+
+    public Boolean isTokenValid() {
+        if (accessToken == null || accessToken.isEmpty() || expiresAt == null) {
+            return false;
+        }
+        Calendar currentTime = Calendar.getInstance();
+        Calendar expiresAtMinusTenMin = ((Calendar) expiresAt.clone());
+        // 5 minute buffer
+        expiresAtMinusTenMin.add(Calendar.MINUTE, -5);
+
+        return currentTime.before(expiresAtMinusTenMin);
     }
 
     public String generateLoginString() {
@@ -105,7 +122,7 @@ public class FacebookApiService {
     }
 
     private DebugTokenReponse callDebugToken() throws Exception {
-        if (accessToken == null || accessToken.isEmpty()) {
+        if (!isTokenValid()) {
             throw new Exception("No access token available");
         }
         String apiUrl = String.format("/debug_token?input_token=%s&access_token=%s", accessToken, facebookApiProperties.getClientId() + "|" + facebookApiProperties.getClientSecret());
@@ -122,7 +139,7 @@ public class FacebookApiService {
      * 2. Use the POST /{ig-user-id}/media endpoint again to create a single carousel container for the items.
      * 3. Use the POST /{ig-user-id}/media_publish endpoint to publish the carousel container.
      */
-    public void postToInstagram(Post post, List<ImageUrlEntry> imagesToUpload) throws Exception {
+    public void postToInstagram(Post post, List<ImageUrlEntry> imagesToUpload, String caption) throws Exception {
         List<String> individualImageContainer = new ArrayList<>();
 
         // Validate token has required permissions
@@ -147,7 +164,11 @@ public class FacebookApiService {
 
         // Step 2
         // Sample request "https://graph.facebook.com/v18.0/90010177253934/media?caption=Fruit%20candies&media_type=CAROUSEL&children=17899506308402767%2C18193870522147812%2C17853844403701904&access_token=EAAOc..."
-        InstagramUserMedia carouselCreateResponse = callInstagramUserMediaApi(facebookApiProperties.getInstagram().getUserId(), null, post.getCaption(), false, "CAROUSEL", individualImageContainer);
+        // Use caption if passed from form otherwise use prepared caption
+        if (caption == null || caption.isEmpty()) {
+            caption = post.getCaption();
+        }
+        InstagramUserMedia carouselCreateResponse = callInstagramUserMediaApi(facebookApiProperties.getInstagram().getUserId(), null, caption, false, "CAROUSEL", individualImageContainer);
         String carouselId = carouselCreateResponse.getId();
 
         // Step 3
@@ -165,7 +186,7 @@ public class FacebookApiService {
         //  &is_carousel_item={is-carousel-item}
         //  &access_token={access-token}
 
-        if (accessToken == null || accessToken.isEmpty()) {
+        if (!isTokenValid()) {
             throw new Exception("No access token available");
         }
 
