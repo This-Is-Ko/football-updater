@@ -62,7 +62,7 @@ public class PostService {
 
     public List<Post> getPosts(Boolean postedStatus) {
         if (postedStatus != null) {
-            return postRepository.findByPostedStatus(postedStatus);
+            return postRepository.findByPostedStatusOrderByDateGeneratedDesc(postedStatus);
         }
         return postRepository.findAllByOrderByDateGeneratedDesc();
     }

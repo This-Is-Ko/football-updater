@@ -8,6 +8,7 @@ import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.form.HorizontalTranslation;
 import com.ko.footballupdater.models.form.ImageGenParams;
 import com.ko.footballupdater.models.form.StatisticEntryGenerateDto;
+import com.ko.footballupdater.models.form.VerticalTranslation;
 import com.ko.footballupdater.utils.DateTimeHelper;
 import com.ko.footballupdater.utils.PostHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -119,55 +120,82 @@ public class ImageGeneratorService {
     private BufferedImage setUpBaseImageWithBackgroundImageUrl(ImageGenParams imageGenParams) throws IOException {
         URL imageUrl = URI.create(imageGenParams.getBackgroundImageUrl()).toURL();
         BufferedImage downloadedImage = ImageIO.read(imageUrl);
-
-        // Scale image down to height of 1000 - change width proportionally
-        // Force scale if set in request
-        float scale = 1;
-        if (imageGenParams.getForceScaleImage() || downloadedImage.getHeight() > 1000) {
-            scale = (float) 1000 /downloadedImage.getHeight();
-        }
-
         BufferedImage background;
-        // No horizontal translation, directly draw image
-        if (imageGenParams.getImageHorizontalTranslation() == null || HorizontalTranslation.NONE.equals(imageGenParams.getImageHorizontalTranslation())) {
-            background = new BufferedImage((int) (scale * downloadedImage.getWidth()), (int) (scale * downloadedImage.getHeight()), BufferedImage.TYPE_INT_RGB);
-            Graphics2D imageGraphics = background.createGraphics();
-            imageGraphics.scale(scale, scale);
-            imageGraphics.drawImage(downloadedImage, 0 , 0, null);
-            imageGraphics.dispose();
+        float scale = 1;
+
+        // Landscape image
+        if (downloadedImage.getWidth() >= downloadedImage.getHeight()) {
+            // Scale image down to height of 1000 - change width proportionally
+            if (imageGenParams.getForceScaleImage() || downloadedImage.getHeight() > 1000) {
+                scale = (float) 1000 /downloadedImage.getHeight();
+            }
+
+            // No horizontal translation, directly draw image
+            if (imageGenParams.getImageHorizontalTranslation() == null || HorizontalTranslation.NONE.equals(imageGenParams.getImageHorizontalTranslation())) {
+                background = new BufferedImage((int) (scale * downloadedImage.getWidth()), (int) (scale * downloadedImage.getHeight()), BufferedImage.TYPE_INT_RGB);
+                Graphics2D imageGraphics = background.createGraphics();
+                imageGraphics.scale(scale, scale);
+                imageGraphics.drawImage(downloadedImage, 0 , 0, null);
+                imageGraphics.dispose();
+            }
+            // Requires horizontal translation as subject is not center of image
+            // Since we are moving the image, default to 1000 pixel size
+            else {
+                background = new BufferedImage(1000, 1000, BufferedImage.TYPE_INT_RGB);
+                Graphics2D imageGraphics = background.createGraphics();
+                imageGraphics.scale(scale, scale);
+                if (HorizontalTranslation.CENTER.equals(imageGenParams.getImageHorizontalTranslation())) {
+                    // Top left may need to be drawn off-canvas in order to center
+                    int xTranslation = (int) ((downloadedImage.getWidth() * scale) - background.getWidth()) / 2;
+                    imageGraphics.drawImage(downloadedImage, -xTranslation, 0, null);
+                } else if (HorizontalTranslation.LEFT.equals(imageGenParams.getImageHorizontalTranslation())) {
+                    // Top left will remain 0,0
+                    // Horizontal offset will move image towards the left
+                    // Offset will only be used from left side
+                    int horizontalOffset = 0;
+                    if (imageGenParams.getImageHorizontalOffset() != null) {
+                        horizontalOffset = imageGenParams.getImageHorizontalOffset();
+                    }
+                    imageGraphics.drawImage(downloadedImage, horizontalOffset, 0, null);
+                } else if(HorizontalTranslation.RIGHT.equals(imageGenParams.getImageHorizontalTranslation())) {
+                    // Top left will need to be drawn off-canvas and right side of image will appear at center
+                    int xTranslation = (int) ((downloadedImage.getWidth() * scale) - background.getWidth());
+                    imageGraphics.drawImage(downloadedImage, -xTranslation, 0, null);
+                }
+                imageGraphics.dispose();
+            }
+            return background;
         }
-        // Requires horizontal translation as subject is not center of image
-        // Since we are moving the image, default to 1000 pixel size
+        // Portrait image
         else {
+            if (imageGenParams.getForceScaleImage() || downloadedImage.getWidth() > 1000) {
+                scale = (float) 1000 /downloadedImage.getWidth();
+            }
+            // Scale image, default to 1000x1000 pixel size
             background = new BufferedImage(1000, 1000, BufferedImage.TYPE_INT_RGB);
             Graphics2D imageGraphics = background.createGraphics();
             imageGraphics.scale(scale, scale);
-            if (HorizontalTranslation.CENTER.equals(imageGenParams.getImageHorizontalTranslation())) {
+            if (VerticalTranslation.CENTER.equals(imageGenParams.getImageVerticalTranslation())) {
                 // Top left may need to be drawn off-canvas in order to center
-                int xTranslation = (int) ((downloadedImage.getWidth() * scale) - 1000) / 2;
-                imageGraphics.drawImage(downloadedImage, -xTranslation, 0, null);
-            } else if (HorizontalTranslation.LEFT.equals(imageGenParams.getImageHorizontalTranslation())) {
+                int yTranslation = (int) ((downloadedImage.getHeight() * scale) - background.getHeight()) / 2;
+                imageGraphics.drawImage(downloadedImage, 0, -yTranslation, null);
+            } else if (imageGenParams.getImageVerticalTranslation() == null || VerticalTranslation.NONE.equals(imageGenParams.getImageVerticalTranslation()) ||  VerticalTranslation.TOP.equals(imageGenParams.getImageVerticalTranslation())) {
                 // Top left will remain 0,0
-                // horizontal offset will move image towards the left
-                int horizontalOffset = 0;
-                if (imageGenParams.getImageHorizontalOffset() != null) {
-                    horizontalOffset = imageGenParams.getImageHorizontalOffset();
+                // vertical offset will move image downward
+                int verticalOffset = 0;
+                if (imageGenParams.getImageVerticalOffset() != null) {
+                    verticalOffset = imageGenParams.getImageVerticalOffset();
                 }
-                imageGraphics.drawImage(downloadedImage, horizontalOffset, 0, null);
-            } else if(HorizontalTranslation.RIGHT.equals(imageGenParams.getImageHorizontalTranslation())) {
-                // Top left will need to be drawn off-canvas and right side of image will appear at center
-                // horizontal offset will move image towards the right
-                int xTranslation = (int) ((downloadedImage.getWidth() * scale) - 1000);
-                int horizontalOffset = 0;
-                if (imageGenParams.getImageHorizontalOffset() != null) {
-                    horizontalOffset = imageGenParams.getImageHorizontalOffset();
-                }
-                imageGraphics.drawImage(downloadedImage, -xTranslation + horizontalOffset, 0, null);
+                imageGraphics.drawImage(downloadedImage, 0, verticalOffset, null);
+            } else if(VerticalTranslation.BOTTOM.equals(imageGenParams.getImageVerticalTranslation())) {
+                // Top left will need to be drawn off-canvas
+                // vertical offset will move image towards the top
+                int yTranslation = (int) ((downloadedImage.getHeight() * scale) - background.getHeight());
+                imageGraphics.drawImage(downloadedImage, 0, -yTranslation, null);
             }
             imageGraphics.dispose();
+            return background;
         }
-
-        return background;
     }
 
     private Graphics2D setUpStatsGraphicsDefaults(BufferedImage image) {

@@ -25,24 +25,41 @@
                         </div>
                     </div>
                     <div class="mb-3 form-check">
-                        <label for="forceScaleImage">Select to scale image to 1000 pixel height regardless of original size</label>
+                        <label for="forceScaleImage">Select to force scaling short side of image to 1000 pixel</label>
                         <input id="forceScaleImage" type="checkbox" class="form-check-input" th:field="${form.imageGenParams.forceScaleImage}" th:checked="${forceScaleImage}"/>
                     </div>
                     <div class="mb-3">
                         <label for="horizontalTranslation" class="form-label">Horizontal translation (Select if image is wider than 1000 pixels) </label>
                         <div class="input-group mb-3">
                             <select id="horizontalTranslation" class="form-select" th:field="${form.imageGenParams.imageHorizontalTranslation}">
-                                <option th:value="'CENTER'" th:text="Center" selected="selected"></option>
+                                <option th:value="'CENTER'" th:text="Center"></option>
                                 <option th:value="'LEFT'" th:text="Left"></option>
                                 <option th:value="'RIGHT'" th:text="Right"></option>
-                                <option th:value="'NONE'" th:text="None"></option>
+                                <option th:value="'NONE'" th:text="None" selected="selected"></option>
                             </select>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="imageHorizontalOffset" class="form-label">Horizontal offset (leave blank for 0): </label>
+                        <label for="imageHorizontalOffset" class="form-label">Horizontal offset from left side only (leave blank for 0): </label>
                         <div class="input-group mb-3">
                             <input id="imageHorizontalOffset" type="number" step="10" min="0" class="form-control" name="imageGenParams.imageHorizontalOffset" size="100">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="verticalTranslation" class="form-label">Vertical translation (Select if image is taller than 1000 pixels) </label>
+                        <div class="input-group mb-3">
+                            <select id="verticalTranslation" class="form-select" th:field="${form.imageGenParams.imageVerticalTranslation}">
+                                <option th:value="'CENTER'" th:text="Center"></option>
+                                <option th:value="'TOP'" th:text="Top"></option>
+                                <option th:value="'BOTTOM'" th:text="Bottom"></option>
+                                <option th:value="'NONE'" th:text="None" selected="selected"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="imageVerticalOffset" class="form-label">Vertical offset from top of image only (leave blank for 0): </label>
+                        <div class="input-group mb-3">
+                            <input id="imageVerticalOffset" type="number" step="10" min="0" class="form-control" name="imageGenParams.imageVerticalOffset" size="100">
                         </div>
                     </div>
                     <div class="table-responsive table-fixed-head-stats">

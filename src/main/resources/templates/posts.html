@@ -10,6 +10,7 @@
             <br>
             <div class="d-flex flex-row justify-content-between">
                 <a th:if="${param.postedStatus == null}" class="btn btn-secondary btn-sm action-button" th:href="@{/posts?postedStatus=false}">Filter not posted only</a>
+                <a th:if="${param.postedStatus != null}" class="btn btn-secondary btn-sm action-button" th:href="@{/posts}">No filter</a>
                 <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == false AND facebookStatus.loginUri != null}" class="btn btn-primary btn-sm action-button" th:href="${facebookStatus.loginUri}">Login to Facebook</a>
                 <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == false AND facebookStatus.loginUri == null}" class="btn btn-primary btn-sm action-button disabled" th:href="${facebookStatus.loginUri}">Login to Facebook unavailable</a>
                 <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == true}" class="btn btn-success btn-sm action-button disabled" th:href="${facebookStatus.loginUri}">Logged In</a>
@@ -87,7 +88,7 @@
         </div>
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
         <script>
             function copyCaptionToClipboard(index) {
                 var copyText = document.getElementById("post-caption-" + index);
