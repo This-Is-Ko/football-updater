@@ -15,4 +15,8 @@ public class ImageGenParams {
 
     private Integer imageHorizontalOffset = 0;
 
+    private VerticalTranslation imageVerticalTranslation = VerticalTranslation.NONE;
+
+    private Integer imageVerticalOffset = 0;
+
 }
