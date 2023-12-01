@@ -104,6 +104,7 @@ public class FacebookApiService {
         // Calculate token expiry time
         this.expiresAt = Calendar.getInstance();
         expiresAt.add(Calendar.SECOND, response.getExpires_in());
+        log.atInfo().setMessage("Saved access token - Expires at: " + expiresAt.toString()).log();
     }
 
     private FacebookAccessTokenResponse exchangeCodeForAccessToken(String code) {

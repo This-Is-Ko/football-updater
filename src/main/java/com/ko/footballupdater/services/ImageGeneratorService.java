@@ -291,11 +291,11 @@ public class ImageGeneratorService {
             }
 
             // Add player name
-            Font nikeIthacaFont = new Font("Nike Ithaca", Font.PLAIN, 47);
+            Font playerNameFont = new Font("NFL Detroit Lions", Font.PLAIN, 40);
             if (!selectedStats.isEmpty()) {
-                drawXCenteredText(image, nikeIthacaFont, post.getPlayer().getName().toUpperCase(), image.getHeight() - 350);
+                drawXCenteredText(image, playerNameFont, post.getPlayer().getName().toUpperCase(), image.getHeight() - 350);
             } else {
-                drawXCenteredText(image, nikeIthacaFont, post.getPlayer().getName().toUpperCase(), image.getHeight() - 100);
+                drawXCenteredText(image, playerNameFont, post.getPlayer().getName().toUpperCase(), image.getHeight() - 100);
             }
 
             // Add match stats
