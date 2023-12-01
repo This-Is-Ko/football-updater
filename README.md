@@ -196,10 +196,23 @@ Enable service
     sudo systemctl daemon-reload
     sudo systemctl restart football-updater
 
-To set up fonts for image generation, add font files to 
+To set up fonts for image generation, copy font files across to ec2
+
+    scp -i .\[key.pem] .\src\main\resources\fonts\* ec2-user@[ec2 public dns]:~/.local/share/fonts
+
+Add the following font files
 
     /usr/share/fonts/ChakraPetch-Bold.ttf
     /usr/share/fonts/Nike_Ithaca.otf
+    /usr/share/fonts/NFL_Detroit_Lions_1.ttf
+
+Refresh font cache
+
+    fc-cache -f -v
+
+Check fonts are available
+
+    fc-list | grep NFL Detroit Lions
 
 Additional reference for fonts on Linux https://medium.com/source-words/how-to-manually-install-update-and-uninstall-fonts-on-linux-a8d09a3853b0
 

@@ -104,6 +104,7 @@ public class FacebookApiService {
         // Calculate token expiry time
         this.expiresAt = Calendar.getInstance();
         expiresAt.add(Calendar.SECOND, response.getExpires_in());
+        log.atInfo().setMessage("Saved access token - Expires at: " + expiresAt.toString()).log();
     }
 
     private FacebookAccessTokenResponse exchangeCodeForAccessToken(String code) {
@@ -141,6 +142,7 @@ public class FacebookApiService {
      */
     public void postToInstagram(Post post, List<ImageUrlEntry> imagesToUpload, String caption) throws Exception {
         List<String> individualImageContainer = new ArrayList<>();
+        log.atInfo().setMessage("Attempting to post to Instagram").addKeyValue("player", post.getPlayer().getName()).log();
 
         // Validate token has required permissions
 //        DebugTokenReponse debugTokenReponse = callDebugToken();
@@ -154,6 +156,7 @@ public class FacebookApiService {
                 throw new RuntimeException(e);
             }
             if (response.getId() != null && !response.getId().isEmpty()) {
+                log.atInfo().setMessage("Successfully saved image to Instagram: " + imageUrlEntry.getImageIndex()).addKeyValue("player", post.getPlayer().getName()).log();
                 individualImageContainer.add(response.getId());
             }
         });
@@ -170,12 +173,14 @@ public class FacebookApiService {
         }
         InstagramUserMedia carouselCreateResponse = callInstagramUserMediaApi(facebookApiProperties.getInstagram().getUserId(), null, caption, false, "CAROUSEL", individualImageContainer);
         String carouselId = carouselCreateResponse.getId();
+        log.atInfo().setMessage("Successfully created Instagram carousel container").addKeyValue("player", post.getPlayer().getName()).log();
 
         // Step 3
         InstagramUserMedia publishResponse = callInstagramUserMediaPublishApi(facebookApiProperties.getInstagram().getUserId(), carouselId);
         if (publishResponse == null || publishResponse.getId() == null || publishResponse.getId().isEmpty()) {
             throw new Exception("Attempt to publish carousel failed");
         }
+        log.atInfo().setMessage("Successfully published carousel").addKeyValue("player", post.getPlayer().getName()).log();
     }
 
     public InstagramUserMedia callInstagramUserMediaApi(String instagramUserId, String imageUrl, String caption, Boolean isCarouselItem, String mediaType, List<String> children) throws Exception {
