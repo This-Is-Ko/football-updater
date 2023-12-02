@@ -30,7 +30,6 @@ public class SofascoreDataSource implements DataSourceParser {
     @Getter
     private final DataSourceSiteName dataSourceSiteName = DataSourceSiteName.SOFASCORE;
 
-    private final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private final String BASEURL = "https://api.sofascore.com";
     private final String API_MATCH_BASE_URL = "/api/v1/event";
 
@@ -45,6 +44,10 @@ public class SofascoreDataSource implements DataSourceParser {
         // e.g. https://api.sofascore.com/api/v1/player/796007/events/last/0
 
         // Extract player id from url
+        if (url == null || url.isEmpty()) {
+            log.atWarn().setMessage("Unable to extract player id from null url").addKeyValue("player", player.getName()).log();
+            return null;
+        }
         String sofascorePlayerId;
         Pattern pattern = Pattern.compile("/player/(\\d+)/");
         Matcher matcher = pattern.matcher(url);

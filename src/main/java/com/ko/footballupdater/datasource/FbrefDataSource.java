@@ -163,7 +163,7 @@ public class FbrefDataSource implements DataSourceParser {
                 StatHelper.populateStatPercentages(playerMatchPerformanceStats);
                 return playerMatchPerformanceStats;
             }
-            log.atInfo().setMessage(player.getName() + " " + "Unable to update player, checked all games").addKeyValue("player", player.getName()).log();
+            log.atInfo().setMessage("Unable to update player, checked all games").addKeyValue("player", player.getName()).log();
         } catch (Exception ex) {
             log.warn("Error while trying to update player: " + player.getName() + " - " + ex);
         }

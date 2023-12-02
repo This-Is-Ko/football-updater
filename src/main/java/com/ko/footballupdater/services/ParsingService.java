@@ -134,6 +134,7 @@ public class ParsingService {
                 }
             }
         }
+        log.atInfo().setMessage("Finished checking data sources").addKeyValue("player", player.getName()).log();
         return null;
     }
 
