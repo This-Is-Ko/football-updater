@@ -1,4 +1,4 @@
-package com.ko.footballupdater.unit;
+package com.ko.footballupdater.unit.parsers;
 
 import com.ko.footballupdater.datasource.FbrefDataSource;
 import com.ko.footballupdater.models.CheckedStatus;
