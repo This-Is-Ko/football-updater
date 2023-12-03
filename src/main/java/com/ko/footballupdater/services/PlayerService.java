@@ -130,24 +130,22 @@ public class PlayerService {
         boolean isEmailSent = emailService.sendEmailUpdate(posts);
 
         response.setEmailSent(isEmailSent);
-        // Update player checked status if email was sent
-//        if (isEmailSent) {
-            List<Player> playersToUpdate = new ArrayList<>();
-            Date currentDateTime = new Date();
-            for (Post post : posts) {
-                // Save post in database for dashboard use
-                postRepository.save(post);
+        // Update player checked status regardless of email status
+        List<Player> playersToUpdate = new ArrayList<>();
+        Date currentDateTime = new Date();
+        for (Post post : posts) {
+            // Save post in database for dashboard use
+            postRepository.save(post);
 
-                post.getPlayer().getCheckedStatus().setLastChecked(currentDateTime);
-                post.getPlayer().getCheckedStatus().setLatestCheckedMatchUrl(post.getPlayerMatchPerformanceStats().getMatch().getUrl());
-                post.getPlayer().getCheckedStatus().setLatestCheckedMatchDate(post.getPlayerMatchPerformanceStats().getMatch().getDate());
-                playersToUpdate.add(post.getPlayer());
-            }
-            playerRepository.saveAll(playersToUpdate);
-            // Populate response
-            response.setPlayersUpdated(playersToUpdate);
-            response.setNumPlayersUpdated(playersToUpdate.size());
-//        }
+            post.getPlayer().getCheckedStatus().setLastChecked(currentDateTime);
+            post.getPlayer().getCheckedStatus().setLatestCheckedMatchUrl(post.getPlayerMatchPerformanceStats().getMatch().getUrl());
+            post.getPlayer().getCheckedStatus().setLatestCheckedMatchDate(post.getPlayerMatchPerformanceStats().getMatch().getDate());
+            playersToUpdate.add(post.getPlayer());
+        }
+        playerRepository.saveAll(playersToUpdate);
+        // Populate response
+        response.setPlayersUpdated(playersToUpdate);
+        response.setNumPlayersUpdated(playersToUpdate.size());
         return response;
     }
 }

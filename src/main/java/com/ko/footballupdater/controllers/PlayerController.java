@@ -1,6 +1,5 @@
 package com.ko.footballupdater.controllers;
 
-import com.ko.footballupdater.models.DataSource;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.responses.UpdatePlayersResponse;
 import com.ko.footballupdater.services.PlayerService;

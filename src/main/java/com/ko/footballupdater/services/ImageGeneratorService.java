@@ -37,6 +37,7 @@ public class ImageGeneratorService {
     private InstagramPostProperies instagramPostProperies;
 
     private final int STAT_Y_COORDINATE = 350;
+    private final String GENERIC_BASE_IMAGE_FILE_NAME = "Generic_base_player_stat_image.jpg";
     private final String BASE_IMAGE_FILE_NAME = "_base_player_stat_image.jpg";
     private final String STANDOUT_BASE_IMAGE_FILE_NAME = "_standout_base_player_stat_image.jpg";
 
@@ -46,23 +47,37 @@ public class ImageGeneratorService {
         }
 
         try {
-            // Load the base image
-            // Check whether team specific image base image is available
+            // Load the base image - priority order:
+
+            // 1. Team specific image base
+            // 2. Player specific image base
+            // 3. Generic image base
             BufferedImage image = null;
-            String playerImageBaseFilePath = imageGeneratorProperies.getInputPath() + "/" + post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME;
+            String selectedBaseImageFilePath = null;
             try {
                 if (post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null) {
                     String teamSpecificPlayerImageBaseFilePath = imageGeneratorProperies.getInputPath() + post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() + "/" + post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME;
-                    image = setUpBaseImage(teamSpecificPlayerImageBaseFilePath);
-                    playerImageBaseFilePath = teamSpecificPlayerImageBaseFilePath;
+                    image = loadImage(teamSpecificPlayerImageBaseFilePath);
+                    selectedBaseImageFilePath = teamSpecificPlayerImageBaseFilePath;
                 }
             } catch (IOException ex) {
-                log.atDebug().setMessage("No team specific image base image found" + post.getPlayer().getName()).log();
+                log.atDebug().setMessage("No team specific base image found" + post.getPlayer().getName()).log();
             }
 
             if (image == null) {
                 // Use default base image for player
-                image = setUpBaseImage(playerImageBaseFilePath);
+                try {
+                    String playerImageBaseFilePath = imageGeneratorProperies.getInputPath() + "/" + post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME;
+                    image = loadImage(playerImageBaseFilePath);
+                    selectedBaseImageFilePath = playerImageBaseFilePath;
+                } catch (IOException ex) {
+                    log.atDebug().setMessage("No player base image found" + post.getPlayer().getName()).log();
+                }
+                if (image == null) {
+                    String genericPlayerImageBaseFilePath = imageGeneratorProperies.getInputPath() + "/" + GENERIC_BASE_IMAGE_FILE_NAME;
+                    image = loadImage(genericPlayerImageBaseFilePath);
+                    selectedBaseImageFilePath = genericPlayerImageBaseFilePath;
+                }
             }
 
             drawAllStatsPlayerName(image, post);
@@ -99,7 +114,7 @@ public class ImageGeneratorService {
                         if (attributeCounter % 12 == 0) {
                             createdImageCounter++;
                             saveImage(post, image, generateFileName(post, createdImageCounter, PostType.ALL_STAT_POST), createdImageCounter);
-                            image = setUpBaseImage(playerImageBaseFilePath);
+                            image = loadImage(selectedBaseImageFilePath);
                             drawAllStatsPlayerName(image, post);
                             graphics = setUpStatsGraphicsDefaults(image);
                             statY = STAT_Y_COORDINATE;
@@ -122,8 +137,39 @@ public class ImageGeneratorService {
         }
     }
 
-    private BufferedImage setUpBaseImage(String baseImagePath) throws IOException {
+    private BufferedImage loadImage(String baseImagePath) throws IOException {
         return ImageIO.read(new File(baseImagePath));
+    }
+
+    private void selectBaseImage(BufferedImage image, Post post) throws IOException {
+        // Base image priority order:
+        // 1. Team specific image base
+        // 2. Player specific image base
+        // 3. Generic image base
+        String playerImageBaseFilePath = imageGeneratorProperies.getInputPath() + "/" + post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME;
+        try {
+            if (post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null) {
+                String teamSpecificPlayerImageBaseFilePath = imageGeneratorProperies.getInputPath() + post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() + "/" + post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME;
+                image = loadImage(teamSpecificPlayerImageBaseFilePath);
+                playerImageBaseFilePath = teamSpecificPlayerImageBaseFilePath;
+            }
+        } catch (IOException ex) {
+            log.atDebug().setMessage("No team specific base image found" + post.getPlayer().getName()).log();
+        }
+
+        if (image == null) {
+            // Use default base image for player
+            try {
+                image = loadImage(playerImageBaseFilePath);
+            } catch (IOException ex) {
+                log.atDebug().setMessage("No player base image found" + post.getPlayer().getName()).log();
+            }
+            if (image == null) {
+                String genericPlayerImageBaseFilePath = imageGeneratorProperies.getInputPath() + GENERIC_BASE_IMAGE_FILE_NAME;
+                image = loadImage(genericPlayerImageBaseFilePath);
+                playerImageBaseFilePath = genericPlayerImageBaseFilePath;
+            }
+        }
     }
 
     private BufferedImage setUpBaseImageWithBackgroundImageUrl(ImageGenParams imageGenParams) throws IOException {
@@ -307,7 +353,7 @@ public class ImageGeneratorService {
             } else {
                 // Load the base image
                 String playerImageBaseFilePath = imageGeneratorProperies.getInputPath() + post.getPlayer().getName().replaceAll(" ", "") + STANDOUT_BASE_IMAGE_FILE_NAME;
-                image = setUpBaseImage(playerImageBaseFilePath);
+                image = loadImage(playerImageBaseFilePath);
             }
 
             // Add player name

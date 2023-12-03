@@ -134,7 +134,7 @@ Create an app in the Facebook developer portal and configure the clientId, secre
 
 Instagram publishing follows the flow reccommended by Facebook seen here https://developers.facebook.com/docs/instagram-api/guides/content-publishing#carousel-posts
 
-Due to Facebook's security rules, to run in a environment which is not "localhost", SSL needs to be configured (to use HTTPS connection) and a custom domain is required. 
+Due to Facebook's security rules, to run in an environment which is not "localhost", SSL needs to be configured (to use HTTPS connection) and a custom domain is required. 
 
 Favicon from https://iconscout.com/free-icon/soccer-8
 
