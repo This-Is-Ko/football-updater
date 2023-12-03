@@ -47,17 +47,25 @@ public class ImageGeneratorService {
 
         try {
             // Load the base image
-            String playerImageBaseFilePath = imageGeneratorProperies.getInputPath() + post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME;
-            BufferedImage image = setUpBaseImage(playerImageBaseFilePath);
+            // Check whether team specific image base image is available
+            BufferedImage image = null;
+            String playerImageBaseFilePath = imageGeneratorProperies.getInputPath() + "/" + post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME;
+            try {
+                if (post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null) {
+                    String teamSpecificPlayerImageBaseFilePath = imageGeneratorProperies.getInputPath() + post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() + "/" + post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME;
+                    image = setUpBaseImage(teamSpecificPlayerImageBaseFilePath);
+                    playerImageBaseFilePath = teamSpecificPlayerImageBaseFilePath;
+                }
+            } catch (IOException ex) {
+                log.atDebug().setMessage("No team specific image base image found" + post.getPlayer().getName()).log();
+            }
 
-            // Add player name to the image
-            Graphics2D nameGraphic = image.createGraphics();
-            nameGraphic.setFont(new Font("Nike Ithaca", Font.PLAIN, 47));
-            nameGraphic.setColor(Color.BLACK);
-            int playerNameX = 77;
-            int playerNameY = 116;
-            nameGraphic.drawString(post.getPlayer().getName().toUpperCase(), playerNameX, playerNameY);
-            nameGraphic.dispose();
+            if (image == null) {
+                // Use default base image for player
+                image = setUpBaseImage(playerImageBaseFilePath);
+            }
+
+            drawAllStatsPlayerName(image, post);
 
             // Match stats to image
             Graphics2D graphics = setUpStatsGraphicsDefaults(image);
@@ -92,12 +100,13 @@ public class ImageGeneratorService {
                             createdImageCounter++;
                             saveImage(post, image, generateFileName(post, createdImageCounter, PostType.ALL_STAT_POST), createdImageCounter);
                             image = setUpBaseImage(playerImageBaseFilePath);
+                            drawAllStatsPlayerName(image, post);
                             graphics = setUpStatsGraphicsDefaults(image);
                             statY = STAT_Y_COORDINATE;
                         }
                     }
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
+                } catch (IllegalAccessException ex) {
+                    log.atWarn().setMessage("Error while generating stat image").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
                 }
             }
 
@@ -206,6 +215,17 @@ public class ImageGeneratorService {
         graphics.setColor(textColor);
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         return graphics;
+    }
+
+    private void drawAllStatsPlayerName(BufferedImage image, Post post) {
+        // Add player name to the image
+        Graphics2D nameGraphic = image.createGraphics();
+        nameGraphic.setFont(new Font("Nike Ithaca", Font.PLAIN, 47));
+        nameGraphic.setColor(Color.BLACK);
+        int playerNameX = 77;
+        int playerNameY = 116;
+        nameGraphic.drawString(post.getPlayer().getName().toUpperCase(), playerNameX, playerNameY);
+        nameGraphic.dispose();
     }
 
     private ImageStatEntry generateDisplayedName(String displayStatName, Object value) {

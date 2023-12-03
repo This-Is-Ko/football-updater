@@ -95,6 +95,12 @@ public class SofascoreDataSource implements DataSourceParser {
             }
             JsonNode statistics = matchStatistics.get("statistics");
 
+            // Check whether player appeared in match
+            if (getStatIntegerOrDefault(statistics, "minutesPlayed") == 0) {
+                log.atInfo().setMessage("Unused sub in selected match").addKeyValue("player", player.getName()).log();
+                return null;
+            }
+
             // Separate processing for Goalkeeper stats
             PlayerMatchPerformanceStats playerMatchPerformanceStats;
             if (matchStatistics.hasNonNull("position") && matchStatistics.get("position").textValue().equals("G")) {
@@ -130,9 +136,16 @@ public class SofascoreDataSource implements DataSourceParser {
                 log.atWarn().setMessage("Unable to retrieve yellow and red card stats - ignoring as best attempt only").setCause(ex).addKeyValue("player", player.getName()).log();
             }
 
+            // Retrieve relevant team name
+            JsonNode relevantTeam = matchStatistics.get("team");
+            String relevantTeamName = null;
+            if (relevantTeam.hasNonNull("name") && !relevantTeam.get("name").textValue().isEmpty()) {
+                relevantTeamName = relevantTeam.get("name").textValue();
+            }
+
             // Store match data
             // Convert timestamp to date e.g. 1701487800 -> 2017-01-31T20:00:00.000Z
-            Match match = new Match(url, selectedMatchDate, matchEntry.get("homeTeam").get("name").textValue(), matchEntry.get("awayTeam").get("name").textValue(), null);
+            Match match = new Match(url, selectedMatchDate, matchEntry.get("homeTeam").get("name").textValue(), matchEntry.get("awayTeam").get("name").textValue(), relevantTeamName);
             playerMatchPerformanceStats.setMatch(match);
             return playerMatchPerformanceStats;
         } catch (Exception ex) {
@@ -143,6 +156,7 @@ public class SofascoreDataSource implements DataSourceParser {
 
     private PlayerMatchPerformanceStats parseGoalkeeperMatchData(JsonNode statistics) {
         return PlayerMatchPerformanceStats.builder()
+                .dataSourceSiteName(dataSourceSiteName)
                 .minutesPlayed(getStatIntegerOrDefault(statistics, "minutesPlayed"))
                 .goals(getStatIntegerOrDefault(statistics, "goals"))
                 .assists(getStatIntegerOrDefault(statistics, "assists"))
@@ -159,6 +173,7 @@ public class SofascoreDataSource implements DataSourceParser {
 
     private PlayerMatchPerformanceStats parseOutfieldPlayerMatchData(JsonNode statistics) {
         return PlayerMatchPerformanceStats.builder()
+                .dataSourceSiteName(dataSourceSiteName)
                 .minutesPlayed(getStatIntegerOrDefault(statistics, "minutesPlayed"))
                 .goals(getStatIntegerOrDefault(statistics, "goals"))
                 .assists(getStatIntegerOrDefault(statistics, "assists"))
