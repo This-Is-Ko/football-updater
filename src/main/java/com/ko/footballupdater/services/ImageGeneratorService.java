@@ -141,37 +141,6 @@ public class ImageGeneratorService {
         return ImageIO.read(new File(baseImagePath));
     }
 
-    private void selectBaseImage(BufferedImage image, Post post) throws IOException {
-        // Base image priority order:
-        // 1. Team specific image base
-        // 2. Player specific image base
-        // 3. Generic image base
-        String playerImageBaseFilePath = imageGeneratorProperies.getInputPath() + "/" + post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME;
-        try {
-            if (post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null) {
-                String teamSpecificPlayerImageBaseFilePath = imageGeneratorProperies.getInputPath() + post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() + "/" + post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME;
-                image = loadImage(teamSpecificPlayerImageBaseFilePath);
-                playerImageBaseFilePath = teamSpecificPlayerImageBaseFilePath;
-            }
-        } catch (IOException ex) {
-            log.atDebug().setMessage("No team specific base image found" + post.getPlayer().getName()).log();
-        }
-
-        if (image == null) {
-            // Use default base image for player
-            try {
-                image = loadImage(playerImageBaseFilePath);
-            } catch (IOException ex) {
-                log.atDebug().setMessage("No player base image found" + post.getPlayer().getName()).log();
-            }
-            if (image == null) {
-                String genericPlayerImageBaseFilePath = imageGeneratorProperies.getInputPath() + GENERIC_BASE_IMAGE_FILE_NAME;
-                image = loadImage(genericPlayerImageBaseFilePath);
-                playerImageBaseFilePath = genericPlayerImageBaseFilePath;
-            }
-        }
-    }
-
     private BufferedImage setUpBaseImageWithBackgroundImageUrl(ImageGenParams imageGenParams) throws IOException {
         URL imageUrl = URI.create(imageGenParams.getBackgroundImageUrl()).toURL();
         BufferedImage downloadedImage = ImageIO.read(imageUrl);
@@ -357,9 +326,9 @@ public class ImageGeneratorService {
             }
 
             // Add player name
-            Font playerNameFont = new Font("NFL Detroit Lions", Font.PLAIN, 40);
+            Font playerNameFont = new Font("Wagner Modern", Font.PLAIN, 50);
             if (!selectedStats.isEmpty()) {
-                drawXCenteredText(image, playerNameFont, post.getPlayer().getName().toUpperCase(), image.getHeight() - 350);
+                drawXCenteredText(image, playerNameFont, post.getPlayer().getName().toUpperCase(), image.getHeight() - 320);
             } else {
                 drawXCenteredText(image, playerNameFont, post.getPlayer().getName().toUpperCase(), image.getHeight() - 100);
             }
