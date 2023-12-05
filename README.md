@@ -204,7 +204,7 @@ Add the following font files
 
     /usr/share/fonts/ChakraPetch-Bold.ttf
     /usr/share/fonts/Nike_Ithaca.otf
-    /usr/share/fonts/NFL_Detroit_Lions_1.ttf
+    /usr/share/fonts/Wagner_Modern.ttf
 
 Refresh font cache
 
@@ -212,7 +212,7 @@ Refresh font cache
 
 Check fonts are available
 
-    fc-list | grep NFL Detroit Lions
+    fc-list | grep Wagner Modern
 
 Additional reference for fonts on Linux https://medium.com/source-words/how-to-manually-install-update-and-uninstall-fonts-on-linux-a8d09a3853b0
 
