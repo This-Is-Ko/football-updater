@@ -1,5 +1,6 @@
 package com.ko.footballupdater.datasource;
 
+import com.ko.footballupdater.exceptions.ParsingException;
 import com.ko.footballupdater.models.DataSource;
 import com.ko.footballupdater.models.DataSourceSiteName;
 import com.ko.footballupdater.models.DataSourceType;
@@ -213,7 +214,7 @@ public class FbrefDataSource implements DataSourceParser {
         }
     }
 
-    private String generatePlayerUrl(Element playerRow, String playerName) throws Exception {
+    private String generatePlayerUrl(Element playerRow, String playerName) throws IllegalArgumentException {
         // Example url
         // https://fbref.com/en/players/30f6344f/matchlogs/2022-2023/Mackenzie-Arnold-Match-Logs
         String input = playerRow.select("td[data-stat=player] > a").attr("href");
@@ -223,7 +224,7 @@ public class FbrefDataSource implements DataSourceParser {
             String playerNameUrl = playerName.replaceAll(" ", "-");
             return BASEURL + matcher.group() + PATH_SUFFIX + "/" + playerNameUrl + "-Match-Logs";
         } else {
-            throw new Exception("Unable to generate player url due to regex not matching for player: " + playerName);
+            throw new IllegalArgumentException("Unable to generate player url due to regex not matching for player: " + playerName);
         }
     }
 }
