@@ -2,11 +2,15 @@ package com.ko.footballupdater.repositories;
 
 import com.ko.footballupdater.models.Team;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
 public interface TeamRepository extends CrudRepository<Team, Integer> {
 
-    List<Team> findByNameAndCountryAndLeague(String name, String country, String league);
+    List<Team> findByName(String name);
+
+    @Query("SELECT DISTINCT t FROM Team t JOIN t.alternativeNames a WHERE a.value = :name")
+    List<Team> findByAlternativeName(String name);
 
 }

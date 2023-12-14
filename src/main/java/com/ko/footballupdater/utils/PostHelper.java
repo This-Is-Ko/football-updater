@@ -4,9 +4,13 @@ import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Post;
+import com.ko.footballupdater.repositories.TeamRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class PostHelper {
+
+    @Autowired
+    private TeamRepository teamRepository;
 
     // Generate caption based on post version
     // v1 All stats in caption
@@ -59,13 +63,7 @@ public class PostHelper {
     }
 
     public static String generatePlayerHashtags(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats, String additionalHashtags) {
-        String teamNameHashtag = "";
-        if (playerMatchPerformanceStats.getMatch().getRelevantTeam() != null && !playerMatchPerformanceStats.getMatch().getRelevantTeam().isEmpty()) {
-            teamNameHashtag = "#" + playerMatchPerformanceStats.getMatch().getRelevantTeam().replaceAll(" ", "").replaceAll("-", "");
-        }
-        return "\n\n#" + player.getName().replaceAll(" ", "").replaceAll("-", "") + " " +
-                (additionalHashtags != null ? additionalHashtags + " " : "") +
-                teamNameHashtag;
+        return "\n\n#" + player.getName().replaceAll(" ", "").replaceAll("-", "") + " " + additionalHashtags;
     }
 
     public static String generateS3UrlList(Post postHolder) {

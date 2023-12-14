@@ -3,12 +3,15 @@ package com.ko.footballupdater.services;
 import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.models.CheckedStatus;
 import com.ko.footballupdater.models.DataSourceSiteName;
+import com.ko.footballupdater.models.Hashtag;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.PostType;
+import com.ko.footballupdater.models.Team;
 import com.ko.footballupdater.repositories.PlayerRepository;
 import com.ko.footballupdater.repositories.PostRepository;
+import com.ko.footballupdater.repositories.TeamRepository;
 import com.ko.footballupdater.repositories.UpdateStatusRepository;
 import com.ko.footballupdater.responses.UpdatePlayersResponse;
 import com.ko.footballupdater.utils.PostHelper;
@@ -21,6 +24,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -28,6 +32,9 @@ public class PlayerService {
 
     @Autowired
     private PlayerRepository playerRepository;
+
+    @Autowired
+    private TeamRepository teamRepository;
 
     @Autowired
     private UpdateStatusRepository updateStatusRepository;
@@ -109,8 +116,32 @@ public class PlayerService {
                 imageGeneratorService.generatePlayerStatImage(post);
                 // Upload stat images to s3
                 amazonS3Service.uploadToS3(post);
+                // Get any additional team hashtags
+                String hashtags = " ";
+                if (post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null && !post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam().isEmpty()) {
+                    List<Team> playerTeams = teamRepository.findByName(post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam());
+                    if (playerTeams.size() == 1) {
+                        Team playerTeam = playerTeams.get(0);
+                        if (playerTeam != null) {
+                            hashtags += playerTeam.getAdditionalHashtags().stream()
+                                    .map(Hashtag::getValue)
+                                    .collect(Collectors.joining(", "));
+                        }
+                    }
+                    List<Team> playerTeamsAltName = teamRepository.findByAlternativeName(post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam());
+                    if (playerTeamsAltName.size() == 1) {
+                        Team playerTeam = playerTeamsAltName.get(0);
+                        if (playerTeam != null) {
+                            hashtags += playerTeam.getAdditionalHashtags().stream()
+                                    .map(Hashtag::getValue)
+                                    .collect(Collectors.joining(" "));
+                        }
+                    } else {
+                        hashtags += "#" + playerMatchPerformanceStats.getMatch().getRelevantTeam().replaceAll(" ", "").replaceAll("-", "");
+                    }
+                }
                 // Generate caption
-                PostHelper.generatePostCaption(instagramPostProperies.getVersion(), post, instagramPostProperies.getDefaultHashtags());
+                PostHelper.generatePostCaption(instagramPostProperies.getVersion(), post, instagramPostProperies.getDefaultHashtags() + hashtags);
                 // Generate image search links
                 PostHelper.generatePostImageSearchUrl(post);
             } catch (Exception e) {

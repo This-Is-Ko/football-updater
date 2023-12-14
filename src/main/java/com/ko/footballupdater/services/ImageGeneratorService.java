@@ -180,7 +180,7 @@ public class ImageGeneratorService {
                     if (imageGenParams.getImageHorizontalOffset() != null) {
                         horizontalOffset = imageGenParams.getImageHorizontalOffset();
                     }
-                    imageGraphics.drawImage(downloadedImage, horizontalOffset, 0, null);
+                    imageGraphics.drawImage(downloadedImage, -horizontalOffset, 0, null);
                 } else if(HorizontalTranslation.RIGHT.equals(imageGenParams.getImageHorizontalTranslation())) {
                     // Top left will need to be drawn off-canvas and right side of image will appear at center
                     int xTranslation = (int) ((downloadedImage.getWidth() * scale) - background.getWidth());
@@ -210,7 +210,7 @@ public class ImageGeneratorService {
                 if (imageGenParams.getImageVerticalOffset() != null) {
                     verticalOffset = imageGenParams.getImageVerticalOffset();
                 }
-                imageGraphics.drawImage(downloadedImage, 0, verticalOffset, null);
+                imageGraphics.drawImage(downloadedImage, 0, -verticalOffset, null);
             } else if(VerticalTranslation.BOTTOM.equals(imageGenParams.getImageVerticalTranslation())) {
                 // Top left will need to be drawn off-canvas
                 // vertical offset will move image towards the top

@@ -1,7 +1,10 @@
 package com.ko.footballupdater.models;
 
+import com.ko.footballupdater.converter.StringArrayListConverter;
+import com.ko.footballupdater.converter.StringListConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -11,11 +14,17 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.NotNull;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "teams")
 public class Team {
@@ -28,13 +37,6 @@ public class Team {
     @NotNull
     private String name;
 
-    @Column
-    @NotNull
-    private String country;
-
-    @Column
-    private String league;
-
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "team_data_source_id")
     @JdbcTypeCode(SqlTypes.JSON)
@@ -44,51 +46,10 @@ public class Team {
     @JoinColumn(name = "checked_status_id")
     private CheckedStatus checkedStatus;
 
-    public Integer getId() {
-        return id;
-    }
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<AlternativeName> alternativeNames;
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Hashtag> additionalHashtags;
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
-    }
-
-    public String getLeague() {
-        return league;
-    }
-
-    public void setLeague(String league) {
-        this.league = league;
-    }
-
-    public Set<DataSource> getDataSources() {
-        return dataSources;
-    }
-
-    public void setDataSources(Set<DataSource> dataSources) {
-        this.dataSources = dataSources;
-    }
-
-    public CheckedStatus getCheckedStatus() {
-        return checkedStatus;
-    }
-
-    public void setCheckedStatus(CheckedStatus checkedStatus) {
-        this.checkedStatus = checkedStatus;
-    }
 }
