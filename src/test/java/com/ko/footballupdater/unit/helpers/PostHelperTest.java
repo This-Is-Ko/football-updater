@@ -18,9 +18,9 @@ public class PostHelperTest {
         PlayerMatchPerformanceStats playerMatchPerformanceStats = new PlayerMatchPerformanceStats(match);
         String additionalHashtags = "#AdditionalHashtags #AnotherOne";
 
-        String result = PostHelper.generatePlayerHashtags(player, playerMatchPerformanceStats, additionalHashtags);
+        String result = PostHelper.generatePlayerHashtags(player, additionalHashtags);
 
-        String expected = "\n\n#TestPlayer #AdditionalHashtags #AnotherOne #TeamA";
+        String expected = "\n\n#TestPlayer #AdditionalHashtags #AnotherOne";
         assertEquals(expected, result);
     }
 
@@ -31,9 +31,9 @@ public class PostHelperTest {
         PlayerMatchPerformanceStats playerMatchPerformanceStats = new PlayerMatchPerformanceStats(match);
         String additionalHashtags = "#AdditionalHashtags #AnotherOne";
 
-        String result = PostHelper.generatePlayerHashtags(player, playerMatchPerformanceStats, additionalHashtags);
+        String result = PostHelper.generatePlayerHashtags(player, additionalHashtags);
 
-        String expected = "\n\n#TestPlayer #AdditionalHashtags #AnotherOne ";
+        String expected = "\n\n#TestPlayer #AdditionalHashtags #AnotherOne";
         assertEquals(expected, result);
     }
 
@@ -46,9 +46,9 @@ public class PostHelperTest {
         PlayerMatchPerformanceStats playerMatchPerformanceStats = new PlayerMatchPerformanceStats(match);
         String additionalHashtags = null;
 
-        String result = PostHelper.generatePlayerHashtags(player, playerMatchPerformanceStats, additionalHashtags);
+        String result = PostHelper.generatePlayerHashtags(player, additionalHashtags);
 
-        String expected = "\n\n#TestPlayer #TeamA";
+        String expected = "\n\n#TestPlayer";
         assertEquals(expected, result);
     }
 }
