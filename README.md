@@ -134,7 +134,7 @@ Create an app in the Facebook developer portal and configure the clientId, secre
 
 Instagram publishing follows the flow reccommended by Facebook seen here https://developers.facebook.com/docs/instagram-api/guides/content-publishing#carousel-posts
 
-Due to Facebook's security rules, to run in a environment which is not "localhost", SSL needs to be configured (to use HTTPS connection) and a custom domain is required. 
+Due to Facebook's security rules, to run in an environment which is not "localhost", SSL needs to be configured (to use HTTPS connection) and a custom domain is required. 
 
 Favicon from https://iconscout.com/free-icon/soccer-8
 
@@ -204,7 +204,7 @@ Add the following font files
 
     /usr/share/fonts/ChakraPetch-Bold.ttf
     /usr/share/fonts/Nike_Ithaca.otf
-    /usr/share/fonts/NFL_Detroit_Lions_1.ttf
+    /usr/share/fonts/Wagner_Modern.ttf
 
 Refresh font cache
 
@@ -212,7 +212,7 @@ Refresh font cache
 
 Check fonts are available
 
-    fc-list | grep NFL Detroit Lions
+    fc-list | grep Wagner Modern
 
 Additional reference for fonts on Linux https://medium.com/source-words/how-to-manually-install-update-and-uninstall-fonts-on-linux-a8d09a3853b0
 

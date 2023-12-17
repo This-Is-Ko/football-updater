@@ -25,7 +25,7 @@ public class FileAccessValidationRunner implements ApplicationRunner {
         File dir = new File(imageGeneratorProperies.getInputPath());
         File[] directoryListing = dir.listFiles();
         if (directoryListing != null) {
-            log.info(String.format("Found %d files in input directory", directoryListing.length));
+            log.info(String.format("Found %d files in input directory: %s", directoryListing.length, imageGeneratorProperies.getInputPath()));
             for (File child : directoryListing) {
                 try {
                     if (child.exists() && child.canRead()) {

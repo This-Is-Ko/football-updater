@@ -37,6 +37,7 @@ public class ImageGeneratorService {
     private InstagramPostProperies instagramPostProperies;
 
     private final int STAT_Y_COORDINATE = 350;
+    private final String GENERIC_BASE_IMAGE_FILE_NAME = "Generic_base_player_stat_image.jpg";
     private final String BASE_IMAGE_FILE_NAME = "_base_player_stat_image.jpg";
     private final String STANDOUT_BASE_IMAGE_FILE_NAME = "_standout_base_player_stat_image.jpg";
 
@@ -46,18 +47,40 @@ public class ImageGeneratorService {
         }
 
         try {
-            // Load the base image
-            String playerImageBaseFilePath = imageGeneratorProperies.getInputPath() + post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME;
-            BufferedImage image = setUpBaseImage(playerImageBaseFilePath);
+            // Load the base image - priority order:
 
-            // Add player name to the image
-            Graphics2D nameGraphic = image.createGraphics();
-            nameGraphic.setFont(new Font("Nike Ithaca", Font.PLAIN, 47));
-            nameGraphic.setColor(Color.BLACK);
-            int playerNameX = 77;
-            int playerNameY = 116;
-            nameGraphic.drawString(post.getPlayer().getName().toUpperCase(), playerNameX, playerNameY);
-            nameGraphic.dispose();
+            // 1. Team specific image base
+            // 2. Player specific image base
+            // 3. Generic image base
+            BufferedImage image = null;
+            String selectedBaseImageFilePath = null;
+            try {
+                if (post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null) {
+                    String teamSpecificPlayerImageBaseFilePath = imageGeneratorProperies.getInputPath() + post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() + "/" + post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME;
+                    image = loadImage(teamSpecificPlayerImageBaseFilePath);
+                    selectedBaseImageFilePath = teamSpecificPlayerImageBaseFilePath;
+                }
+            } catch (IOException ex) {
+                log.atDebug().setMessage("No team specific base image found" + post.getPlayer().getName()).log();
+            }
+
+            if (image == null) {
+                // Use default base image for player
+                try {
+                    String playerImageBaseFilePath = imageGeneratorProperies.getInputPath() + "/" + post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME;
+                    image = loadImage(playerImageBaseFilePath);
+                    selectedBaseImageFilePath = playerImageBaseFilePath;
+                } catch (IOException ex) {
+                    log.atDebug().setMessage("No player base image found" + post.getPlayer().getName()).log();
+                }
+                if (image == null) {
+                    String genericPlayerImageBaseFilePath = imageGeneratorProperies.getInputPath() + "/" + GENERIC_BASE_IMAGE_FILE_NAME;
+                    image = loadImage(genericPlayerImageBaseFilePath);
+                    selectedBaseImageFilePath = genericPlayerImageBaseFilePath;
+                }
+            }
+
+            drawAllStatsPlayerName(image, post);
 
             // Match stats to image
             Graphics2D graphics = setUpStatsGraphicsDefaults(image);
@@ -91,13 +114,14 @@ public class ImageGeneratorService {
                         if (attributeCounter % 12 == 0) {
                             createdImageCounter++;
                             saveImage(post, image, generateFileName(post, createdImageCounter, PostType.ALL_STAT_POST), createdImageCounter);
-                            image = setUpBaseImage(playerImageBaseFilePath);
+                            image = loadImage(selectedBaseImageFilePath);
+                            drawAllStatsPlayerName(image, post);
                             graphics = setUpStatsGraphicsDefaults(image);
                             statY = STAT_Y_COORDINATE;
                         }
                     }
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
+                } catch (IllegalAccessException ex) {
+                    log.atWarn().setMessage("Error while generating stat image").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
                 }
             }
 
@@ -113,7 +137,7 @@ public class ImageGeneratorService {
         }
     }
 
-    private BufferedImage setUpBaseImage(String baseImagePath) throws IOException {
+    private BufferedImage loadImage(String baseImagePath) throws IOException {
         return ImageIO.read(new File(baseImagePath));
     }
 
@@ -156,7 +180,7 @@ public class ImageGeneratorService {
                     if (imageGenParams.getImageHorizontalOffset() != null) {
                         horizontalOffset = imageGenParams.getImageHorizontalOffset();
                     }
-                    imageGraphics.drawImage(downloadedImage, horizontalOffset, 0, null);
+                    imageGraphics.drawImage(downloadedImage, -horizontalOffset, 0, null);
                 } else if(HorizontalTranslation.RIGHT.equals(imageGenParams.getImageHorizontalTranslation())) {
                     // Top left will need to be drawn off-canvas and right side of image will appear at center
                     int xTranslation = (int) ((downloadedImage.getWidth() * scale) - background.getWidth());
@@ -186,7 +210,7 @@ public class ImageGeneratorService {
                 if (imageGenParams.getImageVerticalOffset() != null) {
                     verticalOffset = imageGenParams.getImageVerticalOffset();
                 }
-                imageGraphics.drawImage(downloadedImage, 0, verticalOffset, null);
+                imageGraphics.drawImage(downloadedImage, 0, -verticalOffset, null);
             } else if(VerticalTranslation.BOTTOM.equals(imageGenParams.getImageVerticalTranslation())) {
                 // Top left will need to be drawn off-canvas
                 // vertical offset will move image towards the top
@@ -206,6 +230,17 @@ public class ImageGeneratorService {
         graphics.setColor(textColor);
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         return graphics;
+    }
+
+    private void drawAllStatsPlayerName(BufferedImage image, Post post) {
+        // Add player name to the image
+        Graphics2D nameGraphic = image.createGraphics();
+        nameGraphic.setFont(new Font("Nike Ithaca", Font.PLAIN, 47));
+        nameGraphic.setColor(Color.BLACK);
+        int playerNameX = 77;
+        int playerNameY = 116;
+        nameGraphic.drawString(post.getPlayer().getName().toUpperCase(), playerNameX, playerNameY);
+        nameGraphic.dispose();
     }
 
     private ImageStatEntry generateDisplayedName(String displayStatName, Object value) {
@@ -287,13 +322,13 @@ public class ImageGeneratorService {
             } else {
                 // Load the base image
                 String playerImageBaseFilePath = imageGeneratorProperies.getInputPath() + post.getPlayer().getName().replaceAll(" ", "") + STANDOUT_BASE_IMAGE_FILE_NAME;
-                image = setUpBaseImage(playerImageBaseFilePath);
+                image = loadImage(playerImageBaseFilePath);
             }
 
             // Add player name
-            Font playerNameFont = new Font("NFL Detroit Lions", Font.PLAIN, 40);
+            Font playerNameFont = new Font("Wagner Modern", Font.PLAIN, 50);
             if (!selectedStats.isEmpty()) {
-                drawXCenteredText(image, playerNameFont, post.getPlayer().getName().toUpperCase(), image.getHeight() - 350);
+                drawXCenteredText(image, playerNameFont, post.getPlayer().getName().toUpperCase(), image.getHeight() - 320);
             } else {
                 drawXCenteredText(image, playerNameFont, post.getPlayer().getName().toUpperCase(), image.getHeight() - 100);
             }

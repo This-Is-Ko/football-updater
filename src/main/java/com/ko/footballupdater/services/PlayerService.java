@@ -3,12 +3,15 @@ package com.ko.footballupdater.services;
 import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.models.CheckedStatus;
 import com.ko.footballupdater.models.DataSourceSiteName;
+import com.ko.footballupdater.models.Hashtag;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.PostType;
+import com.ko.footballupdater.models.Team;
 import com.ko.footballupdater.repositories.PlayerRepository;
 import com.ko.footballupdater.repositories.PostRepository;
+import com.ko.footballupdater.repositories.TeamRepository;
 import com.ko.footballupdater.repositories.UpdateStatusRepository;
 import com.ko.footballupdater.responses.UpdatePlayersResponse;
 import com.ko.footballupdater.utils.PostHelper;
@@ -21,6 +24,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -30,7 +34,7 @@ public class PlayerService {
     private PlayerRepository playerRepository;
 
     @Autowired
-    private UpdateStatusRepository updateStatusRepository;
+    private TeamRepository teamRepository;
 
     @Autowired
     private PostRepository postRepository;
@@ -109,8 +113,13 @@ public class PlayerService {
                 imageGeneratorService.generatePlayerStatImage(post);
                 // Upload stat images to s3
                 amazonS3Service.uploadToS3(post);
+                // Generate any additional team hashtags
+                String hashtags = "";
+                if (post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null && !post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam().isEmpty()) {
+                    hashtags = generateTeamHashtags(post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam());
+                }
                 // Generate caption
-                PostHelper.generatePostCaption(instagramPostProperies.getVersion(), post, instagramPostProperies.getDefaultHashtags());
+                PostHelper.generatePostCaption(instagramPostProperies.getVersion(), post, instagramPostProperies.getDefaultHashtags() + hashtags);
                 // Generate image search links
                 PostHelper.generatePostImageSearchUrl(post);
             } catch (Exception e) {
@@ -130,24 +139,50 @@ public class PlayerService {
         boolean isEmailSent = emailService.sendEmailUpdate(posts);
 
         response.setEmailSent(isEmailSent);
-        // Update player checked status if email was sent
-//        if (isEmailSent) {
-            List<Player> playersToUpdate = new ArrayList<>();
-            Date currentDateTime = new Date();
-            for (Post post : posts) {
-                // Save post in database for dashboard use
-                postRepository.save(post);
+        // Update player checked status regardless of email status
+        List<Player> playersToUpdate = new ArrayList<>();
+        Date currentDateTime = new Date();
+        for (Post post : posts) {
+            // Save post in database for dashboard use
+            postRepository.save(post);
 
-                post.getPlayer().getCheckedStatus().setLastChecked(currentDateTime);
-                post.getPlayer().getCheckedStatus().setLatestCheckedMatchUrl(post.getPlayerMatchPerformanceStats().getMatch().getUrl());
-                post.getPlayer().getCheckedStatus().setLatestCheckedMatchDate(post.getPlayerMatchPerformanceStats().getMatch().getDate());
-                playersToUpdate.add(post.getPlayer());
-            }
-            playerRepository.saveAll(playersToUpdate);
-            // Populate response
-            response.setPlayersUpdated(playersToUpdate);
-            response.setNumPlayersUpdated(playersToUpdate.size());
-//        }
+            post.getPlayer().getCheckedStatus().setLastChecked(currentDateTime);
+            post.getPlayer().getCheckedStatus().setLatestCheckedMatchUrl(post.getPlayerMatchPerformanceStats().getMatch().getUrl());
+            post.getPlayer().getCheckedStatus().setLatestCheckedMatchDate(post.getPlayerMatchPerformanceStats().getMatch().getDate());
+            playersToUpdate.add(post.getPlayer());
+        }
+        playerRepository.saveAll(playersToUpdate);
+        // Populate response
+        response.setPlayersUpdated(playersToUpdate);
+        response.setNumPlayersUpdated(playersToUpdate.size());
         return response;
+    }
+
+    public String generateTeamHashtags(String teamName) {
+        String teamHashtags = "";
+        if (teamName == null || teamName.isEmpty()) {
+            return teamHashtags;
+        }
+        List<Team> playerTeams = teamRepository.findByName(teamName);
+        if (playerTeams.size() == 1) {
+            Team playerTeam = playerTeams.get(0);
+            if (playerTeam != null) {
+                teamHashtags += playerTeam.getAdditionalHashtags().stream()
+                        .map(Hashtag::getValue)
+                        .collect(Collectors.joining(", "));
+            }
+        }
+        List<Team> playerTeamsAltName = teamRepository.findByAlternativeName(teamName);
+        if (playerTeamsAltName.size() == 1) {
+            Team playerTeam = playerTeamsAltName.get(0);
+            if (playerTeam != null) {
+                teamHashtags += playerTeam.getAdditionalHashtags().stream()
+                        .map(Hashtag::getValue)
+                        .collect(Collectors.joining(" "));
+            }
+        } else {
+            teamHashtags += "#" + teamName.replaceAll(" ", "").replaceAll("-", "");
+        }
+        return teamHashtags;
     }
 }

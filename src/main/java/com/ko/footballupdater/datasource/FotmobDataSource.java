@@ -2,6 +2,7 @@ package com.ko.footballupdater.datasource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ko.footballupdater.exceptions.ParsingException;
 import com.ko.footballupdater.models.DataSource;
 import com.ko.footballupdater.models.DataSourceSiteName;
 import com.ko.footballupdater.models.DataSourceType;
@@ -414,14 +415,14 @@ public class FotmobDataSource implements DataSourceParser {
         }
     }
 
-    private String generatePlayerUrl(JsonNode playerEntry, String playerName) throws Exception {
+    private String generatePlayerUrl(JsonNode playerEntry, String playerName) throws IllegalArgumentException {
         // Example url
         // https://www.fotmob.com/players/645998/mackenzie-arnold
         int playerId = playerEntry.get("id").intValue();
         if (playerId != 0) {
             return BASEURL + "/players/" + playerId + "/" + playerName.replaceAll(" ", "-");
         } else {
-            throw new Exception("Unable to generate player url due to href empty: " + playerName);
+            throw new IllegalArgumentException("Unable to generate player url due to href empty: " + playerName);
         }
     }
 }

@@ -2,6 +2,7 @@ package com.ko.footballupdater.services;
 
 
 import com.ko.footballupdater.configuration.InstagramPostProperies;
+import com.ko.footballupdater.exceptions.GenerateStandoutException;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.models.form.ImageUrlEntry;
@@ -13,6 +14,7 @@ import com.ko.footballupdater.repositories.PostRepository;
 import com.ko.footballupdater.utils.PostHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
@@ -21,6 +23,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -60,17 +63,23 @@ public class PostService {
     );
 
 
-    public List<Post> getPosts(Boolean postedStatus) {
-        if (postedStatus != null) {
-            return postRepository.findByPostedStatusOrderByDateGeneratedDesc(postedStatus);
+    public List<Post> getPosts(Boolean postedStatus, Integer pageNumber, Integer pageSize) {
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = 0;
         }
-        return postRepository.findAllByOrderByDateGeneratedDesc();
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 30;
+        }
+        if (postedStatus != null) {
+            return postRepository.findByPostedStatusOrderByDateGeneratedDesc(postedStatus, PageRequest.of(pageNumber,pageSize));
+        }
+        return postRepository.findAllByOrderByDateGeneratedDesc(PageRequest.of(pageNumber,pageSize));
     }
 
-    public Post getPostById(Integer postId) throws Exception {
+    public Post getPostById(Integer postId) throws IllegalArgumentException {
         Optional<Post> postSearchResult = postRepository.findById(postId);
         if (postSearchResult.isEmpty()) {
-            throw new Exception("Post id not found");
+            throw new IllegalArgumentException("Post id not found");
         }
         return postSearchResult.get();
     }
@@ -86,13 +95,13 @@ public class PostService {
         }
     }
 
-    public PrepareStandoutImageDto prepareDtoForGeneratePost(Integer postId) throws Exception {
+    public PrepareStandoutImageDto prepareDtoForGeneratePost(Integer postId) throws NoSuchElementException {
         PrepareStandoutImageDto prepareStandoutImageDto = new PrepareStandoutImageDto();
 
         // Search for post with id
         Optional<Post> postSearchResult = postRepository.findById(postId);
         if (postSearchResult.isEmpty()) {
-            throw new Exception("Post id not found");
+            throw new NoSuchElementException("Post id not found");
         }
         Post post = postSearchResult.get();
         generatePostImageSearchUrl(post);
@@ -100,7 +109,7 @@ public class PostService {
 
         List<StatisticEntryGenerateDto> allStats = new ArrayList<>();
         if (post.getPlayerMatchPerformanceStats() == null) {
-            throw new Exception("Post doesn't contain match performance stats object");
+            throw new NoSuchElementException("Post doesn't contain match performance stats object");
         }
         for (Field field : post.getPlayerMatchPerformanceStats().getClass().getDeclaredFields()) {
             field.setAccessible(true); // Make the private field accessible
@@ -131,7 +140,7 @@ public class PostService {
         // Search for post with id
         Optional<Post> postSearchResult = postRepository.findById(prepareStandoutImageDto.getPostId());
         if (postSearchResult.isEmpty()) {
-            throw new Exception("Post id not found");
+            throw new NoSuchElementException("Post id not found");
         }
 
         // Update existing post type to reflect new type
@@ -146,7 +155,6 @@ public class PostService {
 
         if (filteredStats.isEmpty()) {
             prepareStandoutImageDto.setPost(post);
-            log.atInfo().setMessage("No stat selected, unable to generate standout stat image").log();
         }
 
         try {
@@ -163,7 +171,7 @@ public class PostService {
             prepareStandoutImageDto.setPost(post);
             // Skip if image generation or upload fails, allows future retry
             log.atWarn().setMessage("Something went wrong while creating standout post").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
-            throw new Exception("Something went wrong while creating standout post: " + ex.getMessage());
+            throw new GenerateStandoutException("Something went wrong while creating standout post: " + ex.getMessage());
         }
     }
 
@@ -180,7 +188,7 @@ public class PostService {
         Set<Integer> uniqueIndices = new HashSet<>();
         for (Integer index : nonZeroIndices) {
             if (!uniqueIndices.add(index)) {
-                throw new Exception("Cannot upload due to duplicate index values");
+                throw new IllegalArgumentException("Cannot upload due to duplicate index values");
             }
         }
 

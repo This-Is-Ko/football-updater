@@ -1,10 +1,8 @@
 package com.ko.footballupdater.utils;
 
-import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Post;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class PostHelper {
 
@@ -28,7 +26,7 @@ public class PostHelper {
                 playerMatchPerformanceStats.getMatch().getHomeTeamName(),
                 playerMatchPerformanceStats.getMatch().getAwayTeamName(),
                 DateTimeHelper.getDateAsFormattedString(playerMatchPerformanceStats.getMatch().getDate())
-        ) + playerMatchPerformanceStats.toFormattedString() + generatePlayerHashtags(player, playerMatchPerformanceStats, additionalHashtags);
+        ) + playerMatchPerformanceStats.toFormattedString() + generatePlayerHashtags(player, additionalHashtags);
     }
 
     // V2
@@ -38,7 +36,7 @@ public class PostHelper {
                 playerMatchPerformanceStats.getMatch().getHomeTeamName(),
                 playerMatchPerformanceStats.getMatch().getAwayTeamName(),
                 DateTimeHelper.getDateAsFormattedString(playerMatchPerformanceStats.getMatch().getDate())
-        ) + generatePlayerHashtags(player, playerMatchPerformanceStats, additionalHashtags);
+        ) + generatePlayerHashtags(player, additionalHashtags);
     }
 
     public static String generateMatchName(PlayerMatchPerformanceStats playerMatchPerformanceStats) {
@@ -58,14 +56,11 @@ public class PostHelper {
         post.getImageSearchUrls().add(String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:w", searchPhrase.replaceAll(" ", "%20")));
     }
 
-    public static String generatePlayerHashtags(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats, String additionalHashtags) {
-        String teamNameHashtag = "";
-        if (playerMatchPerformanceStats.getMatch().getRelevantTeam() != null && !playerMatchPerformanceStats.getMatch().getRelevantTeam().isEmpty()) {
-            teamNameHashtag = "#" + playerMatchPerformanceStats.getMatch().getRelevantTeam().replaceAll(" ", "").replaceAll("-", "");
+    public static String generatePlayerHashtags(Player player, String additionalHashtags) {
+        if (additionalHashtags != null) {
+            return "\n\n#" + player.getName().replaceAll(" ", "").replaceAll("-", "") + " " + additionalHashtags;
         }
-        return "\n\n#" + player.getName().replaceAll(" ", "").replaceAll("-", "") + " " +
-                (additionalHashtags != null ? additionalHashtags + " " : "") +
-                teamNameHashtag;
+        return "\n\n#" + player.getName().replaceAll(" ", "").replaceAll("-", "") ;
     }
 
     public static String generateS3UrlList(Post postHolder) {
