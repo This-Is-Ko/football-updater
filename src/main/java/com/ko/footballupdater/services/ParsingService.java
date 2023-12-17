@@ -95,43 +95,4 @@ public class ParsingService {
         }
         return null;
     }
-
-//    public String parseMatchDataForTeam(Team team, List<Player> players, String matchLink) {
-//        try {
-//            Document doc = Jsoup.connect(matchLink).get();
-//
-//            List<String> lineupNames = new ArrayList<>();
-//            List<Player> startingLineup = new ArrayList<>();
-//            List<Player> benchLineup = new ArrayList<>();
-//            // Potentially support other sites
-//            switch (dataSourceSiteName) {
-//                case FBREF -> {
-//                    Elements lineups = doc.select("div.lineup");
-//                    // Expect 2 lineup elements
-//                    if (lineups.size() != 2) {
-//                        return null;
-//                    }
-//                    for (Element lineup : lineups) {
-//                        String lineupTeamName = lineup.select("table > tbody > tr > th").text();
-//                        // Check lineup matches team
-//                        if (lineupTeamName.contains(team.getName())) {
-//                            // Get all players in lineup
-//                            Elements lineupRows = lineup.select("tr");
-//                            for (Element lineupRow : lineupRows) {
-//                                String playerName = lineupRow.select("td > a").text();
-//                                if (!playerName.isEmpty()){
-//                                    lineupNames.add(playerName);
-//                                }
-//                            }
-//                        }
-//                    }
-//
-//                    // Find wanted players
-//
-//                }
-//            }
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
 }
