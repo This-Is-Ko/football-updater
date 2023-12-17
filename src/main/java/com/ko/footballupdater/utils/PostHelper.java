@@ -9,9 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class PostHelper {
 
-    @Autowired
-    private TeamRepository teamRepository;
-
     // Generate caption based on post version
     // v1 All stats in caption
     // v2 Only name, match, date, hashtags in caption

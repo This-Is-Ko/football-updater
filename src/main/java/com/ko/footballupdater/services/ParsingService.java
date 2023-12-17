@@ -37,66 +37,6 @@ public class ParsingService {
     @Value("${datasource.sitename}")
     private DataSourceSiteName dataSourceSiteName;
 
-    public String parseTeamData(Team team) {
-        if (team.getDataSources() != null && !team.getDataSources().isEmpty()) {
-            while (team.getDataSources().iterator().hasNext()) {
-                DataSource dataSource = team.getDataSources().iterator().next();
-                try {
-                    if (dataSourceSiteName.equals(dataSource.getSiteName())) {
-                        Document doc = Jsoup.connect(dataSource.getUrl()).get();
-
-                        // Potentially support other sites
-                        // TODO Change to interface
-                        switch (dataSourceSiteName) {
-                            case FBREF -> {
-                                Element tableElement = doc.getElementsByClass("stats_table").first();
-                                if (tableElement != null) {
-                                    Element tbodyElement = tableElement.getElementsByTag("tbody").first();
-                                    if (tbodyElement != null) {
-                                        Elements resultRows = tbodyElement.select("tr");
-                                        boolean useNext = false;
-                                        if (resultRows.isEmpty()) {
-                                            break;
-                                        }
-                                        for (Element resultRow : resultRows) {
-                                            String matchUrl = resultRow.select("th[data-stat=date] > a").attr("href");
-
-                                            if (team.getCheckedStatus() == null) {
-                                                team.setCheckedStatus(new CheckedStatus(dataSourceSiteName));
-                                            }
-
-                                            if (team.getCheckedStatus().getSiteName().equals(dataSourceSiteName)) {
-                                                // Compare to previous if source is the same
-                                                String previousData = team.getCheckedStatus().getLatestCheckedMatchUrl();
-                                                if (useNext || previousData == null) {
-                                                    // Use current matchUrl
-                                                    return matchUrl;
-                                                }
-                                                if (previousData.equals(matchUrl)) {
-                                                    // Matches previous match link therefore next match will be the latest unchecked
-                                                    useNext = true;
-                                                }
-                                            } else {
-                                                // Previous source is not the same
-                                                throw new IllegalStateException("Unexpected value: " + team.getCheckedStatus().getLatestCheckedMatchUrl() + "; Expected: " + dataSourceSiteName);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            default -> throw new IllegalStateException("Unexpected value: " + dataSourceSiteName);
-                        }
-                        break;
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-        }
-        return null;
-    }
-
     public PlayerMatchPerformanceStats parsePlayerMatchData(Player player) {
         return parsePlayerMatchData(player, false);
     }

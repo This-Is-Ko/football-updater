@@ -42,8 +42,12 @@ public class PostController {
      * @return posts view
      */
     @GetMapping("")
-    public String getPosts(Model model, @RequestParam @Nullable Boolean postedStatus) {
-        List<Post> posts = postService.getPosts(postedStatus);
+    public String getPosts(@RequestParam("page") @Nullable Integer pageNumber,
+                           @RequestParam("size") @Nullable Integer pageSize,
+                           Model model,
+                           @RequestParam @Nullable Boolean postedStatus
+    ) {
+        List<Post> posts = postService.getPosts(postedStatus, pageNumber, pageSize);
 
         PostsUpdateDto postsUpdateDto = new PostsUpdateDto();
         for (Post post : posts) {

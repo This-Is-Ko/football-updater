@@ -14,6 +14,7 @@ import com.ko.footballupdater.repositories.PostRepository;
 import com.ko.footballupdater.utils.PostHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
@@ -62,11 +63,17 @@ public class PostService {
     );
 
 
-    public List<Post> getPosts(Boolean postedStatus) {
-        if (postedStatus != null) {
-            return postRepository.findByPostedStatusOrderByDateGeneratedDesc(postedStatus);
+    public List<Post> getPosts(Boolean postedStatus, Integer pageNumber, Integer pageSize) {
+        if (pageNumber == null || pageNumber < 0) {
+            pageNumber = 0;
         }
-        return postRepository.findAllByOrderByDateGeneratedDesc();
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 30;
+        }
+        if (postedStatus != null) {
+            return postRepository.findByPostedStatusOrderByDateGeneratedDesc(postedStatus, PageRequest.of(pageNumber,pageSize));
+        }
+        return postRepository.findAllByOrderByDateGeneratedDesc(PageRequest.of(pageNumber,pageSize));
     }
 
     public Post getPostById(Integer postId) throws IllegalArgumentException {

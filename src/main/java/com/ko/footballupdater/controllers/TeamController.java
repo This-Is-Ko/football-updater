@@ -69,10 +69,4 @@ public class TeamController {
     public @ResponseBody Iterable<Team> getAllTeams() {
         return teamService.getTeams();
     }
-
-    @GetMapping(path="/data/update")
-    public @ResponseBody String dataUpdate() {
-        teamService.updateData();
-        return "A";
-    }
 }

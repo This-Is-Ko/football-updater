@@ -37,9 +37,6 @@ public class PlayerService {
     private TeamRepository teamRepository;
 
     @Autowired
-    private UpdateStatusRepository updateStatusRepository;
-
-    @Autowired
     private PostRepository postRepository;
 
     @Autowired
@@ -116,29 +113,10 @@ public class PlayerService {
                 imageGeneratorService.generatePlayerStatImage(post);
                 // Upload stat images to s3
                 amazonS3Service.uploadToS3(post);
-                // Get any additional team hashtags
-                String hashtags = " ";
+                // Generate any additional team hashtags
+                String hashtags = "";
                 if (post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null && !post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam().isEmpty()) {
-                    List<Team> playerTeams = teamRepository.findByName(post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam());
-                    if (playerTeams.size() == 1) {
-                        Team playerTeam = playerTeams.get(0);
-                        if (playerTeam != null) {
-                            hashtags += playerTeam.getAdditionalHashtags().stream()
-                                    .map(Hashtag::getValue)
-                                    .collect(Collectors.joining(", "));
-                        }
-                    }
-                    List<Team> playerTeamsAltName = teamRepository.findByAlternativeName(post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam());
-                    if (playerTeamsAltName.size() == 1) {
-                        Team playerTeam = playerTeamsAltName.get(0);
-                        if (playerTeam != null) {
-                            hashtags += playerTeam.getAdditionalHashtags().stream()
-                                    .map(Hashtag::getValue)
-                                    .collect(Collectors.joining(" "));
-                        }
-                    } else {
-                        hashtags += "#" + playerMatchPerformanceStats.getMatch().getRelevantTeam().replaceAll(" ", "").replaceAll("-", "");
-                    }
+                    hashtags = generateTeamHashtags(post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam());
                 }
                 // Generate caption
                 PostHelper.generatePostCaption(instagramPostProperies.getVersion(), post, instagramPostProperies.getDefaultHashtags() + hashtags);
@@ -178,5 +156,33 @@ public class PlayerService {
         response.setPlayersUpdated(playersToUpdate);
         response.setNumPlayersUpdated(playersToUpdate.size());
         return response;
+    }
+
+    public String generateTeamHashtags(String teamName) {
+        String teamHashtags = "";
+        if (teamName == null || teamName.isEmpty()) {
+            return teamHashtags;
+        }
+        List<Team> playerTeams = teamRepository.findByName(teamName);
+        if (playerTeams.size() == 1) {
+            Team playerTeam = playerTeams.get(0);
+            if (playerTeam != null) {
+                teamHashtags += playerTeam.getAdditionalHashtags().stream()
+                        .map(Hashtag::getValue)
+                        .collect(Collectors.joining(", "));
+            }
+        }
+        List<Team> playerTeamsAltName = teamRepository.findByAlternativeName(teamName);
+        if (playerTeamsAltName.size() == 1) {
+            Team playerTeam = playerTeamsAltName.get(0);
+            if (playerTeam != null) {
+                teamHashtags += playerTeam.getAdditionalHashtags().stream()
+                        .map(Hashtag::getValue)
+                        .collect(Collectors.joining(" "));
+            }
+        } else {
+            teamHashtags += "#" + teamName.replaceAll(" ", "").replaceAll("-", "");
+        }
+        return teamHashtags;
     }
 }
