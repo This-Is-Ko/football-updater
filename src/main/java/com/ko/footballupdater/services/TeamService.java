@@ -4,6 +4,7 @@ import com.amazonaws.services.kms.model.NotFoundException;
 import com.ko.footballupdater.models.AlternativeName;
 import com.ko.footballupdater.models.CheckedStatus;
 import com.ko.footballupdater.models.DataSource;
+import com.ko.footballupdater.models.DataSourceType;
 import com.ko.footballupdater.models.Hashtag;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.Team;
@@ -74,7 +75,7 @@ public class TeamService {
         if (addTeamRequest.getDataSources() != null) {
             Set<DataSource> dataSources = new HashSet<>();
             for (AddTeamRequestDataSource requestDataSource : addTeamRequest.getDataSources()) {
-                dataSources.add(new DataSource(requestDataSource.getType(), requestDataSource.getSiteName(), requestDataSource.getUrl()));
+                dataSources.add(new DataSource(DataSourceType.TEAM, requestDataSource.getSiteName(), requestDataSource.getUrl()));
             }
             newTeam.setDataSources(dataSources);
         }
@@ -114,7 +115,7 @@ public class TeamService {
         if (updateTeamRequest.getDataSources() != null && !updateTeamRequest.getDataSources().isEmpty()) {
             Set<DataSource> dataSources = !team.getDataSources().isEmpty() ? team.getDataSources() : new HashSet<>();
             for (AddTeamRequestDataSource requestDataSource : updateTeamRequest.getDataSources()) {
-                dataSources.add(new DataSource(requestDataSource.getType(), requestDataSource.getSiteName(), requestDataSource.getUrl()));
+                dataSources.add(new DataSource(DataSourceType.TEAM, requestDataSource.getSiteName(), requestDataSource.getUrl()));
             }
             team.setDataSources(dataSources);
         }

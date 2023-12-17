@@ -10,8 +10,14 @@ import lombok.Setter;
 @Setter
 public class AddTeamRequestDataSource {
 
-    private DataSourceType type;
     private DataSourceSiteName siteName;
     private String url;
 
+    public AddTeamRequestDataSource() {
+    }
+
+    public AddTeamRequestDataSource( DataSourceSiteName siteName, String url) {
+        this.siteName = siteName;
+        this.url = url;
+    }
 }

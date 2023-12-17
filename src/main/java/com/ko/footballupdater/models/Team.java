@@ -52,4 +52,11 @@ public class Team {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Hashtag> additionalHashtags;
 
+    public Team() {
+    }
+
+    public Team(Integer id, String name) {
+        this.id = id;
+        this.name = name;
+    }
 }
