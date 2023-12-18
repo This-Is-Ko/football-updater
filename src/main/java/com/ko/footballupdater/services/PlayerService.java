@@ -159,7 +159,7 @@ public class PlayerService {
     }
 
     public String generateTeamHashtags(String teamName) {
-        String teamHashtags = "";
+        String teamHashtags = " ";
         if (teamName == null || teamName.isEmpty()) {
             return teamHashtags;
         }

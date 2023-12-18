@@ -143,7 +143,23 @@ public class SofascoreDataSource implements DataSourceParser {
 
             // Store match data
             // Convert timestamp to date e.g. 1701487800 -> 2017-01-31T20:00:00.000Z
-            Match match = new Match(url, selectedMatchDate, matchEntry.get("homeTeam").get("name").textValue(), matchEntry.get("awayTeam").get("name").textValue(), relevantTeamName);
+            String homeTeam = null;
+            if (matchEntry.hasNonNull("homeTeam") && matchEntry.get("homeTeam").hasNonNull("name")) {
+                homeTeam = matchEntry.get("homeTeam").get("name").textValue();
+            }
+            String awayTeam = null;
+            if (matchEntry.hasNonNull("awayTeam") && matchEntry.get("awayTeam").hasNonNull("name")) {
+                awayTeam = matchEntry.get("awayTeam").get("name").textValue();
+            }
+            Integer homeTeamScore = null;
+            if (matchEntry.hasNonNull("homeScore") && matchEntry.get("homeScore").hasNonNull("current")) {
+                homeTeamScore = matchEntry.get("homeScore").get("current").intValue();
+            }
+            Integer awayTeamScore = null;
+            if (matchEntry.hasNonNull("awayScore") && matchEntry.get("awayScore").hasNonNull("current")) {
+                awayTeamScore = matchEntry.get("awayScore").get("current").intValue();
+            }
+            Match match = new Match(url, selectedMatchDate, homeTeam, awayTeam, relevantTeamName, homeTeamScore, awayTeamScore);
             playerMatchPerformanceStats.setMatch(match);
             return playerMatchPerformanceStats;
         } catch (Exception ex) {

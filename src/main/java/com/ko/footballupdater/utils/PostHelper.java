@@ -31,6 +31,16 @@ public class PostHelper {
 
     // V2
     public static String generatePostDefaultPlayerCaptionV2(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats, String additionalHashtags) {
+        if (playerMatchPerformanceStats.getMatch().getHomeTeamScore() != null && playerMatchPerformanceStats.getMatch().getAwayTeamScore() != null) {
+            return String.format("%s stats in %s vs %s (%d-%d) on %s\n",
+                    player.getName(),
+                    playerMatchPerformanceStats.getMatch().getHomeTeamName(),
+                    playerMatchPerformanceStats.getMatch().getAwayTeamName(),
+                    playerMatchPerformanceStats.getMatch().getHomeTeamScore(),
+                    playerMatchPerformanceStats.getMatch().getAwayTeamScore(),
+                    DateTimeHelper.getDateAsFormattedString(playerMatchPerformanceStats.getMatch().getDate())
+            ) + generatePlayerHashtags(player, additionalHashtags);
+        }
         return String.format("%s stats in %s vs %s on %s\n",
                 player.getName(),
                 playerMatchPerformanceStats.getMatch().getHomeTeamName(),
