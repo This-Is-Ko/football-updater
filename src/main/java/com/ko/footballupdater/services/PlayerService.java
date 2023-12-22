@@ -13,7 +13,6 @@ import com.ko.footballupdater.models.Team;
 import com.ko.footballupdater.repositories.PlayerRepository;
 import com.ko.footballupdater.repositories.PostRepository;
 import com.ko.footballupdater.repositories.TeamRepository;
-import com.ko.footballupdater.repositories.UpdateStatusRepository;
 import com.ko.footballupdater.responses.UpdatePlayersResponse;
 import com.ko.footballupdater.utils.PostHelper;
 import lombok.extern.slf4j.Slf4j;

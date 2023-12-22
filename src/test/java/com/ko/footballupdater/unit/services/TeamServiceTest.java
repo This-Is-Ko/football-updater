@@ -152,8 +152,8 @@ public class TeamServiceTest {
         when(teamRepository.findByName(TEAM_NAME)).thenReturn(List.of(new Team()));
         AddTeamRequest addTeamRequest = new AddTeamRequest();
         addTeamRequest.setName(TEAM_NAME);
-        addTeamRequest.setAdditionalHashtags(new ArrayList<>(Arrays.asList("#hashtag")));
-        addTeamRequest.setAlternativeNames(new ArrayList<>(Arrays.asList("alt name")));
+        addTeamRequest.setAdditionalHashtags(new ArrayList<>(List.of("#hashtag")));
+        addTeamRequest.setAlternativeNames(new ArrayList<>(List.of("alt name")));
         addTeamRequest.setPopulatePlayers(false);
         AddNewTeamResponse response = new AddNewTeamResponse();
         try {

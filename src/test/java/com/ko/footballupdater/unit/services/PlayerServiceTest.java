@@ -347,7 +347,6 @@ public class PlayerServiceTest {
         players.add(playerToUpdate1);
         players.add(playerToUpdate2);
 
-        PlayerMatchPerformanceStats mockPerformanceStats = mock(PlayerMatchPerformanceStats.class);
         when(parsingService.parsePlayerMatchData(playerToUpdate1)).thenReturn(null);
         when(parsingService.parsePlayerMatchData(playerToUpdate2)).thenReturn(null);
 

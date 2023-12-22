@@ -7,9 +7,7 @@ import com.ko.footballupdater.models.DataSourceType;
 import com.ko.footballupdater.models.Hashtag;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.Team;
-import com.ko.footballupdater.repositories.PlayerRepository;
 import com.ko.footballupdater.repositories.TeamRepository;
-import com.ko.footballupdater.repositories.UpdateStatusRepository;
 import com.ko.footballupdater.request.AddTeamRequest;
 import com.ko.footballupdater.request.AddTeamRequestDataSource;
 import com.ko.footballupdater.request.UpdateTeamRequest;
@@ -31,12 +29,6 @@ public class TeamService {
 
     @Autowired
     private TeamRepository teamRepository;
-
-    @Autowired
-    private PlayerRepository playerRepository;
-
-    @Autowired
-    private UpdateStatusRepository updateStatusRepository;
 
     @Autowired
     private PlayerService playerService;
