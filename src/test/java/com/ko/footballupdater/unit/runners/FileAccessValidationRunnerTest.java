@@ -6,7 +6,6 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import com.ko.footballupdater.configuration.ImageGeneratorProperies;
 import com.ko.footballupdater.runners.FileAccessValidationRunner;
-import com.ko.footballupdater.runners.FontValidationRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +20,6 @@ import org.springframework.boot.ApplicationArguments;
 
 import java.io.File;
 import java.util.List;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
