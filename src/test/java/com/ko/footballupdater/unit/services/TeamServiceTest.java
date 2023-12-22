@@ -159,7 +159,7 @@ public class TeamServiceTest {
         try {
             teamService.addTeam(addTeamRequest, response);
         } catch (IllegalArgumentException e) {
-            assert e.getMessage().equals("Team already exists");
+            assertEquals("Team already exists", e.getMessage());
         }
     }
 
@@ -200,7 +200,7 @@ public class TeamServiceTest {
         try {
             teamService.updateTeam(TEAM_ID, updateTeamRequest, new AddNewTeamResponse());
         } catch (NotFoundException e) {
-            assert e.getErrorMessage().equals("Team can't be found");
+            assertEquals("Team can't be found", e.getErrorMessage());
         }
     }
 
@@ -214,7 +214,7 @@ public class TeamServiceTest {
         try {
             teamService.updateTeam(TEAM_ID, updateTeamRequest, new AddNewTeamResponse());
         } catch (IllegalArgumentException e) {
-            assert e.getMessage().equals("Invalid hashtag value");
+            assertEquals("Invalid hashtag value", e.getMessage());
         }
     }
 
@@ -228,7 +228,7 @@ public class TeamServiceTest {
         try {
             teamService.updateTeam(TEAM_ID, updateTeamRequest, new AddNewTeamResponse());
         } catch (IllegalArgumentException e) {
-            assert e.getMessage().equals("Invalid hashtag value");
+            assertEquals("Invalid hashtag value", e.getMessage());
         }
     }
 
@@ -242,7 +242,7 @@ public class TeamServiceTest {
         try {
             teamService.updateTeam(TEAM_ID, updateTeamRequest, new AddNewTeamResponse());
         } catch (IllegalArgumentException e) {
-            assert e.getMessage().equals("Invalid hashtag value");
+            assertEquals("Invalid hashtag value", e.getMessage());
         }
     }
 
@@ -261,7 +261,7 @@ public class TeamServiceTest {
         try {
             teamService.deleteTeam(TEAM_ID);
         } catch (IllegalArgumentException e) {
-            assert e.getMessage().equals("Team doesn't exist");
+            assertEquals("Team doesn't exist", e.getMessage());
         }
     }
 

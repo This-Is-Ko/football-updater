@@ -1,22 +1,17 @@
 package com.ko.footballupdater.unit.services;
 
-
-
 import com.amazonaws.services.kms.model.NotFoundException;
 import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.models.CheckedStatus;
-import com.ko.footballupdater.models.DataSourceSiteName;
 import com.ko.footballupdater.models.Hashtag;
 import com.ko.footballupdater.models.Match;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Post;
-import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.models.Team;
 import com.ko.footballupdater.repositories.PlayerRepository;
 import com.ko.footballupdater.repositories.PostRepository;
 import com.ko.footballupdater.repositories.TeamRepository;
-import com.ko.footballupdater.responses.AddNewTeamResponse;
 import com.ko.footballupdater.responses.UpdatePlayersResponse;
 import com.ko.footballupdater.services.AmazonS3Service;
 import com.ko.footballupdater.services.EmailService;
@@ -109,7 +104,7 @@ public class PlayerServiceTest {
         try {
             playerService.addPlayer(existingPlayer);
         } catch (IllegalArgumentException e) {
-            assert e.getMessage().equals("Player already exists");
+            assertEquals("Player already exists", e.getMessage());
         }
     }
 
@@ -154,7 +149,7 @@ public class PlayerServiceTest {
         try {
             playerService.updateDataForPlayer(playerId);
         } catch (NotFoundException e) {
-            assert e.getErrorMessage().equals("Player name not found");
+            assertEquals("Player name not found", e.getErrorMessage());
         }
     }
 
