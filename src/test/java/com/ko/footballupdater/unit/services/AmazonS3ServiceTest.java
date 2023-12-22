@@ -51,20 +51,21 @@ public class AmazonS3ServiceTest {
     public void setup() {
         MockitoAnnotations.openMocks(this);
         when(amazonS3Properties.isEnabled()).thenReturn(true);
+        when(imageGeneratorProperies.getOutputPath()).thenReturn("/path/to/output");
+
+        Player player = new Player("Player1");
+        when(post.getPlayer()).thenReturn(player);
     }
 
     @Test
     public void uploadToS3_imagesExist_successfullyUpload() throws Exception {
-        when(amazonS3Properties.isEnabled()).thenReturn(true);
         when(post.getImagesFileNames()).thenReturn(List.of("image1.jpg", "image2.jpg"));
-        Player player = new Player("Player1");
-        when(post.getPlayer()).thenReturn(player);
         when(post.getImagesUrls()).thenReturn(new ArrayList<>());
 
         File file1 = mock(File.class);
         File file2 = mock(File.class);
-        String file1Path = "/path/to/image1.jpg";
-        String file2Path = "/path/to/image2.jpg";
+        String file1Path = "/path/to/output/image1.jpg";
+        String file2Path = "/path/to/output/image2.jpg";
         when(file1.getAbsolutePath()).thenReturn(file1Path);
         when(file2.getAbsolutePath()).thenReturn(file2Path);
         when(file1.delete()).thenReturn(true);
@@ -86,9 +87,6 @@ public class AmazonS3ServiceTest {
 
     @Test
     public void uploadToS3_noImagesToUpload_noUpload() throws Exception {
-        when(amazonS3Properties.isEnabled()).thenReturn(true);
-        Player player = new Player("Player1");
-        when(post.getPlayer()).thenReturn(player);
         when(post.getImagesFileNames()).thenReturn(Collections.emptyList());
         when(post.getImagesUrls()).thenReturn(new ArrayList<>());
 
@@ -109,9 +107,6 @@ public class AmazonS3ServiceTest {
 
     @Test
     public void uploadToS3_amazonServiceException_exceptionThrown() {
-        when(amazonS3Properties.isEnabled()).thenReturn(true);
-        Player player = new Player("Player1");
-        when(post.getPlayer()).thenReturn(player);
         when(post.getImagesFileNames()).thenReturn(Collections.singletonList("image.jpg"));
 
         File file = mock(File.class);
@@ -129,9 +124,6 @@ public class AmazonS3ServiceTest {
 
     @Test
     public void uploadToS3_sdkClientException_exceptionThrown() {
-        when(amazonS3Properties.isEnabled()).thenReturn(true);
-        Player player = new Player("Player1");
-        when(post.getPlayer()).thenReturn(player);
         when(post.getImagesFileNames()).thenReturn(Collections.singletonList("image.jpg"));
 
         File file = mock(File.class);
