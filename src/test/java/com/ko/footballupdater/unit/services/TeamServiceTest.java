@@ -1,12 +1,15 @@
 package com.ko.footballupdater.unit.services;
 
+import com.amazonaws.services.kms.model.NotFoundException;
+import com.ko.footballupdater.models.AlternativeName;
+import com.ko.footballupdater.models.DataSource;
 import com.ko.footballupdater.models.DataSourceSiteName;
 import com.ko.footballupdater.models.DataSourceType;
-import com.ko.footballupdater.models.Hashtag;
 import com.ko.footballupdater.models.Team;
 import com.ko.footballupdater.repositories.TeamRepository;
 import com.ko.footballupdater.request.AddTeamRequest;
 import com.ko.footballupdater.request.AddTeamRequestDataSource;
+import com.ko.footballupdater.request.UpdateTeamRequest;
 import com.ko.footballupdater.responses.AddNewTeamResponse;
 import com.ko.footballupdater.services.TeamService;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,8 +20,10 @@ import org.mockito.MockitoAnnotations;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -147,14 +152,97 @@ public class TeamServiceTest {
         when(teamRepository.findByName(TEAM_NAME)).thenReturn(List.of(new Team()));
         AddTeamRequest addTeamRequest = new AddTeamRequest();
         addTeamRequest.setName(TEAM_NAME);
-        addTeamRequest.setAdditionalHashtags(new ArrayList<>(Arrays.asList("#hashtag")));
-        addTeamRequest.setAlternativeNames(new ArrayList<>(Arrays.asList("alt name")));
+        addTeamRequest.setAdditionalHashtags(new ArrayList<>(List.of("#hashtag")));
+        addTeamRequest.setAlternativeNames(new ArrayList<>(List.of("alt name")));
         addTeamRequest.setPopulatePlayers(false);
         AddNewTeamResponse response = new AddNewTeamResponse();
         try {
             teamService.addTeam(addTeamRequest, response);
         } catch (IllegalArgumentException e) {
-            assert e.getMessage().equals("Team already exists");
+            assertEquals("Team already exists", e.getMessage());
+        }
+    }
+
+    @Test
+    public void updateTeam_updateWithValidInput_successfully() {
+        Team existingTeam = new Team(TEAM_ID, TEAM_NAME);
+        Set<DataSource> existingDataSources = new HashSet<>(Arrays.asList(
+                new DataSource(DataSourceType.TEAM, DataSourceSiteName.FOTMOB, "http://site1.com"),
+                new DataSource(DataSourceType.TEAM, DataSourceSiteName.FBREF, "http://site2.com")));
+        Set<AlternativeName> existingAlternativeNames = new HashSet<>(Arrays.asList(
+                new AlternativeName("AltName1"), new AlternativeName("AltName2")));
+
+        existingTeam.setDataSources(existingDataSources);
+        existingTeam.setAlternativeNames(existingAlternativeNames);
+
+        UpdateTeamRequest updateTeamRequest = new UpdateTeamRequest();
+        updateTeamRequest.setDataSources(List.of(
+                new AddTeamRequestDataSource(DataSourceSiteName.SOFASCORE, "http://test0.com")));
+        updateTeamRequest.setAlternativeNames(new ArrayList<>(Arrays.asList("NewAltName1", "NewAltName2")));
+        updateTeamRequest.setAdditionalHashtags(new ArrayList<>(Arrays.asList("#hashtag0", "#hashtag1")));
+
+        when(teamRepository.findById(TEAM_ID)).thenReturn(Optional.of(existingTeam));
+        when(teamRepository.save(any(Team.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        teamService.updateTeam(TEAM_ID, updateTeamRequest, new AddNewTeamResponse());
+
+        assertEquals(TEAM_NAME, existingTeam.getName());
+        assertEquals(TEAM_ID, existingTeam.getId());
+        assertEquals(3, existingTeam.getDataSources().size());
+        assertEquals(4, existingTeam.getAlternativeNames().size());
+    }
+
+    @Test
+    public void updateTeam_teamNotFound_throwNotFoundException() {
+        UpdateTeamRequest updateTeamRequest = new UpdateTeamRequest();
+        when(teamRepository.findById(TEAM_ID)).thenReturn(Optional.empty());
+
+        try {
+            teamService.updateTeam(TEAM_ID, updateTeamRequest, new AddNewTeamResponse());
+        } catch (NotFoundException e) {
+            assertEquals("Team can't be found", e.getErrorMessage());
+        }
+    }
+
+    @Test
+    public void updateTeam_invalidHashtag_missingHash_throwException() {
+        UpdateTeamRequest updateTeamRequest = new UpdateTeamRequest();
+        updateTeamRequest.setAdditionalHashtags(new ArrayList<>(Arrays.asList("#hashtag0", "invalid", "#hashtag1")));
+
+        when(teamRepository.findById(TEAM_ID)).thenReturn(Optional.of(new Team(TEAM_ID, TEAM_NAME)));
+
+        try {
+            teamService.updateTeam(TEAM_ID, updateTeamRequest, new AddNewTeamResponse());
+        } catch (IllegalArgumentException e) {
+            assertEquals("Invalid hashtag value", e.getMessage());
+        }
+    }
+
+    @Test
+    public void updateTeam_invalidHashtag_spaceInHashtag_throwException() {
+        UpdateTeamRequest updateTeamRequest = new UpdateTeamRequest();
+        updateTeamRequest.setAdditionalHashtags(new ArrayList<>(Arrays.asList("#hashtag0", "#invalid hashtag", "#hashtag1")));
+
+        when(teamRepository.findById(TEAM_ID)).thenReturn(Optional.of(new Team(TEAM_ID, TEAM_NAME)));
+
+        try {
+            teamService.updateTeam(TEAM_ID, updateTeamRequest, new AddNewTeamResponse());
+        } catch (IllegalArgumentException e) {
+            assertEquals("Invalid hashtag value", e.getMessage());
+        }
+    }
+
+    @Test
+    public void updateTeam_invalidHashtag_tabInHashtag_throwException() {
+        UpdateTeamRequest updateTeamRequest = new UpdateTeamRequest();
+        updateTeamRequest.setAdditionalHashtags(new ArrayList<>(Arrays.asList("#hashtag0", "#invalid\thashtag", "#hashtag1")));
+
+        when(teamRepository.findById(TEAM_ID)).thenReturn(Optional.of(new Team(TEAM_ID, TEAM_NAME)));
+
+        try {
+            teamService.updateTeam(TEAM_ID, updateTeamRequest, new AddNewTeamResponse());
+        } catch (IllegalArgumentException e) {
+            assertEquals("Invalid hashtag value", e.getMessage());
         }
     }
 
@@ -173,7 +261,7 @@ public class TeamServiceTest {
         try {
             teamService.deleteTeam(TEAM_ID);
         } catch (IllegalArgumentException e) {
-            assert e.getMessage().equals("Team doesn't exist");
+            assertEquals("Team doesn't exist", e.getMessage());
         }
     }
 

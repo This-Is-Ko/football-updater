@@ -44,14 +44,32 @@ public class Match {
     @Column
     private String relevantTeam;
 
+    @Nullable
+    @Column
+    private Integer homeTeamScore;
+
+    @Nullable
+    @Column
+    private Integer awayTeamScore;
+
     public Match() {
     }
 
-    public Match(String url, Date date, String homeTeamName, String awayTeamName, String relevantTeam) {
+    public Match(@Nullable String url, @Nullable Date date, @Nullable String homeTeamName, @Nullable String awayTeamName, @Nullable String relevantTeam) {
         this.url = url;
         this.date = date;
         this.homeTeamName = homeTeamName;
         this.awayTeamName = awayTeamName;
         this.relevantTeam = relevantTeam;
+    }
+
+    public Match(@Nullable String url, @Nullable Date date, @Nullable String homeTeamName, @Nullable String awayTeamName, @Nullable String relevantTeam, @Nullable Integer homeTeamScore, @Nullable Integer awayTeamScore) {
+        this.url = url;
+        this.date = date;
+        this.homeTeamName = homeTeamName;
+        this.awayTeamName = awayTeamName;
+        this.relevantTeam = relevantTeam;
+        this.homeTeamScore = homeTeamScore;
+        this.awayTeamScore = awayTeamScore;
     }
 }

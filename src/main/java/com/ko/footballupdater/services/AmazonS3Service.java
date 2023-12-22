@@ -65,6 +65,7 @@ public class AmazonS3Service {
                 // The call was transmitted successfully, but Amazon S3 couldn't process
                 // it, so it returned an error response.
                 log.atWarn().setMessage("Error attempting to upload").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
+                throw new Exception("Error attempting to upload");
             } catch (SdkClientException ex) {
                 // Amazon S3 couldn't be contacted for a response, or the client
                 // couldn't parse the response from Amazon S3.

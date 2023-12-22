@@ -131,6 +131,19 @@ public class FotmobDataSource implements DataSourceParser {
                     jsonNode.get("general").get("awayTeam").get("name").textValue(),
                     "");
 
+            // Save match scores if available
+            if (jsonNode.hasNonNull("header") && jsonNode.get("header").hasNonNull("teams") && jsonNode.get("header").get("teams").isArray()) {
+                for (JsonNode teamEntry : jsonNode.get("header").get("teams")) {
+                    if (teamEntry.hasNonNull("name") && teamEntry.hasNonNull("score")) {
+                        if (match.getHomeTeamName() != null && match.getHomeTeamName().equals(teamEntry.get("name").textValue())) {
+                            match.setHomeTeamScore(teamEntry.get("score").intValue());
+                        } else if (match.getAwayTeamName() != null && match.getAwayTeamName().equals(teamEntry.get("name").textValue())) {
+                            match.setAwayTeamScore(teamEntry.get("score").intValue());
+                        }
+                    }
+                }
+            }
+
             JsonNode lineups = jsonNode.get("content").get("lineup").get("lineup");
             if (lineups.isArray()) {
                 for (JsonNode lineup : lineups) {

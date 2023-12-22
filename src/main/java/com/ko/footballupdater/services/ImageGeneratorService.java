@@ -37,7 +37,6 @@ public class ImageGeneratorService {
     private InstagramPostProperies instagramPostProperies;
 
     private final int STAT_Y_COORDINATE = 350;
-    private final String GENERIC_BASE_IMAGE_FILE_NAME = "Generic_base_player_stat_image.jpg";
     private final String BASE_IMAGE_FILE_NAME = "_base_player_stat_image.jpg";
     private final String STANDOUT_BASE_IMAGE_FILE_NAME = "_standout_base_player_stat_image.jpg";
 
@@ -74,7 +73,7 @@ public class ImageGeneratorService {
                     log.atDebug().setMessage("No player base image found" + post.getPlayer().getName()).log();
                 }
                 if (image == null) {
-                    String genericPlayerImageBaseFilePath = imageGeneratorProperies.getInputPath() + "/" + GENERIC_BASE_IMAGE_FILE_NAME;
+                    String genericPlayerImageBaseFilePath = imageGeneratorProperies.getInputPath() + "/" + imageGeneratorProperies.getGenericBaseImageFile();
                     image = loadImage(genericPlayerImageBaseFilePath);
                     selectedBaseImageFilePath = genericPlayerImageBaseFilePath;
                 }

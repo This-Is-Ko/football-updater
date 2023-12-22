@@ -21,4 +21,7 @@ public class ImageGeneratorProperies {
     @NotNull
     private String outputPath;
 
+    @NotNull
+    private String genericBaseImageFile;
+
 }

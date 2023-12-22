@@ -23,17 +23,30 @@ public class FileAccessValidationRunner implements ApplicationRunner {
 
     public void validateFileAccess() {
         File dir = new File(imageGeneratorProperies.getInputPath());
+        validateFileAccess(dir);
+    }
+
+    public void validateFileAccess(File dir) {
         File[] directoryListing = dir.listFiles();
+        boolean isGenericBaseImageSet = false;
         if (directoryListing != null) {
             log.info(String.format("Found %d files in input directory: %s", directoryListing.length, imageGeneratorProperies.getInputPath()));
             for (File child : directoryListing) {
                 try {
                     if (child.exists() && child.canRead()) {
                         log.debug("File access is valid for " + child.getAbsolutePath());
+                        if (imageGeneratorProperies.getGenericBaseImageFile().equals(child.getName())) {
+                            isGenericBaseImageSet = true;
+                        }
+                    } else {
+                        throw new RuntimeException("File access is not valid");
                     }
                 } catch (Exception e) {
-                    log.warn("File access is not valid for " + child.getAbsolutePath());
+                    log.error("File access is not valid for " + child.getAbsolutePath());
                 }
+            }
+            if (!isGenericBaseImageSet) {
+                log.warn("Generic base image file was not found");
             }
             log.info("Completed input directory file access check");
         } else {
