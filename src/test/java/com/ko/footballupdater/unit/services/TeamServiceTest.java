@@ -5,7 +5,6 @@ import com.ko.footballupdater.models.AlternativeName;
 import com.ko.footballupdater.models.DataSource;
 import com.ko.footballupdater.models.DataSourceSiteName;
 import com.ko.footballupdater.models.DataSourceType;
-import com.ko.footballupdater.models.Hashtag;
 import com.ko.footballupdater.models.Team;
 import com.ko.footballupdater.repositories.TeamRepository;
 import com.ko.footballupdater.request.AddTeamRequest;

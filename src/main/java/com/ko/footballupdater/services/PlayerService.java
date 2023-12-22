@@ -1,5 +1,6 @@
 package com.ko.footballupdater.services;
 
+import com.amazonaws.services.kms.model.NotFoundException;
 import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.models.CheckedStatus;
 import com.ko.footballupdater.models.DataSourceSiteName;
@@ -54,16 +55,16 @@ public class PlayerService {
     @Autowired
     private InstagramPostProperies instagramPostProperies;
 
-    public Player addPlayer(Player newPlayer, DataSourceSiteName dataSourceSiteName) throws Exception {
+    public Player addPlayer(Player newPlayer, DataSourceSiteName dataSourceSiteName) throws IllegalArgumentException {
         if (!playerRepository.findByNameEquals(newPlayer.getName()).isEmpty()) {
-            throw new Exception("Player already exists");
+            throw new IllegalArgumentException("Player already exists");
         }
 
         newPlayer.setCheckedStatus(new CheckedStatus(dataSourceSiteName));
         return playerRepository.save(newPlayer);
     }
 
-    public Player addPlayer(Player newPlayer) throws Exception {
+    public Player addPlayer(Player newPlayer) throws IllegalArgumentException {
         // Default to FOTMOB
         return addPlayer(newPlayer, DataSourceSiteName.FOTMOB);
     }
@@ -85,11 +86,11 @@ public class PlayerService {
         return updateDataForPlayers(requestPlayersToUpdate);
     }
 
-    public UpdatePlayersResponse updateDataForPlayer(Integer playerId) throws Exception {
+    public UpdatePlayersResponse updateDataForPlayer(Integer playerId) throws NotFoundException {
         // Find latest match data for individual player
         Optional<Player> requestPlayersToUpdate = playerRepository.findById(playerId);
         if (requestPlayersToUpdate.isEmpty()) {
-            throw new Exception("Player name not found");
+            throw new NotFoundException("Player name not found");
         }
         return updateDataForPlayers(requestPlayersToUpdate.stream().toList());
     }
@@ -127,7 +128,7 @@ public class PlayerService {
                 PostHelper.generatePostImageSearchUrl(post);
             } catch (Exception e) {
                 // Skip if image generation or upload fails, allows future retry
-                log.warn(post.getPlayer().getName() + " - Unable to generate or upload image");
+                log.atWarn().setMessage("Unable to generate or upload image").addKeyValue("player", player.getName()).log();
                 continue;
             }
             posts.add(post);
@@ -162,30 +163,39 @@ public class PlayerService {
     }
 
     public String generateTeamHashtags(String teamName) {
-        String teamHashtags = " ";
+        StringBuilder teamHashtags = new StringBuilder(" ");
         if (teamName == null || teamName.isEmpty()) {
-            return teamHashtags;
+            return teamHashtags.toString();
         }
+
+        // Search for team with name
         List<Team> playerTeams = teamRepository.findByName(teamName);
         if (playerTeams.size() == 1) {
             Team playerTeam = playerTeams.get(0);
             if (playerTeam != null) {
-                teamHashtags += playerTeam.getAdditionalHashtags().stream()
-                        .map(Hashtag::getValue)
-                        .collect(Collectors.joining(", "));
-            }
-        }
-        List<Team> playerTeamsAltName = teamRepository.findByAlternativeName(teamName);
-        if (playerTeamsAltName.size() == 1) {
-            Team playerTeam = playerTeamsAltName.get(0);
-            if (playerTeam != null) {
-                teamHashtags += playerTeam.getAdditionalHashtags().stream()
-                        .map(Hashtag::getValue)
-                        .collect(Collectors.joining(" "));
+                teamHashtags.append(
+                        playerTeam.getAdditionalHashtags().stream()
+                                .map(Hashtag::getValue)
+                                .collect(Collectors.joining(", "))
+                );
             }
         } else {
-            teamHashtags += "#" + teamName.replaceAll(" ", "").replaceAll("-", "");
+            // Search for team with name in alternative name field, if not found, generate alternative name hashtag
+            List<Team> playerTeamsAltName = teamRepository.findByAlternativeName(teamName);
+            if (playerTeamsAltName.size() == 1) {
+                Team playerTeam = playerTeamsAltName.get(0);
+                if (playerTeam != null) {
+                    teamHashtags.append(
+                            playerTeam.getAdditionalHashtags().stream()
+                                    .map(Hashtag::getValue)
+                                    .collect(Collectors.joining(" "))
+                    );
+                }
+            } else {
+                teamHashtags.append("#").append(teamName.replaceAll(" ", "").replaceAll("-", ""));
+            }
         }
-        return teamHashtags;
+
+        return teamHashtags.toString();
     }
 }
