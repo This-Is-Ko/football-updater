@@ -23,6 +23,10 @@ public class FileAccessValidationRunner implements ApplicationRunner {
 
     public void validateFileAccess() {
         File dir = new File(imageGeneratorProperies.getInputPath());
+        validateFileAccess(dir);
+    }
+
+    public void validateFileAccess(File dir) {
         File[] directoryListing = dir.listFiles();
         boolean isGenericBaseImageSet = false;
         if (directoryListing != null) {
@@ -34,6 +38,8 @@ public class FileAccessValidationRunner implements ApplicationRunner {
                         if (imageGeneratorProperies.getGenericBaseImageFile().equals(child.getName())) {
                             isGenericBaseImageSet = true;
                         }
+                    } else {
+                        throw new RuntimeException("File access is not valid");
                     }
                 } catch (Exception e) {
                     log.error("File access is not valid for " + child.getAbsolutePath());
