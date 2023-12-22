@@ -2,7 +2,6 @@ package com.ko.footballupdater.services;
 
 import com.amazonaws.services.kms.model.NotFoundException;
 import com.ko.footballupdater.models.AlternativeName;
-import com.ko.footballupdater.models.CheckedStatus;
 import com.ko.footballupdater.models.DataSource;
 import com.ko.footballupdater.models.DataSourceType;
 import com.ko.footballupdater.models.Hashtag;
@@ -55,6 +54,11 @@ public class TeamService {
             throw new IllegalArgumentException("Team already exists");
         }
 
+        // Input validation
+        if (!areHashtagsValid(addTeamRequest.getAdditionalHashtags())) {
+            throw new IllegalArgumentException("Invalid hashtag value(s)");
+        }
+
         // Construct team object from request
         Team newTeam = new Team();
         newTeam.setName(addTeamRequest.getName());
@@ -104,7 +108,7 @@ public class TeamService {
         }
     }
 
-    public void updateTeam(Integer teamId, UpdateTeamRequest updateTeamRequest, AddNewTeamResponse response) throws NotFoundException {
+    public void updateTeam(Integer teamId, UpdateTeamRequest updateTeamRequest, AddNewTeamResponse response) throws NotFoundException, IllegalArgumentException {
         // Find team
         Optional<Team> teamSearchResult = teamRepository.findById(teamId);
         if (teamSearchResult.isEmpty()) {
@@ -112,15 +116,20 @@ public class TeamService {
         }
         Team team = teamSearchResult.get();
 
+        // Input validation
+        if (!areHashtagsValid(updateTeamRequest.getAdditionalHashtags())) {
+            throw new IllegalArgumentException("Invalid hashtag value");
+        }
+
         if (updateTeamRequest.getDataSources() != null && !updateTeamRequest.getDataSources().isEmpty()) {
-            Set<DataSource> dataSources = !team.getDataSources().isEmpty() ? team.getDataSources() : new HashSet<>();
+            Set<DataSource> dataSources = team.getDataSources() != null && !team.getDataSources().isEmpty() ? team.getDataSources() : new HashSet<>();
             for (AddTeamRequestDataSource requestDataSource : updateTeamRequest.getDataSources()) {
                 dataSources.add(new DataSource(DataSourceType.TEAM, requestDataSource.getSiteName(), requestDataSource.getUrl()));
             }
             team.setDataSources(dataSources);
         }
         if (updateTeamRequest.getAlternativeNames() != null) {
-            Set<AlternativeName> alternativeNames = !team.getAlternativeNames().isEmpty() ? team.getAlternativeNames() : new HashSet<>();
+            Set<AlternativeName> alternativeNames = team.getAlternativeNames() != null && !team.getAlternativeNames().isEmpty() ? team.getAlternativeNames() : new HashSet<>();
             Set<AlternativeName> newAlternativeNames = updateTeamRequest.getAlternativeNames().stream()
                     .filter(name -> !name.isEmpty())
                     .map(AlternativeName::new)
@@ -129,7 +138,7 @@ public class TeamService {
             team.setAlternativeNames(alternativeNames);
         }
         if (updateTeamRequest.getAdditionalHashtags() != null) {
-            Set<Hashtag> additionalHashtags = !team.getAdditionalHashtags().isEmpty() ? team.getAdditionalHashtags() : new HashSet<>();
+            Set<Hashtag> additionalHashtags = team.getAdditionalHashtags() != null && !team.getAdditionalHashtags().isEmpty() ? team.getAdditionalHashtags() : new HashSet<>();
             Set<Hashtag> newAlternativeNames = updateTeamRequest.getAdditionalHashtags().stream()
                     .filter(hashtag -> !hashtag.isEmpty())
                     .map(Hashtag::new)
@@ -148,5 +157,17 @@ public class TeamService {
             throw new IllegalArgumentException("Team doesn't exist");
         }
         teamRepository.deleteById(teamId);
+    }
+
+    private boolean areHashtagsValid(ArrayList<String> hashtags) {
+        if (hashtags != null) {
+            for (String hashtag : hashtags) {
+                if (!hashtag.startsWith("#") || hashtag.contains(" ") || hashtag.contains("\t")) {
+                    log.atInfo().setMessage("Invalid hashtag - " + hashtag).log();
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
