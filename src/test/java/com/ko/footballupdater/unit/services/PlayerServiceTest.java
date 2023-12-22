@@ -6,11 +6,13 @@ import com.amazonaws.services.kms.model.NotFoundException;
 import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.models.CheckedStatus;
 import com.ko.footballupdater.models.DataSourceSiteName;
+import com.ko.footballupdater.models.Hashtag;
 import com.ko.footballupdater.models.Match;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.PostType;
+import com.ko.footballupdater.models.Team;
 import com.ko.footballupdater.repositories.PlayerRepository;
 import com.ko.footballupdater.repositories.PostRepository;
 import com.ko.footballupdater.repositories.TeamRepository;
@@ -29,9 +31,11 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -110,7 +114,7 @@ public class PlayerServiceTest {
     }
 
     @Test
-    public void updateDataForPlayer_validPlayer_successful() throws Exception {
+    public void updateDataForPlayer_onePlayer_successful() throws Exception {
         Integer playerId = 1;
         Player playerToUpdate = new Player("Player1");
         playerToUpdate.setCheckedStatus(new CheckedStatus());
@@ -155,9 +159,102 @@ public class PlayerServiceTest {
     }
 
     @Test
+    public void updateDataForAllPlayers_playersFound_successful() throws Exception {
+        List<Player> players = new ArrayList<>();
+        Player playerToUpdate1 = new Player("Player1");
+        playerToUpdate1.setCheckedStatus(new CheckedStatus());
+        playerToUpdate1.setId(1);
+        Player playerToUpdate2 = new Player("Player1");
+        playerToUpdate2.setCheckedStatus(new CheckedStatus());
+        playerToUpdate2.setId(2);
+        players.add(playerToUpdate1);
+        players.add(playerToUpdate2);
+        when(playerRepository.findAll()).thenReturn(players);
+
+        PlayerMatchPerformanceStats mockPerformanceStats = mock(PlayerMatchPerformanceStats.class);
+        when(parsingService.parsePlayerMatchData(playerToUpdate1)).thenReturn(mockPerformanceStats);
+        when(parsingService.parsePlayerMatchData(playerToUpdate2)).thenReturn(mockPerformanceStats);
+
+        doNothing().when(imageGeneratorService).generatePlayerStatImage(any(Post.class));
+        doNothing().when(amazonS3Service).uploadToS3(any(Post.class));
+
+        Match match = new Match("https://url", Date.from(Instant.now()), "homeTeamName", "awayTeamName", "relevantTeamName");
+        when(mockPerformanceStats.getMatch()).thenReturn(match);
+
+        when(emailService.sendEmailUpdate(anyList())).thenReturn(true);
+
+        when(postRepository.save(any(Post.class))).thenReturn(new Post());
+
+        when(playerRepository.saveAll(any())).thenReturn(List.of(playerToUpdate1));
+        UpdatePlayersResponse response = playerService.updateDataForAllPlayers();
+
+        assertTrue(response.isEmailSent());
+        assertEquals(2, response.getNumPlayersUpdated());
+        assertNotNull(response.getPlayersUpdated());
+        assertEquals(2, response.getPlayersUpdated().size());
+        assertEquals(playerToUpdate1, response.getPlayersUpdated().get(0));
+        assertEquals(playerToUpdate2, response.getPlayersUpdated().get(1));
+    }
+
+    @Test
+    public void updateDataForPlayers_multiplePlayers_successful() throws Exception {
+        List<Player> players = new ArrayList<>();
+        Player playerToUpdate1 = new Player("Player1");
+        playerToUpdate1.setCheckedStatus(new CheckedStatus());
+        playerToUpdate1.setId(1);
+        Player playerToUpdate2 = new Player("Player1");
+        playerToUpdate2.setCheckedStatus(new CheckedStatus());
+        playerToUpdate2.setId(2);
+        players.add(playerToUpdate1);
+        players.add(playerToUpdate2);
+
+        PlayerMatchPerformanceStats mockPerformanceStats = mock(PlayerMatchPerformanceStats.class);
+        when(parsingService.parsePlayerMatchData(playerToUpdate1)).thenReturn(mockPerformanceStats);
+        when(parsingService.parsePlayerMatchData(playerToUpdate2)).thenReturn(mockPerformanceStats);
+
+        doNothing().when(imageGeneratorService).generatePlayerStatImage(any(Post.class));
+        doNothing().when(amazonS3Service).uploadToS3(any(Post.class));
+
+        Match match = new Match("https://url", Date.from(Instant.now()), "homeTeamName", "awayTeamName", "relevantTeamName");
+        when(mockPerformanceStats.getMatch()).thenReturn(match);
+
+        when(emailService.sendEmailUpdate(anyList())).thenReturn(true);
+
+        when(postRepository.save(any(Post.class))).thenReturn(new Post());
+
+        when(playerRepository.saveAll(any())).thenReturn(List.of(playerToUpdate1));
+        UpdatePlayersResponse response = playerService.updateDataForPlayers(players);
+
+        assertTrue(response.isEmailSent());
+        assertEquals(2, response.getNumPlayersUpdated());
+        assertNotNull(response.getPlayersUpdated());
+        assertEquals(2, response.getPlayersUpdated().size());
+        assertEquals(playerToUpdate1, response.getPlayersUpdated().get(0));
+        assertEquals(playerToUpdate2, response.getPlayersUpdated().get(1));
+    }
+
+    @Test
     public void updateDataForPlayers_noPlayersToUpdate_returnEmptyResponse() {
         List<Player> noPlayers = new ArrayList<>();
         UpdatePlayersResponse response = playerService.updateDataForPlayers(noPlayers);
+
+        assertFalse(response.isEmailSent());
+        assertEquals(0, response.getNumPlayersUpdated());
+        assertNull(response.getPlayersUpdated());
+    }
+
+    @Test
+    public void updateDataForPlayers_onePlayer_parsingFailed_noPlayersUpdated() {
+        List<Player> players = new ArrayList<>();
+        Integer playerId = 1;
+        Player playerToUpdate = new Player("Player1");
+        playerToUpdate.setCheckedStatus(new CheckedStatus());
+        playerToUpdate.setId(playerId);
+        players.add(playerToUpdate);
+
+        when(parsingService.parsePlayerMatchData(playerToUpdate)).thenReturn(null);
+
+        UpdatePlayersResponse response = playerService.updateDataForPlayers(players);
 
         assertFalse(response.isEmailSent());
         assertEquals(0, response.getNumPlayersUpdated());
@@ -218,5 +315,183 @@ public class PlayerServiceTest {
         assertFalse(response.isEmailSent());
         assertEquals(0, response.getNumPlayersUpdated());
         assertNull(response.getPlayersUpdated());
+    }
+
+    @Test
+    public void updateDataForPlayers_onePlayer_uploadToS3Failed_noPlayersUpdated() throws Exception {
+        List<Player> players = new ArrayList<>();
+        Integer playerId = 1;
+        Player playerToUpdate = new Player("Player1");
+        playerToUpdate.setCheckedStatus(new CheckedStatus());
+        playerToUpdate.setId(playerId);
+        players.add(playerToUpdate);
+
+        PlayerMatchPerformanceStats mockPerformanceStats = mock(PlayerMatchPerformanceStats.class);
+        when(parsingService.parsePlayerMatchData(playerToUpdate)).thenReturn(mockPerformanceStats);
+
+        doNothing().when(imageGeneratorService).generatePlayerStatImage(any(Post.class));
+        doThrow(new Exception("Error while generating stat image")).when(amazonS3Service).uploadToS3(any(Post.class));
+
+        UpdatePlayersResponse response = playerService.updateDataForPlayers(players);
+
+        assertFalse(response.isEmailSent());
+        assertEquals(0, response.getNumPlayersUpdated());
+        assertNull(response.getPlayersUpdated());
+    }
+
+    @Test
+    public void updateDataForPlayers_multiplePlayers_parsingForAllFailed_noPlayersUpdated() {
+        // Both players fail to parse
+        List<Player> players = new ArrayList<>();
+        Player playerToUpdate1 = new Player("Player1");
+        playerToUpdate1.setCheckedStatus(new CheckedStatus());
+        playerToUpdate1.setId(1);
+        Player playerToUpdate2 = new Player("Player1");
+        playerToUpdate2.setCheckedStatus(new CheckedStatus());
+        playerToUpdate2.setId(2);
+        players.add(playerToUpdate1);
+        players.add(playerToUpdate2);
+
+        PlayerMatchPerformanceStats mockPerformanceStats = mock(PlayerMatchPerformanceStats.class);
+        when(parsingService.parsePlayerMatchData(playerToUpdate1)).thenReturn(null);
+        when(parsingService.parsePlayerMatchData(playerToUpdate2)).thenReturn(null);
+
+        UpdatePlayersResponse response = playerService.updateDataForPlayers(players);
+
+        assertFalse(response.isEmailSent());
+        assertEquals(0, response.getNumPlayersUpdated());
+        assertNull(response.getPlayersUpdated());
+    }
+
+    @Test
+    public void updateDataForPlayers_multiplePlayers_imageGenerationException_onePlayerUpdated() throws Exception {
+        // First player has imageGeneration error; second player is successful
+        // Should only have updated second player, and sent in response
+        List<Player> players = new ArrayList<>();
+        Player playerToUpdate1 = new Player("Player1");
+        playerToUpdate1.setCheckedStatus(new CheckedStatus());
+        playerToUpdate1.setId(1);
+        Player playerToUpdate2 = new Player("Player1");
+        playerToUpdate2.setCheckedStatus(new CheckedStatus());
+        playerToUpdate2.setId(2);
+        players.add(playerToUpdate1);
+        players.add(playerToUpdate2);
+
+        PlayerMatchPerformanceStats mockPerformanceStats = mock(PlayerMatchPerformanceStats.class);
+        when(parsingService.parsePlayerMatchData(playerToUpdate1)).thenReturn(mockPerformanceStats);
+        when(parsingService.parsePlayerMatchData(playerToUpdate2)).thenReturn(mockPerformanceStats);
+
+        // First player error
+        // Second player success
+        doThrow(new Exception("Error while generating stat image")).doNothing().when(imageGeneratorService).generatePlayerStatImage(any(Post.class));
+        doNothing().when(amazonS3Service).uploadToS3(any(Post.class));
+
+        Match match = new Match("https://url", Date.from(Instant.now()), "homeTeamName", "awayTeamName", "relevantTeamName");
+        when(mockPerformanceStats.getMatch()).thenReturn(match);
+
+        when(emailService.sendEmailUpdate(anyList())).thenReturn(true);
+
+        when(postRepository.save(any(Post.class))).thenReturn(new Post());
+
+        when(playerRepository.saveAll(any())).thenReturn(List.of(playerToUpdate1));
+        UpdatePlayersResponse response = playerService.updateDataForPlayers(players);
+
+        assertTrue(response.isEmailSent());
+        assertEquals(1, response.getNumPlayersUpdated());
+        assertNotNull(response.getPlayersUpdated());
+        assertEquals(1, response.getPlayersUpdated().size());
+        assertEquals(playerToUpdate2, response.getPlayersUpdated().get(0));
+    }
+
+    @Test
+    public void updateDataForPlayers_multiplePlayers_uploadToS3Failed_onePlayerUpdated() throws Exception {
+        // First player has uploadToS3 error; second player is successful
+        // Should only have updated second player, and sent in response
+        List<Player> players = new ArrayList<>();
+        Player playerToUpdate1 = new Player("Player1");
+        playerToUpdate1.setCheckedStatus(new CheckedStatus());
+        playerToUpdate1.setId(1);
+        Player playerToUpdate2 = new Player("Player1");
+        playerToUpdate2.setCheckedStatus(new CheckedStatus());
+        playerToUpdate2.setId(2);
+        players.add(playerToUpdate1);
+        players.add(playerToUpdate2);
+
+        PlayerMatchPerformanceStats mockPerformanceStats = mock(PlayerMatchPerformanceStats.class);
+        when(parsingService.parsePlayerMatchData(playerToUpdate1)).thenReturn(mockPerformanceStats);
+        when(parsingService.parsePlayerMatchData(playerToUpdate2)).thenReturn(mockPerformanceStats);
+
+        // First player error
+        // Second player success
+        doNothing().when(imageGeneratorService).generatePlayerStatImage(any(Post.class));
+        doThrow(new Exception("Error while generating stat image")).doNothing().when(amazonS3Service).uploadToS3(any(Post.class));
+
+        Match match = new Match("https://url", Date.from(Instant.now()), "homeTeamName", "awayTeamName", "relevantTeamName");
+        when(mockPerformanceStats.getMatch()).thenReturn(match);
+
+        when(emailService.sendEmailUpdate(anyList())).thenReturn(true);
+
+        when(postRepository.save(any(Post.class))).thenReturn(new Post());
+
+        when(playerRepository.saveAll(any())).thenReturn(List.of(playerToUpdate1));
+        UpdatePlayersResponse response = playerService.updateDataForPlayers(players);
+
+        assertTrue(response.isEmailSent());
+        assertEquals(1, response.getNumPlayersUpdated());
+        assertNotNull(response.getPlayersUpdated());
+        assertEquals(1, response.getPlayersUpdated().size());
+        assertEquals(playerToUpdate2, response.getPlayersUpdated().get(0));
+    }
+
+    @Test
+    public void generateTeamHashtags_foundEntryWithTeamName_returnHashtags() {
+        String teamName = "ValidTeam";
+        Team mockTeam = mock(Team.class);
+        when(mockTeam.getAdditionalHashtags()).thenReturn(Set.of(new Hashtag("#hashtag1"), new Hashtag("#hashtag2")));
+
+        when(teamRepository.findByName(teamName)).thenReturn(List.of(mockTeam));
+
+        String hashtags = playerService.generateTeamHashtags(teamName);
+
+        assertEquals(" #hashtag1, #hashtag2", hashtags);
+    }
+
+    @Test
+    public void generateTeamHashtags_foundEntryWithAltName_returnHashtags() {
+        String teamName = "ValidTeamWithAltName";
+        Team mockTeam = mock(Team.class);
+        when(mockTeam.getAdditionalHashtags()).thenReturn(Set.of(new Hashtag("#hashtag1"), new Hashtag("#hashtag2")));
+
+        when(teamRepository.findByName(teamName)).thenReturn(Collections.emptyList());
+        when(teamRepository.findByAlternativeName(teamName)).thenReturn(List.of(mockTeam));
+
+        String hashtags = playerService.generateTeamHashtags(teamName);
+
+        assertEquals(" #hashtag1 #hashtag2", hashtags);
+    }
+
+    @Test
+    public void generateTeamHashtags_cannotFindEntryWithTeamNameOrAltName_returnGeneratedHashtags() {
+        String teamName = "Invalid Team";
+        when(teamRepository.findByName(teamName)).thenReturn(Collections.emptyList());
+        when(teamRepository.findByAlternativeName(teamName)).thenReturn(Collections.emptyList());
+
+        String hashtags = playerService.generateTeamHashtags(teamName);
+
+        assertEquals(" #InvalidTeam", hashtags);
+    }
+
+    @Test
+    public void generateTeamHashtags_nullTeamName_returnEmptyString() {
+        String hashtags = playerService.generateTeamHashtags(null);
+
+        assertEquals(" ", hashtags);
+    }
+
+    @Test
+    public void generateTeamHashtags_emptyTeamName_returnEmptyString() {
+        String hashtags = playerService.generateTeamHashtags("");
+
+        assertEquals(" ", hashtags);
     }
 }
