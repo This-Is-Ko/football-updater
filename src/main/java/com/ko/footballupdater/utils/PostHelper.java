@@ -70,7 +70,7 @@ public class PostHelper {
         if (additionalHashtags != null) {
             return "\n\n#" + player.getName().replaceAll(" ", "").replaceAll("-", "") + " " + additionalHashtags;
         }
-        return "\n\n#" + player.getName().replaceAll(" ", "").replaceAll("-", "") ;
+        return "\n\n#" + player.getName().replaceAll(" ", "").replaceAll("-", "");
     }
 
     public static String generateS3UrlList(Post postHolder) {
