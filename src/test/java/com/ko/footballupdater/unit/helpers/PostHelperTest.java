@@ -18,9 +18,9 @@ public class PostHelperTest {
         PlayerMatchPerformanceStats playerMatchPerformanceStats = new PlayerMatchPerformanceStats(match);
         String additionalHashtags = "#AdditionalHashtags #AnotherOne";
 
-        String result = PostHelper.generatePlayerHashtags(player, additionalHashtags);
+        String result = PostHelper.generatePlayerHashtags(player);
 
-        String expected = "\n\n#TestPlayer #AdditionalHashtags #AnotherOne";
+        String expected = "\n\n#TestPlayer";
         assertEquals(expected, result);
     }
 
@@ -31,22 +31,21 @@ public class PostHelperTest {
         PlayerMatchPerformanceStats playerMatchPerformanceStats = new PlayerMatchPerformanceStats(match);
         String additionalHashtags = "#AdditionalHashtags #AnotherOne";
 
-        String result = PostHelper.generatePlayerHashtags(player, additionalHashtags);
+        String result = PostHelper.generatePlayerHashtags(player);
 
-        String expected = "\n\n#TestPlayer #AdditionalHashtags #AnotherOne";
+        String expected = "\n\n#TestPlayer";
         assertEquals(expected, result);
     }
 
     @Test
     void testGeneratePostHashtagsAdditionalHashtags() {
-        // Mock objects
         Player player = new Player("Test Player");
         Match match = new Match();
         match.setRelevantTeam("TeamA");
         PlayerMatchPerformanceStats playerMatchPerformanceStats = new PlayerMatchPerformanceStats(match);
         String additionalHashtags = null;
 
-        String result = PostHelper.generatePlayerHashtags(player, additionalHashtags);
+        String result = PostHelper.generatePlayerHashtags(player);
 
         String expected = "\n\n#TestPlayer";
         assertEquals(expected, result);

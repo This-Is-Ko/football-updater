@@ -26,7 +26,10 @@ public class PostHelper {
                 playerMatchPerformanceStats.getMatch().getHomeTeamName(),
                 playerMatchPerformanceStats.getMatch().getAwayTeamName(),
                 DateTimeHelper.getDateAsFormattedString(playerMatchPerformanceStats.getMatch().getDate())
-        ) + playerMatchPerformanceStats.toFormattedString() + generatePlayerHashtags(player, additionalHashtags);
+        )
+                + playerMatchPerformanceStats.toFormattedString()
+                + generatePlayerHashtags(player)
+                + " " + additionalHashtags;
     }
 
     // V2
@@ -39,14 +42,18 @@ public class PostHelper {
                     playerMatchPerformanceStats.getMatch().getHomeTeamScore(),
                     playerMatchPerformanceStats.getMatch().getAwayTeamScore(),
                     DateTimeHelper.getDateAsFormattedString(playerMatchPerformanceStats.getMatch().getDate())
-            ) + generatePlayerHashtags(player, additionalHashtags);
+            )
+                    + generatePlayerHashtags(player)
+                    + " " + additionalHashtags;
         }
         return String.format("%s stats in %s vs %s on %s\n",
                 player.getName(),
                 playerMatchPerformanceStats.getMatch().getHomeTeamName(),
                 playerMatchPerformanceStats.getMatch().getAwayTeamName(),
                 DateTimeHelper.getDateAsFormattedString(playerMatchPerformanceStats.getMatch().getDate())
-        ) + generatePlayerHashtags(player, additionalHashtags);
+        )
+                + generatePlayerHashtags(player)
+                + " " + additionalHashtags;
     }
 
     public static String generateMatchName(PlayerMatchPerformanceStats playerMatchPerformanceStats) {
@@ -66,10 +73,7 @@ public class PostHelper {
         post.getImageSearchUrls().add(String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:w", searchPhrase.replaceAll(" ", "%20")));
     }
 
-    public static String generatePlayerHashtags(Player player, String additionalHashtags) {
-        if (additionalHashtags != null) {
-            return "\n\n#" + player.getName().replaceAll(" ", "").replaceAll("-", "") + " " + additionalHashtags;
-        }
+    public static String generatePlayerHashtags(Player player) {
         return "\n\n#" + player.getName().replaceAll(" ", "").replaceAll("-", "");
     }
 
