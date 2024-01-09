@@ -447,7 +447,7 @@ public class PlayerServiceTest {
 
         String hashtags = playerService.generateTeamHashtags(teamName);
 
-        assertEquals(" #hashtag1, #hashtag2", hashtags);
+        assertEquals(" #hashtag2 #hashtag1", hashtags);
     }
 
     @Test
@@ -461,7 +461,7 @@ public class PlayerServiceTest {
 
         String hashtags = playerService.generateTeamHashtags(teamName);
 
-        assertEquals(" #hashtag1 #hashtag2", hashtags);
+        assertEquals(" #hashtag2 #hashtag1", hashtags);
     }
 
     @Test

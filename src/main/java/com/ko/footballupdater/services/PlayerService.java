@@ -196,6 +196,6 @@ public class PlayerService {
             }
         }
 
-        return teamHashtags.toString();
+        return teamHashtags.toString().replaceAll(",", "");
     }
 }
