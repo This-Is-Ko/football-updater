@@ -13,10 +13,6 @@ public class PostHelperTest {
     @Test
     void testGeneratePostHashtags() {
         Player player = new Player("Test Player");
-        Match match = new Match();
-        match.setRelevantTeam("TeamA");
-        PlayerMatchPerformanceStats playerMatchPerformanceStats = new PlayerMatchPerformanceStats(match);
-        String additionalHashtags = "#AdditionalHashtags #AnotherOne";
 
         String result = PostHelper.generatePlayerHashtags(player);
 
@@ -27,9 +23,6 @@ public class PostHelperTest {
     @Test
     void testGeneratePostHashtagsNoTeam() {
         Player player = new Player("Test Player");
-        Match match = new Match();
-        PlayerMatchPerformanceStats playerMatchPerformanceStats = new PlayerMatchPerformanceStats(match);
-        String additionalHashtags = "#AdditionalHashtags #AnotherOne";
 
         String result = PostHelper.generatePlayerHashtags(player);
 
@@ -40,10 +33,6 @@ public class PostHelperTest {
     @Test
     void testGeneratePostHashtagsAdditionalHashtags() {
         Player player = new Player("Test Player");
-        Match match = new Match();
-        match.setRelevantTeam("TeamA");
-        PlayerMatchPerformanceStats playerMatchPerformanceStats = new PlayerMatchPerformanceStats(match);
-        String additionalHashtags = null;
 
         String result = PostHelper.generatePlayerHashtags(player);
 

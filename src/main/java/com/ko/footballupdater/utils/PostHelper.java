@@ -10,7 +10,7 @@ public class PostHelper {
     // v1 All stats in caption
     // v2 Only name, match, date, hashtags in caption
     public static void generatePostCaption(int version, Post postHolder, String additionalHashtags) {
-        String caption = "";
+        String caption;
         if (version == 2) {
             caption = generatePostDefaultPlayerCaptionV2(postHolder.getPlayer(), postHolder.getPlayerMatchPerformanceStats(), additionalHashtags);
         } else {
