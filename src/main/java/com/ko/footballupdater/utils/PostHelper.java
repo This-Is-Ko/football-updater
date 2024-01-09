@@ -10,7 +10,7 @@ public class PostHelper {
     // v1 All stats in caption
     // v2 Only name, match, date, hashtags in caption
     public static void generatePostCaption(int version, Post postHolder, String additionalHashtags) {
-        String caption = "";
+        String caption;
         if (version == 2) {
             caption = generatePostDefaultPlayerCaptionV2(postHolder.getPlayer(), postHolder.getPlayerMatchPerformanceStats(), additionalHashtags);
         } else {
@@ -26,7 +26,10 @@ public class PostHelper {
                 playerMatchPerformanceStats.getMatch().getHomeTeamName(),
                 playerMatchPerformanceStats.getMatch().getAwayTeamName(),
                 DateTimeHelper.getDateAsFormattedString(playerMatchPerformanceStats.getMatch().getDate())
-        ) + playerMatchPerformanceStats.toFormattedString() + generatePlayerHashtags(player, additionalHashtags);
+        )
+                + playerMatchPerformanceStats.toFormattedString()
+                + generatePlayerHashtags(player)
+                + " " + additionalHashtags;
     }
 
     // V2
@@ -39,14 +42,18 @@ public class PostHelper {
                     playerMatchPerformanceStats.getMatch().getHomeTeamScore(),
                     playerMatchPerformanceStats.getMatch().getAwayTeamScore(),
                     DateTimeHelper.getDateAsFormattedString(playerMatchPerformanceStats.getMatch().getDate())
-            ) + generatePlayerHashtags(player, additionalHashtags);
+            )
+                    + generatePlayerHashtags(player)
+                    + " " + additionalHashtags;
         }
         return String.format("%s stats in %s vs %s on %s\n",
                 player.getName(),
                 playerMatchPerformanceStats.getMatch().getHomeTeamName(),
                 playerMatchPerformanceStats.getMatch().getAwayTeamName(),
                 DateTimeHelper.getDateAsFormattedString(playerMatchPerformanceStats.getMatch().getDate())
-        ) + generatePlayerHashtags(player, additionalHashtags);
+        )
+                + generatePlayerHashtags(player)
+                + " " + additionalHashtags;
     }
 
     public static String generateMatchName(PlayerMatchPerformanceStats playerMatchPerformanceStats) {
@@ -66,11 +73,8 @@ public class PostHelper {
         post.getImageSearchUrls().add(String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:w", searchPhrase.replaceAll(" ", "%20")));
     }
 
-    public static String generatePlayerHashtags(Player player, String additionalHashtags) {
-        if (additionalHashtags != null) {
-            return "\n\n#" + player.getName().replaceAll(" ", "").replaceAll("-", "") + " " + additionalHashtags;
-        }
-        return "\n\n#" + player.getName().replaceAll(" ", "").replaceAll("-", "") ;
+    public static String generatePlayerHashtags(Player player) {
+        return "\n\n#" + player.getName().replaceAll(" ", "").replaceAll("-", "");
     }
 
     public static String generateS3UrlList(Post postHolder) {

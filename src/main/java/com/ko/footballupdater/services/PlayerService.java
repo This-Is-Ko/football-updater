@@ -117,12 +117,13 @@ public class PlayerService {
                 String hashtags = "";
                 if (post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null && !post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam().isEmpty()) {
                     hashtags = generateTeamHashtags(post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam());
-                    log.atInfo().setMessage("Set team hashtags to " + hashtags).addKeyValue("player", player.getName()).log();
+                    log.atInfo().setMessage("Set team hashtags to: " + hashtags).addKeyValue("player", player.getName()).log();
                 } else {
                     log.atWarn().setMessage("Unable to generate team hashtags due to relevant team missing").addKeyValue("player", player.getName()).log();
                 }
                 // Generate caption
                 PostHelper.generatePostCaption(instagramPostProperies.getVersion(), post, instagramPostProperies.getDefaultHashtags() + hashtags);
+                log.atInfo().setMessage("Generated post caption: " + post.getCaption()).addKeyValue("player", player.getName()).log();
                 // Generate image search links
                 PostHelper.generatePostImageSearchUrl(post);
             } catch (Exception e) {
@@ -195,6 +196,6 @@ public class PlayerService {
             }
         }
 
-        return teamHashtags.toString();
+        return teamHashtags.toString().replaceAll(",", "");
     }
 }

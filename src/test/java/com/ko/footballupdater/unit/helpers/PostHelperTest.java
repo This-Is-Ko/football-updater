@@ -13,40 +13,28 @@ public class PostHelperTest {
     @Test
     void testGeneratePostHashtags() {
         Player player = new Player("Test Player");
-        Match match = new Match();
-        match.setRelevantTeam("TeamA");
-        PlayerMatchPerformanceStats playerMatchPerformanceStats = new PlayerMatchPerformanceStats(match);
-        String additionalHashtags = "#AdditionalHashtags #AnotherOne";
 
-        String result = PostHelper.generatePlayerHashtags(player, additionalHashtags);
+        String result = PostHelper.generatePlayerHashtags(player);
 
-        String expected = "\n\n#TestPlayer #AdditionalHashtags #AnotherOne";
+        String expected = "\n\n#TestPlayer";
         assertEquals(expected, result);
     }
 
     @Test
     void testGeneratePostHashtagsNoTeam() {
         Player player = new Player("Test Player");
-        Match match = new Match();
-        PlayerMatchPerformanceStats playerMatchPerformanceStats = new PlayerMatchPerformanceStats(match);
-        String additionalHashtags = "#AdditionalHashtags #AnotherOne";
 
-        String result = PostHelper.generatePlayerHashtags(player, additionalHashtags);
+        String result = PostHelper.generatePlayerHashtags(player);
 
-        String expected = "\n\n#TestPlayer #AdditionalHashtags #AnotherOne";
+        String expected = "\n\n#TestPlayer";
         assertEquals(expected, result);
     }
 
     @Test
     void testGeneratePostHashtagsAdditionalHashtags() {
-        // Mock objects
         Player player = new Player("Test Player");
-        Match match = new Match();
-        match.setRelevantTeam("TeamA");
-        PlayerMatchPerformanceStats playerMatchPerformanceStats = new PlayerMatchPerformanceStats(match);
-        String additionalHashtags = null;
 
-        String result = PostHelper.generatePlayerHashtags(player, additionalHashtags);
+        String result = PostHelper.generatePlayerHashtags(player);
 
         String expected = "\n\n#TestPlayer";
         assertEquals(expected, result);
