@@ -2,8 +2,11 @@ package com.ko.footballupdater.services;
 
 import com.amazonaws.services.kms.model.NotFoundException;
 import com.ko.footballupdater.configuration.InstagramPostProperies;
+import com.ko.footballupdater.models.AlternativePlayerName;
 import com.ko.footballupdater.models.CheckedStatus;
+import com.ko.footballupdater.models.DataSource;
 import com.ko.footballupdater.models.DataSourceSiteName;
+import com.ko.footballupdater.models.DataSourceType;
 import com.ko.footballupdater.models.Hashtag;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
@@ -13,6 +16,8 @@ import com.ko.footballupdater.models.Team;
 import com.ko.footballupdater.repositories.PlayerRepository;
 import com.ko.footballupdater.repositories.PostRepository;
 import com.ko.footballupdater.repositories.TeamRepository;
+import com.ko.footballupdater.request.RequestDataSource;
+import com.ko.footballupdater.request.UpdatePlayerRequest;
 import com.ko.footballupdater.responses.UpdatePlayersResponse;
 import com.ko.footballupdater.utils.PostHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -21,9 +26,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -66,6 +73,35 @@ public class PlayerService {
     public Player addPlayer(Player newPlayer) throws IllegalArgumentException {
         // Default to FOTMOB
         return addPlayer(newPlayer, DataSourceSiteName.FOTMOB);
+    }
+
+    public Player updatePlayer(Integer playerId, UpdatePlayerRequest updatePlayerRequest) throws IllegalArgumentException {
+        // Find player
+        Optional<Player> playerSearchResult = playerRepository.findById(playerId);
+        if (playerSearchResult.isEmpty()) {
+            throw new NotFoundException("Player can't be found");
+        }
+        Player player = playerSearchResult.get();
+
+        if (updatePlayerRequest.getDataSources() != null && !updatePlayerRequest.getDataSources().isEmpty()) {
+            Set<DataSource> dataSources = player.getDataSources() != null && !player.getDataSources().isEmpty() ? player.getDataSources() : new HashSet<>();
+            for (RequestDataSource requestDataSource : updatePlayerRequest.getDataSources()) {
+                dataSources.add(new DataSource(DataSourceType.PLAYER, requestDataSource.getSiteName(), requestDataSource.getUrl()));
+            }
+            player.setDataSources(dataSources);
+        }
+        if (updatePlayerRequest.getAlternativeNames() != null) {
+            Set<AlternativePlayerName> alternativePlayerNames = player.getAlternativeNames() != null && !player.getAlternativeNames().isEmpty() ? player.getAlternativeNames() : new HashSet<>();
+            Set<AlternativePlayerName> newAlternativeNames = updatePlayerRequest.getAlternativeNames().stream()
+                    .filter(name -> !name.isEmpty())
+                    .map(AlternativePlayerName::new)
+                    .collect(Collectors.toSet());
+            alternativePlayerNames.addAll(newAlternativeNames);
+            player.setAlternativeNames(alternativePlayerNames);
+        }
+        Player updatedPlayer = playerRepository.save(player);
+        log.info("Updated player" + updatedPlayer.getName());
+        return updatedPlayer;
     }
 
     public Iterable<Player> getPlayers() {
@@ -181,7 +217,7 @@ public class PlayerService {
             }
         } else {
             // Search for team with name in alternative name field, if not found, generate alternative name hashtag
-            List<Team> playerTeamsAltName = teamRepository.findByAlternativeName(teamName);
+            List<Team> playerTeamsAltName = teamRepository.findByAlternativeTeamName(teamName);
             if (playerTeamsAltName.size() == 1) {
                 Team playerTeam = playerTeamsAltName.get(0);
                 if (playerTeam != null) {

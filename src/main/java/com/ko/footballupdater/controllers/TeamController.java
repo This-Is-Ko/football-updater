@@ -41,7 +41,7 @@ public class TeamController {
     }
 
     @PatchMapping(path="/{teamId}")
-    public @ResponseBody ResponseEntity<AddNewTeamResponse> addNewTeam(
+    public @ResponseBody ResponseEntity<AddNewTeamResponse> updateTeam(
             @PathVariable("teamId") Integer teamId,
             @RequestBody UpdateTeamRequest updateTeamRequest) {
         try {
@@ -50,7 +50,7 @@ public class TeamController {
             return ResponseEntity.ok(response);
         } catch (Exception ex) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Adding new team failed", ex);
+                    HttpStatus.BAD_REQUEST, "Updating team failed", ex);
         }
     }
 

@@ -9,7 +9,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class UpdateTeamRequest {
+public class UpdatePlayerRequest {
 
     private List<RequestDataSource> dataSources;
     private ArrayList<String> alternativeNames;
