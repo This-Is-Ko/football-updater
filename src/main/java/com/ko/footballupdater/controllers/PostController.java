@@ -6,11 +6,13 @@ import com.ko.footballupdater.models.form.PostsUpdateDto;
 import com.ko.footballupdater.models.form.PrepareStandoutImageDto;
 import com.ko.footballupdater.models.form.UploadPostDto;
 import com.ko.footballupdater.services.FacebookApiService;
+import com.ko.footballupdater.services.PlayerService;
 import com.ko.footballupdater.services.PostService;
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -33,6 +35,9 @@ public class PostController {
 
     @Autowired
     private PostService postService;
+
+    @Autowired
+    private PlayerService playerService;
 
     @Autowired
     private FacebookApiService facebookApiService;
@@ -168,6 +173,21 @@ public class PostController {
             return "redirect:/posts";
         } catch (Exception ex) {
             log.atError().setMessage("Updating post status failed").setCause(ex).log();
+            return "redirect:/posts";
+        }
+    }
+
+    /**
+     * Force update player data
+     * @return redirect to upload post view
+     */
+    @GetMapping("/check-for-new")
+    public String checkForNewPosts(Model model) {
+        try {
+            playerService.updateDataForAllPlayers();
+            return "redirect:/posts";
+        } catch (Exception ex) {
+            log.atError().setMessage("Force updating players failed").setCause(ex).log();
             return "redirect:/posts";
         }
     }

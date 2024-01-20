@@ -192,7 +192,7 @@ public class PlayerService {
                     );
                 }
             } else {
-                teamHashtags.append("#").append(teamName.replaceAll(" ", "").replaceAll("-", ""));
+                teamHashtags.append("#").append(teamName.replaceAll(" ", "").replaceAll("-", "").replaceAll("\\.", ""));
             }
         }
 
