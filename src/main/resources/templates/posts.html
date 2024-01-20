@@ -78,7 +78,10 @@
                             </tbody>
                         </table>
                     </div>
-                    <button class="btn btn-primary action-button" type="submit">Save Changes</button>
+                    <div class="d-flex flex-row justify-content-between">
+                        <button class="btn btn-primary action-button" type="submit">Save Changes</button>
+                        <a class="btn btn-primary btn-md action-button" th:href="@{/posts/check-for-new}">Check for new matches</a>
+                    </div>
                 </form>
                 <div th:if="${ #lists.isEmpty(form.posts)}">
                     <p>No posts available</p>

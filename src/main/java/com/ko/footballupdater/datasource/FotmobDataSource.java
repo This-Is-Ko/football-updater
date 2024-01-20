@@ -304,6 +304,18 @@ public class FotmobDataSource implements DataSourceParser {
             return null;
         }
 
+        // Yellow and red card are stored under events
+        int yellowCard = 0;
+        int redCard = 0;
+        if (playerEntry.get("events") != null) {
+            if (playerEntry.get("events").get("yc") != null) {
+                yellowCard = playerEntry.get("events").get("yc").intValue();
+            }
+            if (playerEntry.get("events").get("rc") != null) {
+                redCard = playerEntry.get("events").get("rc").intValue();
+            }
+        }
+
 
         PlayerMatchPerformanceStats playerMatchPerformanceStats = PlayerMatchPerformanceStats.builder()
                 .dataSourceSiteName(dataSourceSiteName)
@@ -311,6 +323,8 @@ public class FotmobDataSource implements DataSourceParser {
                 .minutesPlayed(getStatIntegerOrDefault(topStats, "Minutes played"))
                 .goals(getStatIntegerOrDefault(topStats, "Goals"))
                 .assists(getStatIntegerOrDefault(topStats, "Assists"))
+                .yellowCards(yellowCard)
+                .redCards(redCard)
                 .shots(getStatIntegerOrDefault(topStats, "Total shots"))
                 .shotsBlocked(getStatIntegerOrDefault(attackStats, "Blocked shots"))
                 .fouls(getStatIntegerOrDefault(duelsStats, "Fouls committed"))
