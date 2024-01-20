@@ -1,14 +1,14 @@
 package com.ko.footballupdater.unit.services;
 
 import com.amazonaws.services.kms.model.NotFoundException;
-import com.ko.footballupdater.models.AlternativeName;
+import com.ko.footballupdater.models.AlternativeTeamName;
 import com.ko.footballupdater.models.DataSource;
 import com.ko.footballupdater.models.DataSourceSiteName;
 import com.ko.footballupdater.models.DataSourceType;
 import com.ko.footballupdater.models.Team;
 import com.ko.footballupdater.repositories.TeamRepository;
 import com.ko.footballupdater.request.AddTeamRequest;
-import com.ko.footballupdater.request.AddTeamRequestDataSource;
+import com.ko.footballupdater.request.RequestDataSource;
 import com.ko.footballupdater.request.UpdateTeamRequest;
 import com.ko.footballupdater.responses.AddNewTeamResponse;
 import com.ko.footballupdater.services.TeamService;
@@ -56,8 +56,8 @@ public class TeamServiceTest {
         addTeamRequest.setAdditionalHashtags(new ArrayList<>(Arrays.asList("#hashtag0", "#hashtag1")));
         addTeamRequest.setAlternativeNames(new ArrayList<>(Arrays.asList("alt name0", "alt name1")));
         addTeamRequest.setDataSources(Arrays.asList(
-                new AddTeamRequestDataSource(DataSourceSiteName.FOTMOB, "http://test0.com"),
-                new AddTeamRequestDataSource(DataSourceSiteName.FBREF, "http://test1.com")));
+                new RequestDataSource(DataSourceSiteName.FOTMOB, "http://test0.com"),
+                new RequestDataSource(DataSourceSiteName.FBREF, "http://test1.com")));
         addTeamRequest.setPopulatePlayers(false);
         AddNewTeamResponse response = new AddNewTeamResponse();
 
@@ -77,8 +77,8 @@ public class TeamServiceTest {
         addTeamRequest.setName(TEAM_NAME);
         addTeamRequest.setAlternativeNames(new ArrayList<>(Arrays.asList("alt name0", "alt name1")));
         addTeamRequest.setDataSources(Arrays.asList(
-                new AddTeamRequestDataSource(DataSourceSiteName.FOTMOB, "http://test0.com"),
-                new AddTeamRequestDataSource(DataSourceSiteName.FBREF, "http://test1.com")));
+                new RequestDataSource(DataSourceSiteName.FOTMOB, "http://test0.com"),
+                new RequestDataSource(DataSourceSiteName.FBREF, "http://test1.com")));
         addTeamRequest.setPopulatePlayers(false);
         AddNewTeamResponse response = new AddNewTeamResponse();
 
@@ -98,8 +98,8 @@ public class TeamServiceTest {
         addTeamRequest.setName(TEAM_NAME);
         addTeamRequest.setAdditionalHashtags(new ArrayList<>(Arrays.asList("#hashtag0", "#hashtag1")));
         addTeamRequest.setDataSources(Arrays.asList(
-                new AddTeamRequestDataSource(DataSourceSiteName.FOTMOB, "http://test0.com"),
-                new AddTeamRequestDataSource(DataSourceSiteName.FBREF, "http://test1.com")));
+                new RequestDataSource(DataSourceSiteName.FOTMOB, "http://test0.com"),
+                new RequestDataSource(DataSourceSiteName.FBREF, "http://test1.com")));
         addTeamRequest.setPopulatePlayers(false);
         AddNewTeamResponse response = new AddNewTeamResponse();
 
@@ -169,15 +169,15 @@ public class TeamServiceTest {
         Set<DataSource> existingDataSources = new HashSet<>(Arrays.asList(
                 new DataSource(DataSourceType.TEAM, DataSourceSiteName.FOTMOB, "http://site1.com"),
                 new DataSource(DataSourceType.TEAM, DataSourceSiteName.FBREF, "http://site2.com")));
-        Set<AlternativeName> existingAlternativeNames = new HashSet<>(Arrays.asList(
-                new AlternativeName("AltName1"), new AlternativeName("AltName2")));
+        Set<AlternativeTeamName> existingAlternativeTeamNames = new HashSet<>(Arrays.asList(
+                new AlternativeTeamName("AltName1"), new AlternativeTeamName("AltName2")));
 
         existingTeam.setDataSources(existingDataSources);
-        existingTeam.setAlternativeNames(existingAlternativeNames);
+        existingTeam.setAlternativeTeamNames(existingAlternativeTeamNames);
 
         UpdateTeamRequest updateTeamRequest = new UpdateTeamRequest();
         updateTeamRequest.setDataSources(List.of(
-                new AddTeamRequestDataSource(DataSourceSiteName.SOFASCORE, "http://test0.com")));
+                new RequestDataSource(DataSourceSiteName.SOFASCORE, "http://test0.com")));
         updateTeamRequest.setAlternativeNames(new ArrayList<>(Arrays.asList("NewAltName1", "NewAltName2")));
         updateTeamRequest.setAdditionalHashtags(new ArrayList<>(Arrays.asList("#hashtag0", "#hashtag1")));
 
@@ -189,7 +189,7 @@ public class TeamServiceTest {
         assertEquals(TEAM_NAME, existingTeam.getName());
         assertEquals(TEAM_ID, existingTeam.getId());
         assertEquals(3, existingTeam.getDataSources().size());
-        assertEquals(4, existingTeam.getAlternativeNames().size());
+        assertEquals(4, existingTeam.getAlternativeTeamNames().size());
     }
 
     @Test

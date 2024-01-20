@@ -15,8 +15,8 @@ import java.util.Objects;
 @Getter
 @Setter
 @Entity
-@Table(name = "alternative_names")
-public class AlternativeName {
+@Table(name = "alternative_team_names")
+public class AlternativeTeamName {
 
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
@@ -26,10 +26,10 @@ public class AlternativeName {
     @NotNull
     private String value;
 
-    public AlternativeName() {
+    public AlternativeTeamName() {
     }
 
-    public AlternativeName(String value) {
+    public AlternativeTeamName(String value) {
         this.value = value;
     }
 
@@ -37,7 +37,7 @@ public class AlternativeName {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AlternativeName that = (AlternativeName) o;
+        AlternativeTeamName that = (AlternativeTeamName) o;
         return Objects.equals(value, that.value);
     }
 

@@ -1,10 +1,7 @@
 package com.ko.footballupdater.models;
 
-import com.ko.footballupdater.converter.StringArrayListConverter;
-import com.ko.footballupdater.converter.StringListConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,8 +16,6 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -46,8 +41,9 @@ public class Team {
     @JoinColumn(name = "checked_status_id")
     private CheckedStatus checkedStatus;
 
+    @JoinColumn(name = "team_alternative_names")
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<AlternativeName> alternativeNames;
+    private Set<AlternativeTeamName> alternativeTeamNames;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Hashtag> additionalHashtags;

@@ -214,7 +214,7 @@ public class FotmobDataSource implements DataSourceParser {
     }
 
     private PlayerMatchPerformanceStats checkPlayerAndParse(Player player, JsonNode playerEntry, Match match) {
-        if (!player.getName().equals(playerEntry.get("name").get("fullName").asText())) {
+        if (!player.getAllPossibleNames().contains(playerEntry.get("name").get("fullName").asText())) {
             return null;
         }
         JsonNode stats = playerEntry.get("stats");

@@ -18,6 +18,7 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Set;
 
@@ -56,6 +57,10 @@ public class Player {
     @JoinColumn(name = "checked_status_id")
     private CheckedStatus checkedStatus;
 
+    @JoinColumn(name = "player_alternative_names_id")
+    @OneToMany(cascade = CascadeType.ALL)
+    private Set<AlternativePlayerName> alternativeNames;
+
     public Player() {
     }
 
@@ -76,5 +81,16 @@ public class Player {
         this.images = images;
         this.dataSources = dataSources;
         this.checkedStatus = checkedStatus;
+    }
+
+    public ArrayList<String> getAllPossibleNames() {
+        ArrayList<String> allPossibleNames = new ArrayList<>();
+        allPossibleNames.add(name);
+        if (alternativeNames != null) {
+            for (AlternativePlayerName alternativePlayerName : alternativeNames) {
+                allPossibleNames.add(alternativePlayerName.getValue());
+            }
+        }
+        return allPossibleNames;
     }
 }

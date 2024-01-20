@@ -457,7 +457,7 @@ public class PlayerServiceTest {
         when(mockTeam.getAdditionalHashtags()).thenReturn(Set.of(new Hashtag("#hashtag1"), new Hashtag("#hashtag2")));
 
         when(teamRepository.findByName(teamName)).thenReturn(Collections.emptyList());
-        when(teamRepository.findByAlternativeName(teamName)).thenReturn(List.of(mockTeam));
+        when(teamRepository.findByAlternativeTeamName(teamName)).thenReturn(List.of(mockTeam));
 
         String hashtags = playerService.generateTeamHashtags(teamName);
 
@@ -468,7 +468,7 @@ public class PlayerServiceTest {
     public void generateTeamHashtags_cannotFindEntryWithTeamNameOrAltName_returnGeneratedHashtags() {
         String teamName = "Invalid Team";
         when(teamRepository.findByName(teamName)).thenReturn(Collections.emptyList());
-        when(teamRepository.findByAlternativeName(teamName)).thenReturn(Collections.emptyList());
+        when(teamRepository.findByAlternativeTeamName(teamName)).thenReturn(Collections.emptyList());
 
         String hashtags = playerService.generateTeamHashtags(teamName);
 

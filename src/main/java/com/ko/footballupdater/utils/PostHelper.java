@@ -3,7 +3,11 @@ package com.ko.footballupdater.utils;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Post;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
+
+@Slf4j
 public class PostHelper {
 
     // Generate caption based on post version
@@ -85,5 +89,17 @@ public class PostHelper {
             }
         }
         return builder.toString();
+    }
+
+    public static boolean areHashtagsValid(ArrayList<String> hashtags) {
+        if (hashtags != null) {
+            for (String hashtag : hashtags) {
+                if (!hashtag.startsWith("#") || hashtag.contains(" ") || hashtag.contains("\t")) {
+                    log.atInfo().setMessage("Invalid hashtag - " + hashtag).log();
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

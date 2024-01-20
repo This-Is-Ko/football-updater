@@ -1,7 +1,7 @@
 package com.ko.footballupdater.services;
 
 import com.amazonaws.services.kms.model.NotFoundException;
-import com.ko.footballupdater.models.AlternativeName;
+import com.ko.footballupdater.models.AlternativeTeamName;
 import com.ko.footballupdater.models.DataSource;
 import com.ko.footballupdater.models.DataSourceType;
 import com.ko.footballupdater.models.Hashtag;
@@ -9,14 +9,14 @@ import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.Team;
 import com.ko.footballupdater.repositories.TeamRepository;
 import com.ko.footballupdater.request.AddTeamRequest;
-import com.ko.footballupdater.request.AddTeamRequestDataSource;
+import com.ko.footballupdater.request.RequestDataSource;
 import com.ko.footballupdater.request.UpdateTeamRequest;
 import com.ko.footballupdater.responses.AddNewTeamResponse;
+import com.ko.footballupdater.utils.PostHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -47,7 +47,7 @@ public class TeamService {
         }
 
         // Input validation
-        if (!areHashtagsValid(addTeamRequest.getAdditionalHashtags())) {
+        if (!PostHelper.areHashtagsValid(addTeamRequest.getAdditionalHashtags())) {
             throw new IllegalArgumentException("Invalid hashtag value(s)");
         }
 
@@ -62,15 +62,15 @@ public class TeamService {
             newTeam.setAdditionalHashtags(additionalHashtags);
         }
         if (addTeamRequest.getAlternativeNames() != null) {
-            Set<AlternativeName> alternativeNames = new HashSet<>();
+            Set<AlternativeTeamName> alternativeTeamNames = new HashSet<>();
             for (String requestAltName : addTeamRequest.getAlternativeNames()) {
-                alternativeNames.add(new AlternativeName(requestAltName));
+                alternativeTeamNames.add(new AlternativeTeamName(requestAltName));
             }
-            newTeam.setAlternativeNames(alternativeNames);
+            newTeam.setAlternativeTeamNames(alternativeTeamNames);
         }
         if (addTeamRequest.getDataSources() != null) {
             Set<DataSource> dataSources = new HashSet<>();
-            for (AddTeamRequestDataSource requestDataSource : addTeamRequest.getDataSources()) {
+            for (RequestDataSource requestDataSource : addTeamRequest.getDataSources()) {
                 dataSources.add(new DataSource(DataSourceType.TEAM, requestDataSource.getSiteName(), requestDataSource.getUrl()));
             }
             newTeam.setDataSources(dataSources);
@@ -109,25 +109,25 @@ public class TeamService {
         Team team = teamSearchResult.get();
 
         // Input validation
-        if (!areHashtagsValid(updateTeamRequest.getAdditionalHashtags())) {
+        if (!PostHelper.areHashtagsValid(updateTeamRequest.getAdditionalHashtags())) {
             throw new IllegalArgumentException("Invalid hashtag value");
         }
 
         if (updateTeamRequest.getDataSources() != null && !updateTeamRequest.getDataSources().isEmpty()) {
             Set<DataSource> dataSources = team.getDataSources() != null && !team.getDataSources().isEmpty() ? team.getDataSources() : new HashSet<>();
-            for (AddTeamRequestDataSource requestDataSource : updateTeamRequest.getDataSources()) {
+            for (RequestDataSource requestDataSource : updateTeamRequest.getDataSources()) {
                 dataSources.add(new DataSource(DataSourceType.TEAM, requestDataSource.getSiteName(), requestDataSource.getUrl()));
             }
             team.setDataSources(dataSources);
         }
         if (updateTeamRequest.getAlternativeNames() != null) {
-            Set<AlternativeName> alternativeNames = team.getAlternativeNames() != null && !team.getAlternativeNames().isEmpty() ? team.getAlternativeNames() : new HashSet<>();
-            Set<AlternativeName> newAlternativeNames = updateTeamRequest.getAlternativeNames().stream()
+            Set<AlternativeTeamName> alternativeTeamNames = team.getAlternativeTeamNames() != null && !team.getAlternativeTeamNames().isEmpty() ? team.getAlternativeTeamNames() : new HashSet<>();
+            Set<AlternativeTeamName> newAlternativeTeamNames = updateTeamRequest.getAlternativeNames().stream()
                     .filter(name -> !name.isEmpty())
-                    .map(AlternativeName::new)
+                    .map(AlternativeTeamName::new)
                     .collect(Collectors.toSet());
-            alternativeNames.addAll(newAlternativeNames);
-            team.setAlternativeNames(alternativeNames);
+            alternativeTeamNames.addAll(newAlternativeTeamNames);
+            team.setAlternativeTeamNames(alternativeTeamNames);
         }
         if (updateTeamRequest.getAdditionalHashtags() != null) {
             Set<Hashtag> additionalHashtags = team.getAdditionalHashtags() != null && !team.getAdditionalHashtags().isEmpty() ? team.getAdditionalHashtags() : new HashSet<>();
@@ -151,15 +151,5 @@ public class TeamService {
         teamRepository.deleteById(teamId);
     }
 
-    private boolean areHashtagsValid(ArrayList<String> hashtags) {
-        if (hashtags != null) {
-            for (String hashtag : hashtags) {
-                if (!hashtag.startsWith("#") || hashtag.contains(" ") || hashtag.contains("\t")) {
-                    log.atInfo().setMessage("Invalid hashtag - " + hashtag).log();
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
+
 }

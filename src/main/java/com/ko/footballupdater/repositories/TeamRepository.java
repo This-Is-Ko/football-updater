@@ -10,7 +10,7 @@ public interface TeamRepository extends CrudRepository<Team, Integer> {
 
     List<Team> findByName(String name);
 
-    @Query("SELECT DISTINCT t FROM Team t JOIN t.alternativeNames a WHERE a.value = :name")
-    List<Team> findByAlternativeName(String name);
+    @Query("SELECT DISTINCT t FROM Team t JOIN t.alternativeTeamNames a WHERE a.value = :name")
+    List<Team> findByAlternativeTeamName(String name);
 
 }

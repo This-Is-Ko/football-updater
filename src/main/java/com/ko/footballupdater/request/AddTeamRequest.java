@@ -14,7 +14,7 @@ public class AddTeamRequest {
 
     @NotNull
     private String name;
-    private List<AddTeamRequestDataSource> dataSources;
+    private List<RequestDataSource> dataSources;
     private ArrayList<String> alternativeNames;
     private ArrayList<String> additionalHashtags;
     private Boolean populatePlayers;

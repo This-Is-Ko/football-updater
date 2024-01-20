@@ -162,8 +162,6 @@ public class PostService {
             imageGeneratorService.generateStandoutStatsImage(post, filteredStats, prepareStandoutImageDto.getImageGenParams());
             // Upload stat images to s3
             amazonS3Service.uploadToS3(post, true);
-            // Generate caption
-            PostHelper.generatePostCaption(instagramPostProperies.getVersion(), post, instagramPostProperies.getDefaultHashtags());
             // Save post
             postRepository.save(post);
             log.atInfo().setMessage("Successfully created standout stat image and saved").addKeyValue("player", post.getPlayer().getName()).log();
