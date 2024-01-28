@@ -124,6 +124,7 @@ public class TeamService {
             Set<AlternativeTeamName> alternativeTeamNames = team.getAlternativeTeamNames() != null && !team.getAlternativeTeamNames().isEmpty() ? team.getAlternativeTeamNames() : new HashSet<>();
             Set<AlternativeTeamName> newAlternativeTeamNames = updateTeamRequest.getAlternativeNames().stream()
                     .filter(name -> !name.isEmpty())
+                    .map(String::toLowerCase)
                     .map(AlternativeTeamName::new)
                     .collect(Collectors.toSet());
             alternativeTeamNames.addAll(newAlternativeTeamNames);

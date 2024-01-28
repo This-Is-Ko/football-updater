@@ -41,8 +41,8 @@ public class Team {
     @JoinColumn(name = "checked_status_id")
     private CheckedStatus checkedStatus;
 
-    @JoinColumn(name = "team_alternative_names")
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "alternative_team_names_id")
+    @OneToMany(cascade = CascadeType.ALL)
     private Set<AlternativeTeamName> alternativeTeamNames;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
