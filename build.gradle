@@ -50,6 +50,9 @@ jar {
 }
 
 bootJar {
+	if (project.hasProperty('jarName')) {
+		archiveFileName = "${jarName}.jar"
+	}
 	launchScript()
 	manifest {
 		attributes 'Start-Class': "com.ko.footballupdater.FootballUpdaterApplication"
