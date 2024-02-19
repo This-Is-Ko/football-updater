@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.ko'
-version = '0.0.19-SNAPSHOT'
+version = '0.0.20-SNAPSHOT'
 
 java {
 	sourceCompatibility = '20'
@@ -50,6 +50,9 @@ jar {
 }
 
 bootJar {
+	if (project.hasProperty('jarName')) {
+		archiveFileName = "${jarName}.jar"
+	}
 	launchScript()
 	manifest {
 		attributes 'Start-Class': "com.ko.footballupdater.FootballUpdaterApplication"

@@ -217,7 +217,7 @@ public class PlayerService {
             }
         } else {
             // Search for team with name in alternative name field, if not found, generate alternative name hashtag
-            List<Team> playerTeamsAltName = teamRepository.findByAlternativeTeamName(teamName);
+            List<Team> playerTeamsAltName = teamRepository.findByAlternativeTeamName(teamName.toLowerCase());
             if (playerTeamsAltName.size() == 1) {
                 Team playerTeam = playerTeamsAltName.get(0);
                 if (playerTeam != null) {
@@ -232,6 +232,6 @@ public class PlayerService {
             }
         }
 
-        return teamHashtags.toString().replaceAll(",", "");
+        return teamHashtags.toString().replaceAll(",", "").toLowerCase();
     }
 }
