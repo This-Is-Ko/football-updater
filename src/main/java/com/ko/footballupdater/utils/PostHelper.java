@@ -78,7 +78,7 @@ public class PostHelper {
     }
 
     public static String generatePlayerHashtags(Player player) {
-        return "\n\n#" + player.getName().replaceAll(" ", "").replaceAll("-", "");
+        return "\n\n#" + player.getName().replaceAll(" ", "").replaceAll("-", "").toLowerCase();
     }
 
     public static String generateS3UrlList(Post postHolder) {

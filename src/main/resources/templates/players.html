@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head th:insert="~{fragments/head.html :: head (title='Football Updater | Player Information')}">
+    </head>
+    <body>
+        <div class="container">
+            <div th:replace="~{fragments/header.html :: header}"></div>
+            <br>
+            <h2>Players</h2>
+            <br>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Alt. Names</th>
+                        <th>Data Sources</th>
+                        <th>Last Checked</th>
+                        <th>Last Match</th>
+                        <th>Link</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="player : ${data.players}">
+                        <td th:text="${player.name}"></td>
+                        <td>
+                            <ul th:each="altName : ${player.alternativeNames}">
+                                <li th:text="${altName.value}"></li>
+                            </ul>
+                        </td>
+                        <td>
+                            <ul th:each="dataSource : ${player.dataSources}">
+                                <li th:text="${dataSource.siteName}"></li>
+                            </ul>
+                        </td>
+                        <td th:text="${player.checkedStatus.lastChecked}"></td>
+                        <td th:text="${player.checkedStatus.latestCheckedMatchUrl}"></td>
+                        <td th:text="${player.checkedStatus.latestCheckedMatchDate}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </body>
+</html>
