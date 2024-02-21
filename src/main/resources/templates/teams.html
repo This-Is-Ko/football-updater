@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head th:insert="~{fragments/head.html :: head (title='Football Updater | Team Hashtags')}">
+    </head>
+    <body>
+        <div class="container">
+            <div th:replace="~{fragments/header.html :: header}"></div>
+            <br>
+            <h2>Teams</h2>
+            <br>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th>Team</th>
+                        <th>Hashtags</th>
+                        <th>Alt. Names</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="team : ${data.teams}">
+                        <td th:text="${team.name}"></td>
+                        <td>
+                            <ul th:each="hashtag : ${team.additionalHashtags}">
+                                <li th:text="${hashtag.value}"></li>
+                            </ul>
+                        </td>
+                        <td>
+                            <ul th:each="altTeamNames : ${team.alternativeTeamNames}">
+                                <li th:text="${altTeamNames.value}"></li>
+                            </ul>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </body>
+</html>

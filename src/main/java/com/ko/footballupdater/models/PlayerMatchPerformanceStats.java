@@ -14,6 +14,9 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+/**
+ * Represents the performance statistics of a player in a specific match.
+ */
 @Getter
 @Setter
 @Entity

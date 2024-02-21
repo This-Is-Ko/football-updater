@@ -447,7 +447,9 @@ public class PlayerServiceTest {
 
         String hashtags = playerService.generateTeamHashtags(teamName);
 
-        assertEquals(" #hashtag1 #hashtag2", hashtags);
+        // Check contains due to random set order
+        assertTrue(hashtags.contains(" #hashtag1"));
+        assertTrue(hashtags.contains(" #hashtag2"));
     }
 
     @Test
@@ -457,22 +459,24 @@ public class PlayerServiceTest {
         when(mockTeam.getAdditionalHashtags()).thenReturn(Set.of(new Hashtag("#hashtag1"), new Hashtag("#hashtag2")));
 
         when(teamRepository.findByName(teamName)).thenReturn(Collections.emptyList());
-        when(teamRepository.findByAlternativeTeamName(teamName)).thenReturn(List.of(mockTeam));
+        when(teamRepository.findByAlternativeTeamName(teamName.toLowerCase())).thenReturn(List.of(mockTeam));
 
         String hashtags = playerService.generateTeamHashtags(teamName);
 
-        assertEquals(" #hashtag1 #hashtag2", hashtags);
+        // Check contains due to random set order
+        assertTrue(hashtags.contains(" #hashtag1"));
+        assertTrue(hashtags.contains(" #hashtag2"));
     }
 
     @Test
     public void generateTeamHashtags_cannotFindEntryWithTeamNameOrAltName_returnGeneratedHashtags() {
         String teamName = "Invalid Team";
         when(teamRepository.findByName(teamName)).thenReturn(Collections.emptyList());
-        when(teamRepository.findByAlternativeTeamName(teamName)).thenReturn(Collections.emptyList());
+        when(teamRepository.findByAlternativeTeamName(teamName.toLowerCase())).thenReturn(Collections.emptyList());
 
         String hashtags = playerService.generateTeamHashtags(teamName);
 
-        assertEquals(" #InvalidTeam", hashtags);
+        assertEquals(" #invalidteam", hashtags);
     }
 
     @Test

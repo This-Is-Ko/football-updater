@@ -16,7 +16,7 @@ public class PostHelperTest {
 
         String result = PostHelper.generatePlayerHashtags(player);
 
-        String expected = "\n\n#TestPlayer";
+        String expected = "\n\n#testplayer";
         assertEquals(expected, result);
     }
 
@@ -26,7 +26,7 @@ public class PostHelperTest {
 
         String result = PostHelper.generatePlayerHashtags(player);
 
-        String expected = "\n\n#TestPlayer";
+        String expected = "\n\n#testplayer";
         assertEquals(expected, result);
     }
 
@@ -36,7 +36,7 @@ public class PostHelperTest {
 
         String result = PostHelper.generatePlayerHashtags(player);
 
-        String expected = "\n\n#TestPlayer";
+        String expected = "\n\n#testplayer";
         assertEquals(expected, result);
     }
 }

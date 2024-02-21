@@ -14,6 +14,9 @@ import lombok.Setter;
 
 import java.util.Date;
 
+/**
+ * Represents the status of checking data for a specific player/team.
+ */
 @Getter
 @Setter
 @Entity
@@ -24,18 +27,30 @@ public class CheckedStatus {
     @GeneratedValue(strategy= GenerationType.AUTO)
     private Integer id;
 
+    /**
+     * The data source that was checked.
+     */
     @NotNull
     @Column
     @Enumerated(EnumType.STRING)
     private DataSourceSiteName siteName;
 
+    /**
+     * The date when the data was last checked.
+     */
     @NotNull
     @Column
     private Date lastChecked = new Date();
 
+    /**
+     * The URL of the latest checked match.
+     */
     @Column
     private String latestCheckedMatchUrl;
 
+    /**
+     * The date of the latest checked match.
+     */
     @Column
     private Date latestCheckedMatchDate;
 
