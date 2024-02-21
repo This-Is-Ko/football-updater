@@ -33,10 +33,6 @@ public class ParsingService {
     @Value("#{'${datasource.priority}'.split(',')}")
     private List<DataSourceSiteName> dataSourcePriority;
 
-    @NotNull
-    @Value("${datasource.sitename}")
-    private DataSourceSiteName dataSourceSiteName;
-
     public PlayerMatchPerformanceStats parsePlayerMatchData(Player player) {
         return parsePlayerMatchData(player, false);
     }
