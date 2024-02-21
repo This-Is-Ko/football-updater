@@ -25,6 +25,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Holds a post related to a player.
+ */
 @Getter
 @Setter
 @Entity
@@ -35,39 +38,67 @@ public class Post {
     @GeneratedValue(strategy= GenerationType.AUTO)
     private Integer id;
 
-    // Any null can be assumed as standard ALL_STAT_POST
+    /**
+     * The type of post.
+     * Any null can be assumed as standard ALL_STAT_POST
+     */
     @Column
     @Enumerated(EnumType.STRING)
     private PostType postType;
 
+    /**
+     * The player associated with the post.
+     */
     @ManyToOne
     @JoinColumn(name = "player_id")
     @JdbcTypeCode(SqlTypes.JSON)
     private Player player;
 
+    /**
+     * The performance statistics of the player associated with the post.
+     */
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "match_performance_stats_id")
     @JdbcTypeCode(SqlTypes.JSON)
     private PlayerMatchPerformanceStats playerMatchPerformanceStats;
 
+    /**
+     * The URLs of images.
+     */
     @Convert(converter = StringListConverter.class)
     @Column(name = "image_urls", length = 10000)
     private List<String> imagesUrls;
 
+    /**
+     * Temporary storage for URLs used for image searches.
+     * Generated for posts view
+     */
     @Transient
     @Convert(converter = StringListConverter.class)
     private List<String> imageSearchUrls = new ArrayList<>();
 
+    /**
+     * Temporary storage for file names of images.
+     */
     @Transient
     @Convert(converter = StringListConverter.class)
     private List<String> imagesFileNames = new ArrayList<>();
 
+    /**
+     * The date when the post was generated.
+     */
     @NotNull
     private Date dateGenerated = new Date();
 
+    /**
+     * Caption of post.
+     */
     @Column(name = "caption")
     private String caption;
 
+    /**
+     * Indicates whether the post has been posted.
+     */
     @NotNull
     private boolean postedStatus;
 
