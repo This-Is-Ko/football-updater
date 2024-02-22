@@ -1,8 +1,8 @@
 FROM eclipse-temurin:20.0.2_9-jre-jammy AS build
 RUN mkdir /project
-COPY . /project
+COPY .. /project
 WORKDIR /project
-CMD ["./gradlew", "clean", "bootJar", "-PjarName=app"]
+RUN ./gradlew clean bootJar -PjarName=app
 
 FROM eclipse-temurin:20.0.2_9-jre-jammy
 RUN mkdir /app
