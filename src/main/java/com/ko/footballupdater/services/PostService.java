@@ -3,6 +3,8 @@ package com.ko.footballupdater.services;
 
 import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.exceptions.GenerateStandoutException;
+import com.ko.footballupdater.models.Player;
+import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.models.form.ImageUrlEntry;
@@ -11,6 +13,7 @@ import com.ko.footballupdater.models.form.StatisticEntryGenerateDto;
 import com.ko.footballupdater.models.form.UploadPostDto;
 import com.ko.footballupdater.repositories.PlayerRepository;
 import com.ko.footballupdater.repositories.PostRepository;
+import com.ko.footballupdater.request.CreatePostRequest;
 import com.ko.footballupdater.utils.PostHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -171,6 +174,26 @@ public class PostService {
             log.atWarn().setMessage("Something went wrong while creating standout post").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
             throw new GenerateStandoutException("Something went wrong while creating standout post: " + ex.getMessage());
         }
+    }
+
+    public Post createPost(CreatePostRequest createPostRequest) throws IllegalArgumentException {
+        // Check if request is not null
+        if (createPostRequest == null) {
+            throw new IllegalArgumentException("Request body cannot be null");
+        }
+
+        // Check if playerId exists in the database
+        Integer playerId = createPostRequest.getPlayerId();
+        Optional<Player> playerSearchResult = playerRepository.findById(playerId);
+        if (playerSearchResult.isEmpty()) {
+            throw new IllegalArgumentException("Player with ID " + playerId + " not found in the database");
+        }
+
+        Post newPost = new Post(PostType.ALL_STAT_POST, playerSearchResult.get(), createPostRequest.getStats());
+
+        PostHelper.generatePostCaption(instagramPostProperies.getVersion(), newPost, instagramPostProperies.getDefaultHashtags());
+
+        return postRepository.save(newPost);
     }
 
     public void uploadPost(UploadPostDto uploadPostForm) throws Exception {

@@ -41,7 +41,7 @@
                                     <td th:text="${post.player.name}"></td>
                                     <td th:id="'post-caption-' + ${itemStat.index}" th:text="${post.caption}"></td>
                                     <td>
-                                        <ul th:each="imageUrl, imageIter : ${post.imagesUrls}">
+                                        <ul th:if="${post.imagesUrls != null AND !post.imagesUrls.isEmpty()}" th:each="imageUrl, imageIter : ${post.imagesUrls}">
                                             <a th:href="${imageUrl}" target="_blank" rel="noopener noreferrer"><li th:text="'Image_' + ${imageIter.index}"></li></a>
                                         </ul>
                                     </td>
