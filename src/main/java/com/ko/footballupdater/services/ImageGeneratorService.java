@@ -343,9 +343,11 @@ public class ImageGeneratorService {
             drawXCenteredText(image, matchNameFont, matchName, image.getHeight() - 60);
 
             // Add match date
-            String matchDateString = DateTimeHelper.getDateAsFormattedString(post.getPlayerMatchPerformanceStats().getMatch().getDate());
-            Font matchDateFont = new Font("Chakra Petch", Font.BOLD, 20);
-            drawXCenteredText(image, matchDateFont, matchDateString, image.getHeight() - 30);
+            if (post.getPlayerMatchPerformanceStats().getMatch() != null && post.getPlayerMatchPerformanceStats().getMatch().getDate() != null) {
+                String matchDateString = DateTimeHelper.getDateAsFormattedString(post.getPlayerMatchPerformanceStats().getMatch().getDate());
+                Font matchDateFont = new Font("Chakra Petch", Font.BOLD, 20);
+                drawXCenteredText(image, matchDateFont, matchDateString, image.getHeight() - 30);
+            }
 
             // Save the modified image
             saveImage(post, image, generateFileName(post, 1, PostType.STANDOUT_STATS_POST), 1);
