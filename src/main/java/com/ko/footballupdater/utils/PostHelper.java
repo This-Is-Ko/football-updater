@@ -38,26 +38,24 @@ public class PostHelper {
 
     // V2
     public static String generatePostDefaultPlayerCaptionV2(Player player, PlayerMatchPerformanceStats playerMatchPerformanceStats, String additionalHashtags) {
-        if (playerMatchPerformanceStats.getMatch().getHomeTeamScore() != null && playerMatchPerformanceStats.getMatch().getAwayTeamScore() != null) {
-            return String.format("%s stats in %s vs %s (%d-%d) on %s\n",
-                    player.getName(),
+        StringBuilder strBuilder = new StringBuilder();
+        if (playerMatchPerformanceStats.getMatch() != null && playerMatchPerformanceStats.getMatch().getHomeTeamScore() != null && playerMatchPerformanceStats.getMatch().getAwayTeamScore() != null) {
+            strBuilder.append(String.format("%s stats in %s vs %s", player.getName(),
                     playerMatchPerformanceStats.getMatch().getHomeTeamName(),
-                    playerMatchPerformanceStats.getMatch().getAwayTeamName(),
-                    playerMatchPerformanceStats.getMatch().getHomeTeamScore(),
-                    playerMatchPerformanceStats.getMatch().getAwayTeamScore(),
-                    DateTimeHelper.getDateAsFormattedString(playerMatchPerformanceStats.getMatch().getDate())
-            )
-                    + generatePlayerHashtags(player)
-                    + " " + additionalHashtags;
+                    playerMatchPerformanceStats.getMatch().getAwayTeamName()));
+            if (playerMatchPerformanceStats.getMatch().getHomeTeamScore() != null && playerMatchPerformanceStats.getMatch().getAwayTeamScore() != null) {
+                strBuilder.append(String.format(" (%d-%d)",
+                        playerMatchPerformanceStats.getMatch().getHomeTeamScore(),
+                        playerMatchPerformanceStats.getMatch().getAwayTeamScore()));
+            }
+            if (playerMatchPerformanceStats.getMatch().getDate() != null) {
+                strBuilder.append(String.format(" on %s",
+                        DateTimeHelper.getDateAsFormattedString(playerMatchPerformanceStats.getMatch().getDate())));
+            }
+            strBuilder.append("\n");
         }
-        return String.format("%s stats in %s vs %s on %s\n",
-                player.getName(),
-                playerMatchPerformanceStats.getMatch().getHomeTeamName(),
-                playerMatchPerformanceStats.getMatch().getAwayTeamName(),
-                DateTimeHelper.getDateAsFormattedString(playerMatchPerformanceStats.getMatch().getDate())
-        )
-                + generatePlayerHashtags(player)
-                + " " + additionalHashtags;
+        strBuilder.append(generatePlayerHashtags(player)).append(" ").append(additionalHashtags);
+        return strBuilder.toString();
     }
 
     public static String generateMatchName(PlayerMatchPerformanceStats playerMatchPerformanceStats) {
