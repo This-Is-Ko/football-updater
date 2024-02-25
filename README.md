@@ -142,13 +142,22 @@ Favicon from https://iconscout.com/free-icon/soccer-8
 
 ### Local MYSQL
 
-Use to login to local mysql
+Use to login to local MySQL
 
     ./mysql -u root -p
 
 ### AWS RDS
 
-.
+Current prod config points to an AWS RDS endpoint which is running MySQL.
+
+Ensure the EC2 and RDS are within the same VPC and disable public access to avoid getting charged for multiple public IPs.
+
+Update the application-[env].properties with the relevant config
+
+    SPRING_DATASOURCE_HOST
+    SPRING_DATASOURCE_NAME
+    SPRING_DATASOURCE_USERNAME
+    SPRING_DATASOURCE_PASSWORD
 
 ### AWS EC2
 
@@ -196,6 +205,9 @@ Enable service
     # Restart service after file changes
     sudo systemctl daemon-reload
     sudo systemctl restart football-updater
+
+Alternatively use the dockerfiles to build and deploy. Ensure docker is installed on the machine.
+
 
 To set up fonts for image generation, copy font files across to ec2
 
