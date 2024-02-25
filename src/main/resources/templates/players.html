@@ -18,6 +18,7 @@
                         <th>Last Checked</th>
                         <th>Last Match</th>
                         <th>Link</th>
+                        <th>ID</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -36,6 +37,7 @@
                         <td th:text="${player.checkedStatus.lastChecked}"></td>
                         <td th:text="${player.checkedStatus.latestCheckedMatchUrl}"></td>
                         <td th:text="${player.checkedStatus.latestCheckedMatchDate}"></td>
+                        <td th:text="${player.id}"></td>
                     </tr>
                     </tbody>
                 </table>
