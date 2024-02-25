@@ -58,7 +58,7 @@
                                         <a class="btn btn-primary action-button full-width-button" th:href="@{/posts/prepare-standout-image?postId={id}(id=${post.id})}">Custom image</a>
                                         <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == true}" class="btn btn-primary action-button full-width-button" th:href="@{/posts/prepare-upload?postId={id}(id=${post.id})}">Upload post</a>
                                         <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == false}" class="btn btn-primary action-button full-width-button disabled" th:href="@{/posts/prepare-upload?postId={id}(id=${post.id})}">Upload post</a>
-                                        <a type="button" class="btn btn-danger full-width-button" data-toggle="modal" th:data-target="'#delete-confirm-modal-' + ${post.id}">Delete</a>
+                                        <a type="button" class="btn btn-danger full-width-button" data-bs-toggle="modal" th:data-bs-target="'#delete-confirm-modal-' + ${post.id}">Delete</a>
 
                                         <div th:id="'delete-confirm-modal-' + ${post.id}" class="modal" tabindex="-1" role="dialog">
                                             <div class="modal-dialog" role="document">
@@ -68,7 +68,7 @@
                                                     </div>
                                                     <div class="modal-footer">
                                                         <a class="btn btn-danger" th:href="@{/posts/delete?postId={id}(id=${post.id})}">Delete</a>
-                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                                                     </div>
                                                 </div>
                                             </div>

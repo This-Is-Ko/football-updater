@@ -135,52 +135,84 @@ public class FacebookApiService {
     }
 
     /**
-     * From facebook spec
+     * From Facebook spec:
+     * For single image
+     * 1. Use the POST /{ig-user-id}/media endpoint to create a container from an image or video hosted on your public server.
+     * 2. Use the POST /{ig-user-id}/media_publish endpoint to publish the container.
+     * Refer to <a href="https://developers.facebook.com/docs/instagram-api/guides/content-publishing#single-media-posts">...</a>
+     * ----
+     * For multiple images
      * 1. Use the POST /{ig-user-id}/media endpoint to create individual item containers for each image and video that will appear in the carousel.
      * 2. Use the POST /{ig-user-id}/media endpoint again to create a single carousel container for the items.
      * 3. Use the POST /{ig-user-id}/media_publish endpoint to publish the carousel container.
+     * Refer to <a href="https://developers.facebook.com/docs/instagram-api/guides/content-publishing#carousel-posts">...</a>
      */
     public void postToInstagram(Post post, List<ImageUrlEntry> imagesToUpload, String caption) throws Exception {
-        List<String> individualImageContainer = new ArrayList<>();
         log.atInfo().setMessage("Attempting to post to Instagram").addKeyValue("player", post.getPlayer().getName()).log();
 
         // Validate token has required permissions
 //        DebugTokenReponse debugTokenReponse = callDebugToken();
 
-        // Step 1
-        imagesToUpload.forEach(imageUrlEntry -> {
-            InstagramUserMedia response = null;
+        // Single image posting
+        if (imagesToUpload.size() == 1) {
+            // Step 1 - create container
+            InstagramUserMedia response;
             try {
-                response = callInstagramUserMediaApi(facebookApiProperties.getInstagram().getUserId(), imageUrlEntry.getUrl(), null, true, null, null);
+                response = callInstagramUserMediaApi(facebookApiProperties.getInstagram().getUserId(), imagesToUpload.get(0).getUrl(), post.getCaption(), false, null, null);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
             if (response.getId() != null && !response.getId().isEmpty()) {
-                log.atInfo().setMessage("Successfully saved image to Instagram: " + imageUrlEntry.getImageIndex()).addKeyValue("player", post.getPlayer().getName()).log();
-                individualImageContainer.add(response.getId());
+                log.atInfo().setMessage("Successfully saved single image to Instagram").addKeyValue("player", post.getPlayer().getName()).log();
+            } else {
+                throw new RuntimeException("No container ID in Instagram User Media Api response");
             }
-        });
 
-        if (imagesToUpload.size() != individualImageContainer.size()) {
-            throw new Exception("Images uploaded doesn't match expected");
-        }
+            // Step 2 - publish container
+            InstagramUserMedia publishResponse = callInstagramUserMediaPublishApi(facebookApiProperties.getInstagram().getUserId(), response.getId());
+            if (publishResponse == null || publishResponse.getId() == null || publishResponse.getId().isEmpty()) {
+                throw new Exception("Attempt to publish single image post failed");
+            }
+            log.atInfo().setMessage("Successfully published single image post").addKeyValue("player", post.getPlayer().getName()).log();
+        } else {
+            // Multiple images, use carousel (does not allow single images)
+            List<String> individualImageContainer = new ArrayList<>();
 
-        // Step 2
-        // Sample request "https://graph.facebook.com/v18.0/90010177253934/media?caption=Fruit%20candies&media_type=CAROUSEL&children=17899506308402767%2C18193870522147812%2C17853844403701904&access_token=EAAOc..."
-        // Use caption if passed from form otherwise use prepared caption
-        if (caption == null || caption.isEmpty()) {
-            caption = post.getCaption();
-        }
-        InstagramUserMedia carouselCreateResponse = callInstagramUserMediaApi(facebookApiProperties.getInstagram().getUserId(), null, caption, false, "CAROUSEL", individualImageContainer);
-        String carouselId = carouselCreateResponse.getId();
-        log.atInfo().setMessage("Successfully created Instagram carousel container").addKeyValue("player", post.getPlayer().getName()).log();
+            // Step 1 - create item container
+            imagesToUpload.forEach(imageUrlEntry -> {
+                InstagramUserMedia response;
+                try {
+                    response = callInstagramUserMediaApi(facebookApiProperties.getInstagram().getUserId(), imageUrlEntry.getUrl(), null, true, null, null);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                if (response.getId() != null && !response.getId().isEmpty()) {
+                    log.atInfo().setMessage("Successfully saved image to Instagram: " + imageUrlEntry.getImageIndex()).addKeyValue("player", post.getPlayer().getName()).log();
+                    individualImageContainer.add(response.getId());
+                }
+            });
 
-        // Step 3
-        InstagramUserMedia publishResponse = callInstagramUserMediaPublishApi(facebookApiProperties.getInstagram().getUserId(), carouselId);
-        if (publishResponse == null || publishResponse.getId() == null || publishResponse.getId().isEmpty()) {
-            throw new Exception("Attempt to publish carousel failed");
+            if (imagesToUpload.size() != individualImageContainer.size()) {
+                throw new Exception("Images uploaded doesn't match expected");
+            }
+
+            // Step 2 - create carousel container
+            // Sample request "https://graph.facebook.com/v18.0/90010177253934/media?caption=Fruit%20candies&media_type=CAROUSEL&children=17899506308402767%2C18193870522147812%2C17853844403701904&access_token=EAAOc..."
+            // Use caption if passed from form otherwise use prepared caption
+            if (caption == null || caption.isEmpty()) {
+                caption = post.getCaption();
+            }
+            InstagramUserMedia carouselCreateResponse = callInstagramUserMediaApi(facebookApiProperties.getInstagram().getUserId(), null, caption, false, "CAROUSEL", individualImageContainer);
+            String carouselId = carouselCreateResponse.getId();
+            log.atInfo().setMessage("Successfully created Instagram carousel container").addKeyValue("player", post.getPlayer().getName()).log();
+
+            // Step 3 - publish carousel container
+            InstagramUserMedia publishResponse = callInstagramUserMediaPublishApi(facebookApiProperties.getInstagram().getUserId(), carouselId);
+            if (publishResponse == null || publishResponse.getId() == null || publishResponse.getId().isEmpty()) {
+                throw new Exception("Attempt to publish carousel failed");
+            }
+            log.atInfo().setMessage("Successfully published carousel").addKeyValue("player", post.getPlayer().getName()).log();
         }
-        log.atInfo().setMessage("Successfully published carousel").addKeyValue("player", post.getPlayer().getName()).log();
     }
 
     public InstagramUserMedia callInstagramUserMediaApi(String instagramUserId, String imageUrl, String caption, Boolean isCarouselItem, String mediaType, List<String> children) throws Exception {
@@ -220,7 +252,6 @@ public class FacebookApiService {
             // Refer to https://stackoverflow.com/questions/54099777/inconsistent-line-breaks-when-posting-to-instagram
             // https://www.fileformat.info/info/unicode/char/2063/index.htm
             urlBuilder.queryParam("caption", FacebookApiHelper.encodeTextToUtf8(caption.replace("\n", "\u2063\n")));
-
         }
         String apiUrl = urlBuilder
                 .build()
