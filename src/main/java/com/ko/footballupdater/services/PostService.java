@@ -4,7 +4,6 @@ package com.ko.footballupdater.services;
 import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.exceptions.GenerateStandoutException;
 import com.ko.footballupdater.models.Player;
-import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.models.form.ImageUrlEntry;
@@ -42,9 +41,6 @@ public class PostService {
 
     @Autowired
     private PlayerRepository playerRepository;
-
-    @Autowired
-    private ParsingService parsingService;
 
     @Autowired
     private ImageGeneratorService imageGeneratorService;

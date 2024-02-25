@@ -1,7 +1,5 @@
 package com.ko.footballupdater.utils;
 
-import jakarta.persistence.Transient;
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
