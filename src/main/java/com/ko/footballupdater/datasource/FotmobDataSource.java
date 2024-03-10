@@ -2,7 +2,6 @@ package com.ko.footballupdater.datasource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ko.footballupdater.exceptions.ParsingException;
 import com.ko.footballupdater.models.DataSource;
 import com.ko.footballupdater.models.DataSourceSiteName;
 import com.ko.footballupdater.models.DataSourceType;
@@ -41,9 +40,6 @@ public class FotmobDataSource implements DataSourceParser {
     private final String BASEURL = "https://www.fotmob.com";
     private final String API_MATCH_BASE_URL = "/api/matchDetails?matchId=";
     private final String GOALKEEPER_FOTMOB_STRING_SHORT = "GK";
-
-    String STRING_STAT_FIRST_NUMBER_REGEX = "^(\\d+)";
-    String STRING_STAT_SECOND_NUMBER_REGEX = "/(\\d+)\\s";
 
     @Override
     public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document) {
@@ -371,22 +367,6 @@ public class FotmobDataSource implements DataSourceParser {
         } catch (Exception ex) {
             return null;
         }
-    }
-
-    /**
-     * Convert string values into separate values
-     *  e.g. 37/40 (93%) into 37, 40, 93%
-     */
-    private Integer parseStatString(JsonNode statContainer, String stateName, String matchRegex) {
-        String statString = getStatStringOrDefault(statContainer, stateName);
-        if (statString != null) {
-            Pattern pattern = Pattern.compile(matchRegex);
-            Matcher matcher = pattern.matcher(statString);
-            if (matcher.find()) {
-                return Integer.valueOf(matcher.group(1));
-            }
-        }
-        return null;
     }
 
     /**
