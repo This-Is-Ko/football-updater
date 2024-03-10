@@ -6,6 +6,8 @@ import com.ko.footballupdater.exceptions.GenerateStandoutException;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.PostType;
+import com.ko.footballupdater.models.form.CreatePostDto;
+import com.ko.footballupdater.models.form.CreatePostPlayerDto;
 import com.ko.footballupdater.models.form.ImageUrlEntry;
 import com.ko.footballupdater.models.form.PrepareStandoutImageDto;
 import com.ko.footballupdater.models.form.StatisticEntryGenerateDto;
@@ -94,6 +96,16 @@ public class PostService {
         }
     }
 
+    public CreatePostDto prepareDtoForCreateNewPost() {
+        CreatePostDto createPostDto = new CreatePostDto();
+        List<Player> players = playerRepository.findAll();
+        if (players != null) {
+            List<CreatePostPlayerDto> playerDtos = players.stream().map(player -> new CreatePostPlayerDto(player.getId(), player.getName())).toList();
+            createPostDto.setPlayers(playerDtos);
+        }
+        return createPostDto;
+    }
+
     public PrepareStandoutImageDto prepareDtoForGeneratePost(Integer postId) throws NoSuchElementException {
         PrepareStandoutImageDto prepareStandoutImageDto = new PrepareStandoutImageDto();
 
@@ -170,6 +182,15 @@ public class PostService {
             log.atWarn().setMessage("Something went wrong while creating standout post").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
             throw new GenerateStandoutException("Something went wrong while creating standout post: " + ex.getMessage());
         }
+    }
+
+    public void createPost(CreatePostDto createPostDto) {
+        // Map CreatePostDto to CreatePostRequest
+        CreatePostRequest createPostRequest = new CreatePostRequest();
+        createPostRequest.setPlayerId(createPostDto.getSelectedPlayerId());
+//        createPostDto.getPlayerMatchPerformanceStats().getMatch().setDate(createPostDto.getFormattedMatchDate());
+        createPostRequest.setStats(createPostDto.getPlayerMatchPerformanceStats());
+        createPost(createPostRequest);
     }
 
     public Post createPost(CreatePostRequest createPostRequest) throws IllegalArgumentException {

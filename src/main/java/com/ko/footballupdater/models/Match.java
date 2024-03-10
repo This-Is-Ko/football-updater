@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -30,6 +31,7 @@ public class Match {
 
     @Nullable
     @Column
+    @DateTimeFormat(fallbackPatterns = {"yyyy-MM-dd"})
     private Date date;
 
     @Nullable

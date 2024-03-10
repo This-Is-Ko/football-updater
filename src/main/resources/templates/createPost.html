@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:insert="~{fragments/head.html :: head (title='Football Updater | Create Post')}">
+</head>
+<body>
+<div class="container">
+    <div th:replace="~{fragments/header.html :: header}"></div>
+    <div>
+        <form th:object="${postForm}" method="post" th:action="@{/posts/create/submit}">
+            <br>
+            <h2>Create New Post</h2>
+            <div class="mb-3">
+                <label for="playerId" class="form-label">Select Player:</label>
+                <select id="playerId" class="form-select" th:field="${postForm.selectedPlayerId}">
+                    <option th:each="player : ${postForm.players}" th:value="${player.id}" th:text="${player.name}"></option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="matchSection" class="form-label">Match Section:</label>
+                <div id="matchSection">
+                    <label for="homeTeam" class="form-label">Home Team:</label>
+                    <input id="homeTeam" type="text" class="form-control" th:field="${postForm.playerMatchPerformanceStats.match.homeTeamName}"/>
+                    <label for="awayTeam" class="form-label">Away Team:</label>
+                    <input id="awayTeam" type="text" class="form-control" th:field="${postForm.playerMatchPerformanceStats.match.awayTeamName}"/>
+                    <label for="relevantTeam" class="form-label">Relevant Team:</label>
+                    <input id="relevantTeam" type="text" class="form-control" th:field="${postForm.playerMatchPerformanceStats.match.relevantTeam}"/>
+                    <label for="homeScore" class="form-label">Home Score:</label>
+                    <input id="homeScore" type="number" class="form-control" th:field="${postForm.playerMatchPerformanceStats.match.homeTeamScore}"/>
+                    <label for="awayScore" class="form-label">Away Score:</label>
+                    <input id="awayScore" type="number" class="form-control" th:field="${postForm.playerMatchPerformanceStats.match.awayTeamScore}"/>
+                    <label for="matchDate" class="form-label">Match Date:</label>
+                    <input id="matchDate" type="date" class="form-control" th:field="${postForm.playerMatchPerformanceStats.match.date}"/>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="playerStatsSection" class="form-label">Player Statistics Section:</label>
+                <div id="playerStatsSection">
+                    <label for="minutesPlayed" class="form-label">Minutes Played:</label>
+                    <input id="minutesPlayed" type="number" class="form-control" th:field="${postForm.playerMatchPerformanceStats.minutesPlayed}"/>
+                    <label for="goals" class="form-label">Goals:</label>
+                    <input id="goals" type="number" class="form-control" th:field="${postForm.playerMatchPerformanceStats.goals}"/>
+                    <label for="assists" class="form-label">Assists:</label>
+                    <input id="assists" type="number" class="form-control" th:field="${postForm.playerMatchPerformanceStats.assists}"/>
+                    <label for="yellowCards" class="form-label">Yellow Cards:</label>
+                    <input id="yellowCards" type="number" class="form-control" th:field="${postForm.playerMatchPerformanceStats.yellowCards}"/>
+                    <label for="redCards" class="form-label">Red Cards:</label>
+                    <input id="redCards" type="number" class="form-control" th:field="${postForm.playerMatchPerformanceStats.redCards}"/>
+                </div>
+            </div>
+            <button class="btn btn-primary action-button" type="submit">Create Post</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>
