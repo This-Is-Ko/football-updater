@@ -93,7 +93,7 @@ public class Post {
     /**
      * Caption of post.
      */
-    @Column(name = "caption")
+    @Column(name = "caption", length = 5000)
     private String caption;
 
     /**
