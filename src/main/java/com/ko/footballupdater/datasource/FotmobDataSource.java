@@ -274,6 +274,8 @@ public class FotmobDataSource implements DataSourceParser {
                     .build();
         }
 
+        // TODO Check keeper call
+        // TODO check caption SQL error Mar 09 13:42:07 ip-172-30-2-198.ap-southeast-2.compute.internal java[795807]: Caused by: org.hibernate.exception.DataException: could not execute statement [Data truncation: Data too long for column 'caption' at row 1] [insert into posts (caption,date_generated,image_urls,player_
         // Separate stats required for goalkeepers
         if (playerEntry.get("positionStringShort") != null && GOALKEEPER_FOTMOB_STRING_SHORT.equals(playerEntry.get("positionStringShort").asText())) {
             // Goalkeepers only contain top stats
@@ -285,8 +287,8 @@ public class FotmobDataSource implements DataSourceParser {
                     .match(match)
                     .minutesPlayed(getStatIntegerOrDefault(topStats, "Minutes played"))
                     .touches(getStatIntegerOrDefault(topStats, "Touches"))
-                    .passesAttempted(parseStatString(topStats, "Accurate passes", STRING_STAT_SECOND_NUMBER_REGEX))
-                    .passesCompleted(parseStatString(topStats, "Accurate passes", STRING_STAT_FIRST_NUMBER_REGEX))
+                    .passesAttempted(parseFractionWithPercentageStatType(topStats, "Accurate passes", true))
+                    .passesCompleted(parseFractionWithPercentageStatType(topStats, "Accurate passes", false))
                     .longBallsAttempted(parseStatString(topStats, "Accurate long balls", STRING_STAT_SECOND_NUMBER_REGEX))
                     .longBallsCompleted(parseStatString(topStats, "Accurate long balls", STRING_STAT_FIRST_NUMBER_REGEX))
                     .gkGoalsAgainst(getStatIntegerOrDefault(topStats, "Goals conceded"))
@@ -330,12 +332,12 @@ public class FotmobDataSource implements DataSourceParser {
                 .fouls(getStatIntegerOrDefault(duelsStats, "Fouls committed"))
                 .fouled(getStatIntegerOrDefault(duelsStats, "Was fouled"))
                 .offsides(getStatIntegerOrDefault(attackStats, "Offsides"))
-                .crosses(parseStatString(attackStats, "Accurate crosses", STRING_STAT_SECOND_NUMBER_REGEX))
-                .crossesSuccessful(parseStatString(attackStats, "Accurate crosses", STRING_STAT_FIRST_NUMBER_REGEX))
+                .crosses(parseFractionWithPercentageStatType(attackStats, "Accurate crosses", true))
+                .crossesSuccessful(parseFractionWithPercentageStatType(attackStats, "Accurate crosses", false))
                 .dispossessed(getStatIntegerOrDefault(attackStats, "Dispossessed"))
                 .touches(getStatIntegerOrDefault(attackStats, "Touches"))
-                .tackles(parseStatString(defenseStats, "Tackles won", STRING_STAT_SECOND_NUMBER_REGEX))
-                .tacklesWon(parseStatString(defenseStats, "Tackles won", STRING_STAT_FIRST_NUMBER_REGEX))
+                .tackles(parseFractionWithPercentageStatType(defenseStats, "Tackles won", true))
+                .tacklesWon(parseFractionWithPercentageStatType(defenseStats, "Tackles won", false))
                 .defensiveActions(getStatIntegerOrDefault(defenseStats, "Defensive actions"))
                 .recoveries(getStatIntegerOrDefault(defenseStats, "Recoveries"))
                 .duelsWon(getStatIntegerOrDefault(duelsStats, "Duels won"))
@@ -343,11 +345,11 @@ public class FotmobDataSource implements DataSourceParser {
                 .groundDuelsWon(getStatIntegerOrDefault(duelsStats, "Ground duels won"))
                 .aerialDuelsWon(getStatIntegerOrDefault(duelsStats, "Aerial duels won"))
                 .chancesCreatedAll(getStatIntegerOrDefault(topStats, "Chances created"))
-                .passesAttempted(parseStatString(topStats, "Accurate passes", STRING_STAT_SECOND_NUMBER_REGEX))
-                .passesCompleted(parseStatString(topStats, "Accurate passes", STRING_STAT_FIRST_NUMBER_REGEX))
+                .passesAttempted(parseFractionWithPercentageStatType(topStats, "Accurate passes", true))
+                .passesCompleted(parseFractionWithPercentageStatType(topStats, "Accurate passes", false))
                 .passesIntoFinalThird(getStatIntegerOrDefault(attackStats, "Passes into final third"))
-                .carries(parseStatString(attackStats, "Successful dribbles", STRING_STAT_SECOND_NUMBER_REGEX))
-                .carriesSuccessful(parseStatString(attackStats, "Successful dribbles", STRING_STAT_FIRST_NUMBER_REGEX))
+                .carries(parseFractionWithPercentageStatType(attackStats, "Successful dribbles", true))
+                .carriesSuccessful(parseFractionWithPercentageStatType(attackStats, "Successful dribbles", false))
                 .build();
 
         StatHelper.populateStatPercentages(playerMatchPerformanceStats);
@@ -358,7 +360,7 @@ public class FotmobDataSource implements DataSourceParser {
     private int getStatIntegerOrDefault(JsonNode statContainer, String stateName) {
         // Return default if stat is no found
         try {
-            return statContainer.get("stats").get(stateName).get("value").intValue();
+            return statContainer.get("stats").get(stateName).get("stat").get("value").intValue();
         } catch (Exception ex) {
             return 0;
         }
@@ -387,6 +389,22 @@ public class FotmobDataSource implements DataSourceParser {
             }
         }
         return null;
+    }
+
+    /**
+     * Example entry
+     * {"key":"shot_accuracy","stat":{"value":1,"total":2,"type":"fractionWithPercentage"}}
+     */
+    private Integer parseFractionWithPercentageStatType(JsonNode statContainer, String stateName, boolean isTotal) {
+        // Return default if stat is no found
+        try {
+            if (isTotal) {
+                return statContainer.get("stats").get(stateName).get("stat").get("total").intValue();
+            }
+            return statContainer.get("stats").get(stateName).get("stat").get("value").intValue();
+        } catch (Exception ex) {
+            return 0;
+        }
     }
 
     private void populateRelevantTeam(JsonNode lineupObject, PlayerMatchPerformanceStats playerMatchPerformanceStats) {
