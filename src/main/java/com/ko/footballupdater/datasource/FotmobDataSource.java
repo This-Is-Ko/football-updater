@@ -360,15 +360,6 @@ public class FotmobDataSource implements DataSourceParser {
         }
     }
 
-    private String getStatStringOrDefault(JsonNode statContainer, String stateName) {
-        // Return default if stat is no found
-        try {
-            return statContainer.get("stats").get(stateName).get("value").textValue();
-        } catch (Exception ex) {
-            return null;
-        }
-    }
-
     /**
      * Example entry
      * {"key":"shot_accuracy","stat":{"value":1,"total":2,"type":"fractionWithPercentage"}}
