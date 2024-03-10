@@ -16,7 +16,7 @@
                 <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == true}" class="btn btn-success btn-sm action-button disabled" th:href="${facebookStatus.loginUri}">Logged In</a>
             </div>
             <div>
-                <form th:if="${ not#lists.isEmpty(form.posts)}" th:object="${postsForm}" method="post" th:action="@{/posts/save}">
+                <form th:if="${ not#lists.isEmpty(form.posts)}" th:object="${postsForm}" method="post" th:action="@{/posts/save-all}">
                     <div class="table-responsive table-fixed-head">
                         <table
                                 id="post-table"

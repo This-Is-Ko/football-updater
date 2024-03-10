@@ -1,6 +1,7 @@
 package com.ko.footballupdater.controllers;
 
 import com.ko.footballupdater.models.Post;
+import com.ko.footballupdater.models.form.CreatePostDto;
 import com.ko.footballupdater.models.form.ImageUrlEntry;
 import com.ko.footballupdater.models.form.PostsUpdateDto;
 import com.ko.footballupdater.models.form.PrepareStandoutImageDto;
@@ -67,8 +68,8 @@ public class PostViewController {
      * Save changes to any posts from dashboard posts view
      * @return redirect to posts view
      */
-    @PostMapping("/save")
-    public String savePosts(@ModelAttribute PostsUpdateDto postsForm) {
+    @PostMapping("/save-all")
+    public String saveAllPosts(@ModelAttribute PostsUpdateDto postsForm) {
         try {
             postService.updatePostPostedStatus(postsForm.getPosts());
             return "redirect:/posts";
@@ -92,6 +93,39 @@ public class PostViewController {
             log.atError().setMessage("Deleting post status failed").setCause(ex).log();
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Deleting post status failed", ex);
+        }
+    }
+
+    /**
+     * Create new post
+     * @return create post page
+     */
+    @GetMapping("/create")
+    public String createPost(Model model) {
+        try {
+            CreatePostDto createPostDto = postService.prepareDtoForCreateNewPost();
+            model.addAttribute("postForm", createPostDto);
+            return "createPost";
+        } catch (Exception ex) {
+            log.atError().setMessage("Create post form prep failed").setCause(ex).log();
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Create post form prep failed", ex);
+        }
+    }
+
+    /**
+     * Create new post
+     * @return create post page
+     */
+    @PostMapping("/create/submit")
+    public String submitCreatePost(@ModelAttribute CreatePostDto createPostDto) {
+        try {
+            postService.createPost(createPostDto);
+            return "redirect:/posts";
+        } catch (Exception ex) {
+            log.atError().setMessage("Create post submit failed").setCause(ex).log();
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Create post submit failed", ex);
         }
     }
 

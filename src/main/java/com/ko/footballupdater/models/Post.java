@@ -12,7 +12,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
@@ -93,7 +92,7 @@ public class Post {
     /**
      * Caption of post.
      */
-    @Column(name = "caption")
+    @Column(name = "caption", length = 5000)
     private String caption;
 
     /**
