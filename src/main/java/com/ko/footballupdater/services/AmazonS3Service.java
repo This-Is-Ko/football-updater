@@ -42,10 +42,12 @@ public class AmazonS3Service {
                 for (String imageFileName : post.getImagesFileNames()) {
                     String filePath = imageGeneratorProperies.getOutputPath() + imageFileName;
                     File file = new File(filePath);
-                    PutObjectRequest request = new PutObjectRequest(amazonS3Properties.getBucketName(),imageFileName, file)
+                    // Save to specific path/key prefix if configured
+                    String imageKey = amazonS3Properties.getObjectKeyPrefix() != null ? amazonS3Properties.getObjectKeyPrefix() + imageFileName : imageFileName;
+                    PutObjectRequest request = new PutObjectRequest(amazonS3Properties.getBucketName(), imageKey, file)
                             .withCannedAcl(CannedAccessControlList.PublicRead);
                     s3Client.putObject(request);
-                    String imageUrl = s3Client.getUrl(amazonS3Properties.getBucketName(), imageFileName).toString();
+                    String imageUrl = s3Client.getUrl(amazonS3Properties.getBucketName(), imageKey).toString();
                     log.atInfo().setMessage("Successfully uploaded image " + imageFileName + " to S3 @ " + imageUrl).addKeyValue("player", post.getPlayer().getName()).log();
 
                     // Remove if url exists and add to end of list, keeps the order of the urls to be oldest to newest

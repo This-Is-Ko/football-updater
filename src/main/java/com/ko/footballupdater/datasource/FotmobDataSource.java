@@ -274,8 +274,6 @@ public class FotmobDataSource implements DataSourceParser {
                     .build();
         }
 
-        // TODO Check keeper call
-        // TODO check caption SQL error Mar 09 13:42:07 ip-172-30-2-198.ap-southeast-2.compute.internal java[795807]: Caused by: org.hibernate.exception.DataException: could not execute statement [Data truncation: Data too long for column 'caption' at row 1] [insert into posts (caption,date_generated,image_urls,player_
         // Separate stats required for goalkeepers
         if (playerEntry.get("positionStringShort") != null && GOALKEEPER_FOTMOB_STRING_SHORT.equals(playerEntry.get("positionStringShort").asText())) {
             // Goalkeepers only contain top stats
@@ -289,10 +287,10 @@ public class FotmobDataSource implements DataSourceParser {
                     .touches(getStatIntegerOrDefault(topStats, "Touches"))
                     .passesAttempted(parseFractionWithPercentageStatType(topStats, "Accurate passes", true))
                     .passesCompleted(parseFractionWithPercentageStatType(topStats, "Accurate passes", false))
-                    .longBallsAttempted(parseStatString(topStats, "Accurate long balls", STRING_STAT_SECOND_NUMBER_REGEX))
-                    .longBallsCompleted(parseStatString(topStats, "Accurate long balls", STRING_STAT_FIRST_NUMBER_REGEX))
+                    .longBallsAttempted(parseFractionWithPercentageStatType(topStats, "Accurate long balls", true))
+                    .longBallsCompleted(parseFractionWithPercentageStatType(topStats, "Accurate long balls", false))
                     .gkGoalsAgainst(getStatIntegerOrDefault(topStats, "Goals conceded"))
-                    .gkSaves(parseStatString(topStats, "Saves", STRING_STAT_FIRST_NUMBER_REGEX))
+                    .gkSaves(getStatIntegerOrDefault(topStats, "Saves"))
                     .gkPunches(getStatIntegerOrDefault(topStats, "Punches"))
                     .gkThrows(getStatIntegerOrDefault(topStats, "Throws"))
                     .gkHighClaim(getStatIntegerOrDefault(topStats, "High claim"))

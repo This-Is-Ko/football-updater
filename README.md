@@ -97,6 +97,7 @@ AWS S3 Uploads
     AWS_ACCESS_KEY
     AWS_SECRET_KEY
     AWS_S3_BUCKET_NAME
+    AWS_S3_OBJECT_KEY_PREFIX - Optional
 
 Facebook and Instagram API
 
