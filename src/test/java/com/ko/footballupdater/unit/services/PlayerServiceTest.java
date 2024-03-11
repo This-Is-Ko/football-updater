@@ -18,6 +18,7 @@ import com.ko.footballupdater.services.EmailService;
 import com.ko.footballupdater.services.ImageGeneratorService;
 import com.ko.footballupdater.services.ParsingService;
 import com.ko.footballupdater.services.PlayerService;
+import com.ko.footballupdater.utils.PostHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -66,6 +67,9 @@ public class PlayerServiceTest {
 
     @Mock
     private AmazonS3Service amazonS3Service;
+
+    @Mock
+    private PostHelper postHelper;
 
     @Mock
     private ImageGeneratorService imageGeneratorService;
@@ -131,6 +135,8 @@ public class PlayerServiceTest {
         when(postRepository.save(any(Post.class))).thenReturn(new Post());
 
         when(playerRepository.saveAll(any())).thenReturn(List.of(playerToUpdate));
+
+        when(postHelper.generateTeamHashtags("relevantTeamName")).thenReturn("#someTeamhashtag");
 
         UpdatePlayersResponse response = playerService.updateDataForPlayer(playerId);
 
@@ -435,61 +441,5 @@ public class PlayerServiceTest {
         assertNotNull(response.getPlayersUpdated());
         assertEquals(1, response.getPlayersUpdated().size());
         assertEquals(playerToUpdate2, response.getPlayersUpdated().get(0));
-    }
-
-    @Test
-    public void generateTeamHashtags_foundEntryWithTeamName_returnHashtags() {
-        String teamName = "ValidTeam";
-        Team mockTeam = mock(Team.class);
-        when(mockTeam.getAdditionalHashtags()).thenReturn(Set.of(new Hashtag("#hashtag1"), new Hashtag("#hashtag2")));
-
-        when(teamRepository.findByName(teamName)).thenReturn(List.of(mockTeam));
-
-        String hashtags = playerService.generateTeamHashtags(teamName);
-
-        // Check contains due to random set order
-        assertTrue(hashtags.contains(" #hashtag1"));
-        assertTrue(hashtags.contains(" #hashtag2"));
-    }
-
-    @Test
-    public void generateTeamHashtags_foundEntryWithAltName_returnHashtags() {
-        String teamName = "ValidTeamWithAltName";
-        Team mockTeam = mock(Team.class);
-        when(mockTeam.getAdditionalHashtags()).thenReturn(Set.of(new Hashtag("#hashtag1"), new Hashtag("#hashtag2")));
-
-        when(teamRepository.findByName(teamName)).thenReturn(Collections.emptyList());
-        when(teamRepository.findByAlternativeTeamName(teamName.toLowerCase())).thenReturn(List.of(mockTeam));
-
-        String hashtags = playerService.generateTeamHashtags(teamName);
-
-        // Check contains due to random set order
-        assertTrue(hashtags.contains(" #hashtag1"));
-        assertTrue(hashtags.contains(" #hashtag2"));
-    }
-
-    @Test
-    public void generateTeamHashtags_cannotFindEntryWithTeamNameOrAltName_returnGeneratedHashtags() {
-        String teamName = "Invalid Team";
-        when(teamRepository.findByName(teamName)).thenReturn(Collections.emptyList());
-        when(teamRepository.findByAlternativeTeamName(teamName.toLowerCase())).thenReturn(Collections.emptyList());
-
-        String hashtags = playerService.generateTeamHashtags(teamName);
-
-        assertEquals(" #invalidteam", hashtags);
-    }
-
-    @Test
-    public void generateTeamHashtags_nullTeamName_returnEmptyString() {
-        String hashtags = playerService.generateTeamHashtags(null);
-
-        assertEquals(" ", hashtags);
-    }
-
-    @Test
-    public void generateTeamHashtags_emptyTeamName_returnEmptyString() {
-        String hashtags = playerService.generateTeamHashtags("");
-
-        assertEquals(" ", hashtags);
     }
 }

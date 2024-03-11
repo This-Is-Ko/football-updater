@@ -56,6 +56,9 @@ public class PlayerService {
     private AmazonS3Service amazonS3Service;
 
     @Autowired
+    private PostHelper postHelper;
+
+    @Autowired
     private ImageGeneratorService imageGeneratorService;
 
     @Autowired
@@ -152,16 +155,16 @@ public class PlayerService {
                 // Generate any additional team hashtags
                 String hashtags = "";
                 if (post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null && !post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam().isEmpty()) {
-                    hashtags = generateTeamHashtags(post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam());
+                    hashtags = postHelper.generateTeamHashtags(post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam());
                     log.atInfo().setMessage("Set team hashtags to: " + hashtags).addKeyValue("player", player.getName()).log();
                 } else {
                     log.atWarn().setMessage("Unable to generate team hashtags due to relevant team missing").addKeyValue("player", player.getName()).log();
                 }
                 // Generate caption
-                PostHelper.generatePostCaption(instagramPostProperies.getVersion(), post, instagramPostProperies.getDefaultHashtags() + hashtags);
+                postHelper.generatePostCaption(instagramPostProperies.getVersion(), post, instagramPostProperies.getDefaultHashtags() + hashtags);
                 log.atInfo().setMessage("Generated post caption: " + post.getCaption()).addKeyValue("player", player.getName()).log();
                 // Generate image search links
-                PostHelper.generatePostImageSearchUrl(post);
+                postHelper.generatePostImageSearchUrl(post);
             } catch (Exception e) {
                 // Skip if image generation or upload fails, allows future retry
                 log.atWarn().setMessage("Unable to generate or upload image").addKeyValue("player", player.getName()).log();
@@ -198,40 +201,5 @@ public class PlayerService {
         return response;
     }
 
-    public String generateTeamHashtags(String teamName) {
-        StringBuilder teamHashtags = new StringBuilder(" ");
-        if (teamName == null || teamName.isEmpty()) {
-            return teamHashtags.toString();
-        }
 
-        // Search for team with name
-        List<Team> playerTeams = teamRepository.findByName(teamName);
-        if (playerTeams.size() == 1) {
-            Team playerTeam = playerTeams.get(0);
-            if (playerTeam != null) {
-                teamHashtags.append(
-                        playerTeam.getAdditionalHashtags().stream()
-                                .map(Hashtag::getValue)
-                                .collect(Collectors.joining(", "))
-                );
-            }
-        } else {
-            // Search for team with name in alternative name field, if not found, generate alternative name hashtag
-            List<Team> playerTeamsAltName = teamRepository.findByAlternativeTeamName(teamName.toLowerCase());
-            if (playerTeamsAltName.size() == 1) {
-                Team playerTeam = playerTeamsAltName.get(0);
-                if (playerTeam != null) {
-                    teamHashtags.append(
-                            playerTeam.getAdditionalHashtags().stream()
-                                    .map(Hashtag::getValue)
-                                    .collect(Collectors.joining(" "))
-                    );
-                }
-            } else {
-                teamHashtags.append("#").append(teamName.replaceAll(" ", "").replaceAll("-", "").replaceAll("\\.", ""));
-            }
-        }
-
-        return teamHashtags.toString().replaceAll(",", "").toLowerCase();
-    }
 }

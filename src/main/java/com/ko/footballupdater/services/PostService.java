@@ -32,8 +32,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.ko.footballupdater.utils.PostHelper.generatePostImageSearchUrl;
-
 @Slf4j
 @Service
 public class PostService {
@@ -52,6 +50,9 @@ public class PostService {
 
     @Autowired
     private FacebookApiService facebookApiService;
+
+    @Autowired
+    private PostHelper postHelper;
 
     @Autowired
     private InstagramPostProperies instagramPostProperies;
@@ -115,7 +116,7 @@ public class PostService {
             throw new NoSuchElementException("Post id not found");
         }
         Post post = postSearchResult.get();
-        generatePostImageSearchUrl(post);
+        postHelper.generatePostImageSearchUrl(post);
         prepareStandoutImageDto.setPost(post);
 
         List<StatisticEntryGenerateDto> allStats = new ArrayList<>();
@@ -188,7 +189,6 @@ public class PostService {
         // Map CreatePostDto to CreatePostRequest
         CreatePostRequest createPostRequest = new CreatePostRequest();
         createPostRequest.setPlayerId(createPostDto.getSelectedPlayerId());
-//        createPostDto.getPlayerMatchPerformanceStats().getMatch().setDate(createPostDto.getFormattedMatchDate());
         createPostRequest.setStats(createPostDto.getPlayerMatchPerformanceStats());
         createPost(createPostRequest);
     }
@@ -207,8 +207,15 @@ public class PostService {
         }
 
         Post newPost = new Post(PostType.ALL_STAT_POST, playerSearchResult.get(), createPostRequest.getStats());
+        String hashtags = "";
+        if (newPost.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null && !newPost.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam().isEmpty()) {
+            hashtags = postHelper.generateTeamHashtags(newPost.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam());
+            log.atInfo().setMessage("Set team hashtags to: " + hashtags).addKeyValue("player", playerSearchResult.get().getName()).log();
+        } else {
+            log.atWarn().setMessage("Unable to generate team hashtags due to relevant team missing").addKeyValue("player", playerSearchResult.get().getName()).log();
+        }
 
-        PostHelper.generatePostCaption(instagramPostProperies.getVersion(), newPost, instagramPostProperies.getDefaultHashtags());
+        postHelper.generatePostCaption(instagramPostProperies.getVersion(), newPost, instagramPostProperies.getDefaultHashtags() + hashtags);
 
         return postRepository.save(newPost);
     }
