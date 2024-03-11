@@ -9,6 +9,7 @@ import com.ko.footballupdater.models.form.UploadPostDto;
 import com.ko.footballupdater.services.FacebookApiService;
 import com.ko.footballupdater.services.PlayerService;
 import com.ko.footballupdater.services.PostService;
+import com.ko.footballupdater.utils.PostHelper;
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +27,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.ko.footballupdater.utils.PostHelper.generatePostImageSearchUrl;
-
 @Slf4j
 @Controller
 @RequestMapping(path="/posts")
@@ -41,6 +40,9 @@ public class PostViewController {
 
     @Autowired
     private FacebookApiService facebookApiService;
+
+    @Autowired
+    private PostHelper postHelper;
 
     /**
      * Display all generated posts
@@ -56,7 +58,7 @@ public class PostViewController {
 
         PostsUpdateDto postsUpdateDto = new PostsUpdateDto();
         for (Post post : posts) {
-            generatePostImageSearchUrl(post);
+            postHelper.generatePostImageSearchUrl(post);
             postsUpdateDto.addPost(post);
         }
         model.addAttribute("form", postsUpdateDto);
