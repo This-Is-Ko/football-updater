@@ -209,6 +209,13 @@ Enable service
 
 Alternatively use the dockerfiles to build and deploy. Ensure docker is installed on the machine.
 
+### Certificate Generation
+
+Follow the instructions here to renew certificate and generate JKS https://keychest.net/stories/lets-encrypt-certificate-into-java-jks
+
+Next move the JKS into path which matches the config > server.ssl.key-store
+
+### Fonts
 
 To set up fonts for image generation, copy font files across to ec2
 
