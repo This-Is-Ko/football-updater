@@ -360,6 +360,20 @@ public class ImageGeneratorService {
         }
     }
 
+    public void generateSummaryImage(Post summaryPost, List<Post> postsToInclude) throws Exception {
+        try {
+            BufferedImage image;
+
+            ImageGenParams imageGenParams = new ImageGenParams();
+            imageGenParams.setBackgroundImageUrl();
+            image = setUpBaseImageWithBackgroundImageUrl(imageGenParams);
+        } catch (Exception ex) {
+            log.atWarn().setMessage("Error while generating summary image").setCause(ex).log();
+            throw new Exception("Summary image - Error while generating summary image ", ex);
+        }
+        return;
+    }
+
     public void drawGradient(BufferedImage image) {
         Graphics2D gradientGraphics = image.createGraphics();
         int gradientHeight = 600;

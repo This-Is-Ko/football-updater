@@ -11,6 +11,7 @@ import java.util.List;
 @Getter
 @Setter
 public class PostsUpdateDto {
+
     private List<Post> posts;
 
     public void addPost(Post post) {
@@ -19,4 +20,5 @@ public class PostsUpdateDto {
         }
         posts.add(post);
     }
+
 }

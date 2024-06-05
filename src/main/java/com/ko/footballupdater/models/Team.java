@@ -1,7 +1,9 @@
 package com.ko.footballupdater.models;
 
+import com.ko.footballupdater.converter.StringListConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,6 +18,7 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -28,8 +31,8 @@ public class Team {
     @GeneratedValue(strategy= GenerationType.AUTO)
     private Integer id;
 
-    @Column
     @NotNull
+    @Column
     private String name;
 
     @OneToMany(cascade = CascadeType.ALL)
@@ -47,6 +50,10 @@ public class Team {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Hashtag> additionalHashtags;
+
+    @NotNull
+    @Column(name = "logoUrl", length = 300)
+    private String logoUrl;
 
     public Team() {
     }

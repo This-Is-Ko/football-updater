@@ -3,8 +3,10 @@ package com.ko.footballupdater.controllers;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.form.CreatePostDto;
 import com.ko.footballupdater.models.form.ImageUrlEntry;
+import com.ko.footballupdater.models.form.PostWithSelection;
 import com.ko.footballupdater.models.form.PostsUpdateDto;
 import com.ko.footballupdater.models.form.PrepareStandoutImageDto;
+import com.ko.footballupdater.models.form.PrepareSummaryPostDto;
 import com.ko.footballupdater.models.form.UploadPostDto;
 import com.ko.footballupdater.services.FacebookApiService;
 import com.ko.footballupdater.services.PlayerService;
@@ -166,6 +168,47 @@ public class PostViewController {
             model.addAttribute("form", prepareStandoutImageForm);
             model.addAttribute("prepareStandoutImageForm", prepareStandoutImageForm);
             return "redirect:/posts/prepare?postId=" + prepareStandoutImageForm.getPostId();
+        }
+    }
+
+    /**
+     * Display setup to generate summary post
+     * @return generate summary image view
+     */
+    @GetMapping("/prepare/summary")
+    public String prepareSummaryPost(Model model) {
+        try {
+            List<Post> posts = postService.getPosts(null, null, null);
+            PrepareSummaryPostDto prepareSummaryPostDto = new PrepareSummaryPostDto();
+            for (Post post : posts) {
+                prepareSummaryPostDto.addPostWithSelection(new PostWithSelection(post, false));
+            }
+
+            model.addAttribute("form", prepareSummaryPostDto);
+            return "prepareSummaryPost";
+        } catch (Exception ex) {
+            return "error";
+        }
+    }
+
+    /**
+     * Generate post image from selected stats
+     * @return redirect to posts view
+     */
+    @PostMapping("/generate/summary")
+    public String generateSummaryPost(Model model, @ModelAttribute PrepareSummaryPostDto prepareSummaryPostDto, BindingResult result) {
+        if (result.hasErrors()) {
+            return "redirect:/posts";
+        }
+        try {
+            postService.generateSummaryPost(prepareSummaryPostDto);
+            return "redirect:/posts";
+        } catch (Exception ex) {
+            log.atError().setMessage("Updating post status failed").setCause(ex).log();
+            prepareSummaryPostDto.setError(ex.getMessage());
+            model.addAttribute("form", prepareSummaryPostDto);
+            model.addAttribute("prepareStandoutImageForm", prepareSummaryPostDto);
+            return "redirect:/posts";
         }
     }
 

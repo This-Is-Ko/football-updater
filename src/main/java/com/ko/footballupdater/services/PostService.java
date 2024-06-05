@@ -10,6 +10,7 @@ import com.ko.footballupdater.models.form.CreatePostDto;
 import com.ko.footballupdater.models.form.CreatePostPlayerDto;
 import com.ko.footballupdater.models.form.ImageUrlEntry;
 import com.ko.footballupdater.models.form.PrepareStandoutImageDto;
+import com.ko.footballupdater.models.form.PrepareSummaryPostDto;
 import com.ko.footballupdater.models.form.StatisticEntryGenerateDto;
 import com.ko.footballupdater.models.form.UploadPostDto;
 import com.ko.footballupdater.repositories.PlayerRepository;
@@ -182,6 +183,33 @@ public class PostService {
             // Skip if image generation or upload fails, allows future retry
             log.atWarn().setMessage("Something went wrong while creating standout post").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
             throw new GenerateStandoutException("Something went wrong while creating standout post: " + ex.getMessage());
+        }
+    }
+
+    public void generateSummaryPost(PrepareSummaryPostDto prepareSummaryPostDto) throws Exception {
+        // Search for each player post entry and store
+        if (prepareSummaryPostDto.getPostWithSelections().isEmpty()) {
+            throw new NoSuchElementException("Post ids is empty");
+        }
+
+        Post summaryPost = new Post();
+        List<Post> postsToInclude = new ArrayList<>();
+        prepareSummaryPostDto.getPostWithSelections().forEach(postWithSelection -> {
+            postsToInclude.add(postWithSelection.getPost());
+        });
+
+
+        try {
+            // Generate summary image using selected posts
+            imageGeneratorService.generateSummaryImage(summaryPost, postsToInclude);
+            // Upload stat images to s3
+            amazonS3Service.uploadToS3(summaryPost, true);
+            // Save post
+            postRepository.save(summaryPost);
+            log.atInfo().setMessage("Successfully created summary image and saved").log();
+        } catch (Exception ex) {
+            log.atWarn().setMessage("Something went wrong while summary post").setCause(ex).log();
+            throw new GenerateStandoutException("Something went wrong while creating summary post: " + ex.getMessage());
         }
     }
 
