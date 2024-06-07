@@ -1,6 +1,6 @@
 package com.ko.footballupdater.runners;
 
-import com.ko.footballupdater.configuration.ImageGeneratorProperies;
+import com.ko.footballupdater.configuration.ImageGeneratorProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -14,7 +14,7 @@ import java.io.File;
 public class FileAccessValidationRunner implements ApplicationRunner {
 
     @Autowired
-    private ImageGeneratorProperies imageGeneratorProperies;
+    private ImageGeneratorProperties imageGeneratorProperties;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -22,7 +22,7 @@ public class FileAccessValidationRunner implements ApplicationRunner {
     }
 
     public void validateFileAccess() {
-        File dir = new File(imageGeneratorProperies.getInputPath());
+        File dir = new File(imageGeneratorProperties.getInputPath());
         validateFileAccess(dir);
     }
 
@@ -30,12 +30,12 @@ public class FileAccessValidationRunner implements ApplicationRunner {
         File[] directoryListing = dir.listFiles();
         boolean isGenericBaseImageSet = false;
         if (directoryListing != null) {
-            log.info(String.format("Found %d files in input directory: %s", directoryListing.length, imageGeneratorProperies.getInputPath()));
+            log.info(String.format("Found %d files in input directory: %s", directoryListing.length, imageGeneratorProperties.getInputPath()));
             for (File child : directoryListing) {
                 try {
                     if (child.exists() && child.canRead()) {
                         log.debug("File access is valid for " + child.getAbsolutePath());
-                        if (imageGeneratorProperies.getGenericBaseImageFile().equals(child.getName())) {
+                        if (imageGeneratorProperties.getGenericBaseImageFile().equals(child.getName())) {
                             isGenericBaseImageSet = true;
                         }
                     } else {

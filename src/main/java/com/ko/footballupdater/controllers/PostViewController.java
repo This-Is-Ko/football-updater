@@ -1,6 +1,7 @@
 package com.ko.footballupdater.controllers;
 
 import com.ko.footballupdater.models.Post;
+import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.models.form.CreatePostDto;
 import com.ko.footballupdater.models.form.ImageUrlEntry;
 import com.ko.footballupdater.models.form.PostWithSelection;
@@ -181,7 +182,9 @@ public class PostViewController {
             List<Post> posts = postService.getPosts(null, null, null);
             PrepareSummaryPostDto prepareSummaryPostDto = new PrepareSummaryPostDto();
             for (Post post : posts) {
-                prepareSummaryPostDto.addPostWithSelection(new PostWithSelection(post, false));
+                if (post.getPostType() != PostType.SUMMARY_POST) {
+                    prepareSummaryPostDto.addPostWithSelection(new PostWithSelection(post, false));
+                }
             }
 
             model.addAttribute("form", prepareSummaryPostDto);

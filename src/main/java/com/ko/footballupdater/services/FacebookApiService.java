@@ -147,7 +147,7 @@ public class FacebookApiService {
      * 3. Use the POST /{ig-user-id}/media_publish endpoint to publish the carousel container.
      * Refer to <a href="https://developers.facebook.com/docs/instagram-api/guides/content-publishing#carousel-posts">...</a>
      */
-    public void postToInstagram(Post post, List<ImageUrlEntry> imagesToUpload, String caption) throws Exception {
+    public void postToInstagram(Post post, List<ImageUrlEntry> imagesToUpload) throws Exception {
         log.atInfo().setMessage("Attempting to post to Instagram").addKeyValue("player", post.getPlayer().getName()).log();
 
         // Validate token has required permissions
@@ -198,11 +198,7 @@ public class FacebookApiService {
 
             // Step 2 - create carousel container
             // Sample request "https://graph.facebook.com/v18.0/90010177253934/media?caption=Fruit%20candies&media_type=CAROUSEL&children=17899506308402767%2C18193870522147812%2C17853844403701904&access_token=EAAOc..."
-            // Use caption if passed from form otherwise use prepared caption
-            if (caption == null || caption.isEmpty()) {
-                caption = post.getCaption();
-            }
-            InstagramUserMedia carouselCreateResponse = callInstagramUserMediaApi(facebookApiProperties.getInstagram().getUserId(), null, caption, false, "CAROUSEL", individualImageContainer);
+            InstagramUserMedia carouselCreateResponse = callInstagramUserMediaApi(facebookApiProperties.getInstagram().getUserId(), null, post.getCaption(), false, "CAROUSEL", individualImageContainer);
             String carouselId = carouselCreateResponse.getId();
             log.atInfo().setMessage("Successfully created Instagram carousel container").addKeyValue("player", post.getPlayer().getName()).log();
 

@@ -2,7 +2,7 @@ package com.ko.footballupdater.services;
 
 
 import com.ko.footballupdater.configuration.InstagramPostProperies;
-import com.ko.footballupdater.exceptions.GenerateStandoutException;
+import com.ko.footballupdater.exceptions.GenerateStandoutPostException;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.PostType;
@@ -182,34 +182,43 @@ public class PostService {
             prepareStandoutImageDto.setPost(post);
             // Skip if image generation or upload fails, allows future retry
             log.atWarn().setMessage("Something went wrong while creating standout post").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
-            throw new GenerateStandoutException("Something went wrong while creating standout post: " + ex.getMessage());
+            throw new GenerateStandoutPostException("Something went wrong while creating standout post: " + ex.getMessage());
         }
     }
 
     public void generateSummaryPost(PrepareSummaryPostDto prepareSummaryPostDto) throws Exception {
-        // Search for each player post entry and store
         if (prepareSummaryPostDto.getPostWithSelections().isEmpty()) {
             throw new NoSuchElementException("Post ids is empty");
         }
 
         Post summaryPost = new Post();
+        summaryPost.setPostType(PostType.SUMMARY_POST);
         List<Post> postsToInclude = new ArrayList<>();
         prepareSummaryPostDto.getPostWithSelections().forEach(postWithSelection -> {
-            postsToInclude.add(postWithSelection.getPost());
+            if (postWithSelection.isSelected()) {
+                Optional<Post> postSearchResult = postRepository.findById(postWithSelection.getPost().getId());
+                if (postSearchResult.isEmpty()) {
+                    throw new NoSuchElementException("Post id not found");
+                }
+                postsToInclude.add(postSearchResult.get());
+            }
         });
 
+        if (postsToInclude.isEmpty()) {
+            throw new GenerateStandoutPostException("No posts selected to use for generating summary post");
+        }
 
         try {
             // Generate summary image using selected posts
             imageGeneratorService.generateSummaryImage(summaryPost, postsToInclude);
-            // Upload stat images to s3
+            // Upload images to s3
             amazonS3Service.uploadToS3(summaryPost, true);
             // Save post
             postRepository.save(summaryPost);
             log.atInfo().setMessage("Successfully created summary image and saved").log();
         } catch (Exception ex) {
             log.atWarn().setMessage("Something went wrong while summary post").setCause(ex).log();
-            throw new GenerateStandoutException("Something went wrong while creating summary post: " + ex.getMessage());
+            throw new GenerateStandoutPostException("Something went wrong while creating summary post: " + ex.getMessage());
         }
     }
 
@@ -272,7 +281,10 @@ public class PostService {
                 .sorted(Comparator.comparingInt(ImageUrlEntry::getImageIndex))
                 .toList();
 
-        facebookApiService.postToInstagram(post, imagesToUpload, uploadPostForm.getCaption());
+        // Update caption from form
+        post.setCaption(uploadPostForm.getCaption());
+
+        facebookApiService.postToInstagram(post, imagesToUpload);
 
         post.setPostedStatus(true);
         postRepository.save(post);

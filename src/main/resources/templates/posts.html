@@ -38,7 +38,8 @@
                                         <p th:text="${#dates.format(post.dateGenerated, 'dd-MM-yyyy hh:mm:ss')}"></p>
                                         <p th:text="${post.postType}"></p>
                                     </td>
-                                    <td th:text="${post.player.name}"></td>
+                                    <td th:if="${post.player != null}" th:text="${post.player.name}"></td>
+                                    <td th:if="${post.player == null}">Summary post</td>
                                     <td th:id="'post-caption-' + ${itemStat.index}" th:text="${post.caption}"></td>
                                     <td>
                                         <ul th:if="${post.imagesUrls != null AND !post.imagesUrls.isEmpty()}" th:each="imageUrl, imageIter : ${post.imagesUrls}">

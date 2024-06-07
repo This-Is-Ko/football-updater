@@ -6,22 +6,15 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+
 @Getter
 @Setter
 @Component
-@ConfigurationProperties(prefix = "image.generator")
-public class ImageGeneratorProperies {
+@ConfigurationProperties(prefix = "team")
+public class TeamProperties {
 
     @NotNull
-    private boolean enabled;
-
-    @NotNull
-    private String inputPath;
-
-    @NotNull
-    private String outputPath;
-
-    @NotNull
-    private String genericBaseImageFile;
+    private ArrayList<String> nameSuffixesToRemove;
 
 }

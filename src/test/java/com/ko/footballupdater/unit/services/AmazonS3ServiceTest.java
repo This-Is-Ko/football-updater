@@ -5,7 +5,7 @@ import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.ko.footballupdater.configuration.AmazonS3Properties;
-import com.ko.footballupdater.configuration.ImageGeneratorProperies;
+import com.ko.footballupdater.configuration.ImageGeneratorProperties;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.services.AmazonS3Service;
@@ -36,7 +36,7 @@ public class AmazonS3ServiceTest {
     private AmazonS3Service amazonS3Service;
 
     @Mock
-    private ImageGeneratorProperies imageGeneratorProperies;
+    private ImageGeneratorProperties imageGeneratorProperties;
 
     @Mock
     private AmazonS3Properties amazonS3Properties;
@@ -51,7 +51,7 @@ public class AmazonS3ServiceTest {
     public void setup() {
         MockitoAnnotations.openMocks(this);
         when(amazonS3Properties.isEnabled()).thenReturn(true);
-        when(imageGeneratorProperies.getOutputPath()).thenReturn("/path/to/output");
+        when(imageGeneratorProperties.getOutputPath()).thenReturn("/path/to/output");
 
         Player player = new Player("Player1");
         when(post.getPlayer()).thenReturn(player);

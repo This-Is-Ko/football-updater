@@ -4,7 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import com.ko.footballupdater.configuration.ImageGeneratorProperies;
+import com.ko.footballupdater.configuration.ImageGeneratorProperties;
 import com.ko.footballupdater.runners.FileAccessValidationRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ class FileAccessValidationRunnerTest {
     private FileAccessValidationRunner fileAccessValidationRunner;
 
     @Mock
-    private ImageGeneratorProperies imageGeneratorProperies;
+    private ImageGeneratorProperties imageGeneratorProperties;
 
     @Mock
     private ApplicationArguments applicationArguments;
@@ -44,8 +44,8 @@ class FileAccessValidationRunnerTest {
     @BeforeEach
     public void setup() {
         MockitoAnnotations.openMocks(this);
-        when(imageGeneratorProperies.getInputPath()).thenReturn("src/test/resources/input");
-        when(imageGeneratorProperies.getGenericBaseImageFile()).thenReturn("genericBaseImage.jpg");
+        when(imageGeneratorProperties.getInputPath()).thenReturn("src/test/resources/input");
+        when(imageGeneratorProperties.getGenericBaseImageFile()).thenReturn("genericBaseImage.jpg");
     }
 
     @Test

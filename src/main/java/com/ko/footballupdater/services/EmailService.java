@@ -1,6 +1,6 @@
 package com.ko.footballupdater.services;
 
-import com.ko.footballupdater.configuration.ImageGeneratorProperies;
+import com.ko.footballupdater.configuration.ImageGeneratorProperties;
 import com.ko.footballupdater.configuration.MailerProperties;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.utils.DateTimeHelper;
@@ -28,7 +28,7 @@ public class EmailService {
     private MailerProperties mailerProperties;
 
     @Autowired
-    private ImageGeneratorProperies imageGeneratorProperies;
+    private ImageGeneratorProperties imageGeneratorProperties;
 
     public boolean sendEmailUpdate(List<Post> posts){
         // Check config for email enabled status
@@ -57,7 +57,7 @@ public class EmailService {
             if (mailerProperties.isAttachImages()) {
                 if (!postHolder.getImagesFileNames().isEmpty()) {
                     for (String fileName : postHolder.getImagesFileNames()) {
-                        attachments.add(new AttachmentResource(fileName, new FileDataSource(imageGeneratorProperies.getOutputPath() + fileName)));
+                        attachments.add(new AttachmentResource(fileName, new FileDataSource(imageGeneratorProperties.getOutputPath() + fileName)));
                     }
                 }
             }

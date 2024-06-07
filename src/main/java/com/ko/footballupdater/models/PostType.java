@@ -18,5 +18,5 @@ public enum PostType {
     /**
      * Represents a post containing a standout image as well as image(s) with all player performances from the relevant matchday.
      */
-    WRAP_UP_POST;
+    SUMMARY_POST;
 }

@@ -52,8 +52,8 @@ public class Team {
     private Set<Hashtag> additionalHashtags;
 
     @NotNull
-    @Column(name = "logoUrl", length = 300)
-    private String logoUrl;
+    @Column
+    private String logoFileName;
 
     public Team() {
     }

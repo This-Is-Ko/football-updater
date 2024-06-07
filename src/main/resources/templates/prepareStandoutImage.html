@@ -9,7 +9,8 @@
                 <form th:if="${ not#lists.isEmpty(form.allStats)}" th:object="${prepareStandoutImageForm}" method="post" th:action="@{/posts/generate}">
                     <br>
                     <h2>Prepare Post</h2>
-                    <h4 th:text="${form.post.player.name}"></h4>
+                    <h4 th:if="${post.player != null}" th:text="${form.post.player.name}"></h4>
+                    <h4 th:if="${post.player == null}">Not a player</h4>
                     <br>
                     <input hidden th:field="${form.postId}" th:value="${form.post.id}"/>
                     <div class="mb-3">
