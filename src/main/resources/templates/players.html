@@ -17,7 +17,8 @@
                         <th>Data Sources</th>
                         <th>Last Checked</th>
                         <th>Last Match</th>
-                        <th>Link</th>
+                        <th>Match Date</th>
+                        <th>Team</th>
                         <th>ID</th>
                     </tr>
                     </thead>
@@ -37,6 +38,8 @@
                         <td th:text="${player.checkedStatus.lastChecked}"></td>
                         <td th:text="${player.checkedStatus.latestCheckedMatchUrl}"></td>
                         <td th:text="${player.checkedStatus.latestCheckedMatchDate}"></td>
+                        <td th:if="${ player.team != null}" th:text="${player.team.name}"></td>
+                        <td th:if="${ player.team == null}"></td>
                         <td th:text="${player.id}"></td>
                     </tr>
                     </tbody>

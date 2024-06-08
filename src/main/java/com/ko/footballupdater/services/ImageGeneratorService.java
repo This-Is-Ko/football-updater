@@ -28,7 +28,9 @@ import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -48,10 +50,12 @@ public class ImageGeneratorService {
     private final String STANDOUT_BASE_IMAGE_FILE_NAME = "_standout_base_player_stat_image.jpg";
     private final String TEAM_LOGO_DIRECTORY = "/team-logos";
     private final String ICON_DIRECTORY = "/icons";
-    private final String GOAL_ICON_FILE_NAME = "/goal_icon.png";
-    private final String ASSIST_ICON_FILE_NAME = "/assist_icon.png";
-    private final String YELLOW_CARD_ICON_FILE_NAME = "/yellow_card_icon.png";
-    private final String RED_CARD_ICON_FILE_NAME = "/red_card_icon.png";
+    private final String GOAL_ICON_FILE_NAME = "goal_icon.png";
+    private final String ASSIST_ICON_FILE_NAME = "assist_icon.png";
+    private final String YELLOW_CARD_ICON_FILE_NAME = "yellow_card_icon.png";
+    private final String RED_CARD_ICON_FILE_NAME = "red_card_icon.png";
+    private Map<String, BufferedImage> teamLogoCache = new HashMap<>();
+    private Map<String, BufferedImage> iconCache = new HashMap<>();
 
     public void generatePlayerStatImage(Post post) throws Exception {
         if (!imageGeneratorProperties.isEnabled()) {
@@ -154,7 +158,7 @@ public class ImageGeneratorService {
     }
 
     private BufferedImage setUpBaseImageWithBackgroundImageUrl(ImageGenParams imageGenParams) throws IOException {
-        URL imageUrl = URI.create(imageGenParams.getBackgroundImageUrl()).toURL();
+        URL imageUrl = URI.create(imageGenParams.getImageUrl()).toURL();
         BufferedImage downloadedImage = ImageIO.read(imageUrl);
         BufferedImage background;
         float scale = 1;
@@ -283,7 +287,7 @@ public class ImageGeneratorService {
                 return post.getPlayer().getName().replaceAll(" ", "") + "_" + DateTimeHelper.getDateAsFormattedStringForFileName(post.getPlayerMatchPerformanceStats().getMatch().getDate()) + "_standout_stat_image_" + createdImageCounter + ".jpg";
             }
             case SUMMARY_POST -> {
-                return DateTimeHelper.getDateAsFormattedStringForFileName(post.getDateGenerated()) + "summary_image.jpg";
+                return DateTimeHelper.getDateAsFormattedStringForFileName(post.getDateGenerated()) + "_summary_image_" + createdImageCounter + ".jpg";
             }
             default -> {
                 return post.getPlayer().getName().replaceAll(" ", "") + "_" + DateTimeHelper.getDateAsFormattedStringForFileName(post.getPlayerMatchPerformanceStats().getMatch().getDate()) + "_stat_image_" + createdImageCounter + ".jpg";
@@ -292,7 +296,7 @@ public class ImageGeneratorService {
     }
 
     private void saveImage(Post post, BufferedImage image, String fileName, int createdImageCounter) throws IOException {
-        String outputImageFilePath = imageGeneratorProperties.getOutputPath() + fileName;
+        String outputImageFilePath = imageGeneratorProperties.getOutputPath() + "/" + fileName;
         ImageIO.write(image, "jpg", new File(outputImageFilePath));
         post.getImagesFileNames().add(fileName);
         LogHelper.logWithSubject(log.atInfo().setMessage("Generated image " + createdImageCounter), post);
@@ -324,7 +328,7 @@ public class ImageGeneratorService {
     public void generateStandoutStatsImage(Post post, List<StatisticEntryGenerateDto> selectedStats, ImageGenParams imageGenParams) throws Exception {
         try {
             BufferedImage image;
-            if (imageGenParams != null && imageGenParams.getBackgroundImageUrl() != null && !imageGenParams.getBackgroundImageUrl().isEmpty()) {
+            if (imageGenParams != null && imageGenParams.getImageUrl() != null && !imageGenParams.getImageUrl().isEmpty()) {
                 // Download and set background image
                 image = setUpBaseImageWithBackgroundImageUrl(imageGenParams);
 
@@ -376,18 +380,29 @@ public class ImageGeneratorService {
         }
     }
 
-    public void generateSummaryImage(Post summaryPost, List<Post> playerPosts) throws Exception {
+    public void generateSummaryImage(Post summaryPost, List<Post> playerPosts, ImageGenParams imageGenParams) throws Exception {
         try {
             BufferedImage image;
 
-            ImageGenParams imageGenParams = new ImageGenParams();
-            imageGenParams.setBackgroundImageUrl(imageGeneratorProperties.getExternalImageStoreUri() + imageGeneratorProperties.getSummaryBaseImageFile());
-            image = setUpBaseImageWithBackgroundImageUrl(imageGenParams);
+            ImageGenParams backgroundImageGenParams = new ImageGenParams();
+            backgroundImageGenParams.setImageUrl(imageGeneratorProperties.getExternalImageStoreUri() + imageGeneratorProperties.getSummaryBaseImageFile());
+            image = setUpBaseImageWithBackgroundImageUrl(backgroundImageGenParams);
 
-            summaryDrawPlayerStats(image, playerPosts);
+            // Add individual player stats
+            List<BufferedImage> outputImages = summaryDrawPlayerStats(image, playerPosts);
+
+            // Add side image
+            summaryDrawSideImage(outputImages, imageGenParams);
 
             // Save the modified image
-            saveImage(summaryPost, image, generateFileName(summaryPost, 1, PostType.SUMMARY_POST), 1);
+            if (outputImages.isEmpty()) {
+                throw new Exception("No output images created");
+            }
+            int savedImagesCount = 0;
+            for (BufferedImage imageToSave : outputImages) {
+                savedImagesCount++;
+                saveImage(summaryPost, imageToSave, generateFileName(summaryPost, savedImagesCount, PostType.SUMMARY_POST), savedImagesCount);
+            }
         } catch (Exception ex) {
             log.atWarn().setMessage("Error while generating summary image").setCause(ex).log();
             throw new Exception("Summary image - Error while generating summary image ", ex);
@@ -425,16 +440,16 @@ public class ImageGeneratorService {
     }
 
     public void drawXCenteredText(BufferedImage image, Font font, String text, int y) {
-        drawXCenteredText(image, font, text, y, Color.WHITE);
+        drawXCenteredText(image, image.getWidth(), font, text, y, Color.WHITE);
     }
 
-    public void drawXCenteredText(BufferedImage image, Font font, String text, int y, Color color) {
+    public void drawXCenteredText(BufferedImage image, int drawingAreaWidth, Font font, String text, int y, Color color) {
         Graphics2D nameGraphic = image.createGraphics();
         nameGraphic.setFont(font);
         nameGraphic.setColor(color);
         FontMetrics metrics = nameGraphic.getFontMetrics(font);
         // Calculate X coordinate
-        int x = (image.getWidth() - metrics.stringWidth(text)) / 2;
+        int x = (drawingAreaWidth - metrics.stringWidth(text)) / 2;
         nameGraphic.drawString(text, x, y);
         nameGraphic.dispose();
     }
@@ -477,16 +492,24 @@ public class ImageGeneratorService {
         statValueGraphic.dispose();
     }
 
-    public void summaryDrawPlayerStats(BufferedImage image, List<Post> playerPosts) {
-        Graphics2D playerNameGraphic = image.createGraphics();
+    public List<BufferedImage> summaryDrawPlayerStats(BufferedImage image, List<Post> playerPosts) {
+        BufferedImage currentImage = copyBufferedImage(image);
+        Graphics2D playerNameGraphic = currentImage.createGraphics();
         Font playerNameFont = new Font("Chakra Petch", Font.BOLD, 30);
         playerNameGraphic.setFont(playerNameFont);
 
+        int imageHeight = 1000;
         int teamLogoOffsetFromNameY = 35;
-        int currentNameY = 200;
         int playerNameX = 130;
         int playerMinutesPlayedX = 550;
+        int statsDrawingAreaWidth = 650;
+
+        // Dynamic
+        int currentNameY = 200;
         Team previousTeam = null;
+
+        List<BufferedImage> outputImages = new ArrayList<>();
+
         for (int i = 0; i < playerPosts.size(); i++) {
             Post playerPost = playerPosts.get(i);
             if (playerPost.getPlayer() != null) {
@@ -494,20 +517,19 @@ public class ImageGeneratorService {
                 if (!playerPost.getPlayer().getTeam().equals(previousTeam)) {
                     playerNameGraphic.setColor(Color.GRAY);
                     int separatorY = currentNameY - 10;
-                    playerNameGraphic.drawLine(50, separatorY, 650 - 50, separatorY);
+                    playerNameGraphic.drawLine(50, separatorY, statsDrawingAreaWidth - 50, separatorY);
                     currentNameY += 20;
                     String matchName = PostHelper.generateMatchNameWithSuffixRemoved(playerPost.getPlayerMatchPerformanceStats(), teamProperties) + " " + PostHelper.generateMatchScore(playerPost.getPlayerMatchPerformanceStats());
                     Font matchNameFont = new Font("Chakra Petch", Font.BOLD, 20);
-                    drawXCenteredText(image, matchNameFont, matchName, currentNameY, Color.GRAY);
+                    drawXCenteredText(currentImage, statsDrawingAreaWidth, matchNameFont, matchName, currentNameY, Color.GRAY);
                     currentNameY += 50;
                 }
 
                 try {
                     // Draw team logo for player
-                    URL imageUrl = URI.create(imageGeneratorProperties.getExternalImageStoreUri() + TEAM_LOGO_DIRECTORY + "/" + playerPost.getPlayer().getTeam().getLogoFileName()).toURL();
-                    BufferedImage downloadedImage = ImageIO.read(imageUrl);
-                    Graphics2D imageGraphics = image.createGraphics();
-                    imageGraphics.drawImage(downloadedImage, 70 , currentNameY - teamLogoOffsetFromNameY, null);
+                    BufferedImage teamLogo = getTeamLogo(playerPost.getPlayer().getTeam().getLogoFileName());
+                    Graphics2D imageGraphics = currentImage.createGraphics();
+                    imageGraphics.drawImage(teamLogo, 70, currentNameY - teamLogoOffsetFromNameY, null);
                     imageGraphics.dispose();
                 } catch (IOException e) {
                     log.atWarn().setMessage("URL to team logo was invalid").log();
@@ -518,15 +540,34 @@ public class ImageGeneratorService {
                 playerNameGraphic.drawString(String.valueOf(playerPost.getPlayerMatchPerformanceStats().getMinutesPlayed()), playerMinutesPlayedX, currentNameY);
 
                 // Draw goal, assist, cards icons and count
-                drawSummaryPlayerStats(image, playerPost.getPlayerMatchPerformanceStats(), currentNameY);
+                boolean statsAdded = drawSummaryPlayerStats(currentImage, playerPost.getPlayerMatchPerformanceStats(), currentNameY);
+                if (statsAdded) {
+                    currentNameY += 105;
+                } else {
+                    currentNameY += 65;
+                }
 
-                currentNameY += 65;
                 previousTeam = playerPost.getPlayer().getTeam();
+
+                // Check if there is any space left to add another entry
+                if (currentNameY > (imageHeight - 80)) {
+                    outputImages.add(currentImage);
+                    currentImage = copyBufferedImage(image);
+                    playerNameGraphic = currentImage.createGraphics();
+                    playerNameGraphic.setFont(playerNameFont);
+                    currentNameY = 200;
+                    previousTeam = null;
+                }
+            }
+            if (i + 1 == playerPosts.size()) {
+                outputImages.add(currentImage);
             }
         }
+        playerNameGraphic.dispose();
+        return outputImages;
     }
 
-    public void drawSummaryPlayerStats(BufferedImage image, PlayerMatchPerformanceStats playerMatchPerformanceStats, int currentY) {
+    public boolean drawSummaryPlayerStats(BufferedImage image, PlayerMatchPerformanceStats playerMatchPerformanceStats, int currentY) {
         try {
             Graphics2D imageGraphics = image.createGraphics();
             Font playerNameFont = new Font("Chakra Petch", Font.PLAIN, 30);
@@ -539,6 +580,7 @@ public class ImageGeneratorService {
 
             // Place stats under minutes played
             currentY += 50;
+            boolean isAddedStats = false;
 
             // Red cards
             if (playerMatchPerformanceStats.getRedCards() != null && playerMatchPerformanceStats.getRedCards() > 0) {
@@ -549,6 +591,7 @@ public class ImageGeneratorService {
                         statValueXMinimumOffset,
                         currentY);
                 currentStatX -= 80;
+                isAddedStats = true;
             }
 
             // Yellow cards
@@ -560,6 +603,7 @@ public class ImageGeneratorService {
                         statValueXMinimumOffset,
                         currentY);
                 currentStatX -= 80;
+                isAddedStats = true;
             }
 
             // Assists
@@ -571,6 +615,7 @@ public class ImageGeneratorService {
                         statValueXMinimumOffset,
                         currentY);
                 currentStatX -= 80;
+                isAddedStats = true;
             }
 
             // Goals
@@ -581,9 +626,11 @@ public class ImageGeneratorService {
                         currentStatX,
                         statValueXMinimumOffset,
                         currentY);
+                isAddedStats = true;
             }
 
             imageGraphics.dispose();
+            return isAddedStats;
         } catch (IOException e) {
             log.atError().setMessage("Failure while adding stat icons").log();
             throw new RuntimeException(e);
@@ -591,9 +638,89 @@ public class ImageGeneratorService {
     }
 
     private void drawSummaryPlayerStatWithIcon(Graphics2D imageGraphics, String iconFileName, String statValue, int currentStatX, int statValueXOffset, int currentY) throws IOException {
-        URL imageUrl = URI.create(imageGeneratorProperties.getExternalImageStoreUri() + ICON_DIRECTORY + iconFileName).toURL();
-        BufferedImage downloadedImage = ImageIO.read(imageUrl);
+        BufferedImage downloadedImage = getIcons(iconFileName);
         imageGraphics.drawImage(downloadedImage, currentStatX, currentY - 35, null);
         imageGraphics.drawString(statValue, currentStatX + statValueXOffset, currentY);
+    }
+
+    public void summaryDrawSideImage(List<BufferedImage> outputImages, ImageGenParams imageGenParams) throws IOException {
+        int statsDrawingAreaWidth = 650;
+        if (imageGenParams == null) {
+            throw new RuntimeException("Missing imageGenParams");
+        }
+
+        String sideImageUri = imageGenParams.getImageUrl();
+        if (sideImageUri == null || sideImageUri.isEmpty()) {
+            // Use fallback image
+            sideImageUri = imageGeneratorProperties.getExternalImageStoreUri() + "/default_side_image.jpg";
+        }
+        URL imageUrl = URI.create(sideImageUri).toURL();
+        BufferedImage downloadedImage = ImageIO.read(imageUrl);
+
+        // Determine the scaling factor to make the height 1000px
+        int targetHeight = 1000;
+        int originalWidth = downloadedImage.getWidth();
+        int originalHeight = downloadedImage.getHeight();
+        int scaledWidth = (int) ((double) targetHeight / originalHeight * originalWidth);
+
+        // Scale the image
+        Image tempScaledImage = downloadedImage.getScaledInstance(scaledWidth, targetHeight, Image.SCALE_SMOOTH);
+
+        // Convert scaled Image back to BufferedImage
+        BufferedImage scaledImage = new BufferedImage(scaledWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = scaledImage.createGraphics();
+        g2d.drawImage(tempScaledImage, 0, 0, null);
+        g2d.dispose();
+
+        // Crop image
+        int horizontalOffset = (imageGenParams.getImageHorizontalOffset() != null ? imageGenParams.getImageHorizontalOffset() : 0);
+        BufferedImage croppedImage = downloadedImage.getSubimage(horizontalOffset, 0, 1000 - statsDrawingAreaWidth, 1000);
+
+        for (BufferedImage image : outputImages) {
+            Graphics2D imageGraphics = image.createGraphics();
+            imageGraphics.drawImage(croppedImage, statsDrawingAreaWidth, 0, null);
+            imageGraphics.dispose();
+        }
+    }
+
+    public static BufferedImage copyBufferedImage(BufferedImage original) {
+        // Create a new BufferedImage with the same dimensions and type as the original
+        BufferedImage copy = new BufferedImage(original.getWidth(), original.getHeight(), original.getType());
+
+        // Create a Graphics2D object to draw the original image onto the new image
+        Graphics2D g2d = copy.createGraphics();
+        g2d.drawImage(original, 0, 0, null);
+        g2d.dispose();
+
+        return copy;
+    }
+
+    public BufferedImage getTeamLogo(String logoFileName) throws IOException {
+        return getImageUsingCache(logoFileName, imageGeneratorProperties.getExternalImageStoreUri() + TEAM_LOGO_DIRECTORY + "/", teamLogoCache);
+    }
+
+    public BufferedImage getIcons(String iconFileName) throws IOException {
+        return getImageUsingCache(iconFileName, imageGeneratorProperties.getExternalImageStoreUri() + ICON_DIRECTORY + "/", iconCache);
+    }
+
+    public BufferedImage getImageUsingCache(String fileName, String fileLocation, Map<String, BufferedImage> cache) throws IOException {
+        // Check in-memory cache to reduce downloads
+        if (fileName == null) {
+            throw new IOException("No filename defined");
+        }
+        BufferedImage cachedImage = null;
+        // Check cache for image
+        if (cache != null) {
+            cachedImage = cache.get(fileName);
+        }
+        // Download image and store in cache
+        if (cachedImage == null) {
+            URL imageUrl = URI.create(fileLocation + fileName).toURL();
+            cachedImage = ImageIO.read(imageUrl);
+            if (cache != null) {
+                cache.put(fileName, cachedImage);
+            }
+        }
+        return cachedImage;
     }
 }

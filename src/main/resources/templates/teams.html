@@ -15,6 +15,7 @@
                         <th>Team</th>
                         <th>Hashtags</th>
                         <th>Alt. Names</th>
+                        <th>Logo</th>
                         <th>ID</th>
                     </tr>
                     </thead>
@@ -31,6 +32,7 @@
                                 <li th:text="${altTeamNames.value}"></li>
                             </ul>
                         </td>
+                        <td th:text="${team.logoFileName}"></td>
                         <td th:text="${team.id}"></td>
                     </tr>
                     </tbody>

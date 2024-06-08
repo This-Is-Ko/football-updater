@@ -42,7 +42,7 @@ public class AmazonS3Service {
                 // Upload images and save urls
                 // Overwrites any file with the same name
                 for (String imageFileName : post.getImagesFileNames()) {
-                    String filePath = imageGeneratorProperties.getOutputPath() + imageFileName;
+                    String filePath = imageGeneratorProperties.getOutputPath() + "/" + imageFileName;
                     File file = new File(filePath);
                     // Save to specific path/key prefix if configured
                     String imageKey = amazonS3Properties.getObjectKeyPrefix() != null ? amazonS3Properties.getObjectKeyPrefix() + imageFileName : imageFileName;

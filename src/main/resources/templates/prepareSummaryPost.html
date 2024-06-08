@@ -6,10 +6,22 @@
         <div class="container">
             <div th:replace="~{fragments/header.html :: header}"></div>
             <br>
-            <h2>Latest Posts</h2>
+            <h2>Create Summary Post</h2>
             <br>
             <div>
                 <form th:if="${ not#lists.isEmpty(form.postWithSelections)}" th:object="${postsForm}" method="post" th:action="@{/posts/generate/summary}">
+                    <div class="mb-3">
+                        <label for="imageUrl" class="form-label">Side Image (leave blank for default): </label>
+                        <div class="input-group mb-3">
+                            <input id="imageUrl" type="text" class="form-control" name="imageGenParams.imageUrl" size="100">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="imageHorizontalOffset" class="form-label">Horizontal offset from left side only (leave blank for 0): </label>
+                        <div class="input-group mb-3">
+                            <input id="imageHorizontalOffset" type="number" step="10" min="0" class="form-control" name="imageGenParams.imageHorizontalOffset" size="100">
+                        </div>
+                    </div>
                     <div class="table-responsive table-fixed-head">
                         <table
                                 id="post-table"
@@ -18,6 +30,7 @@
                                 <tr>
                                     <th style="min-width:100px" >Date</th>
                                     <th>Player</th>
+                                    <th>Caption</th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -28,6 +41,7 @@
                                         <p th:text="${postWithSelections.post.postType}"></p>
                                     </td>
                                     <td th:text="${postWithSelections.post.player.name}"></td>
+                                    <td th:id="'post-caption-' + ${itemStat.index}" th:text="${postWithSelections.post.caption}"></td>
                                     <td>
                                         <input hidden th:name="|postWithSelections[${itemStat.index}].post.id|" th:value="${postWithSelections.post.getId()}"/>
                                         <input type="checkbox" th:checked="${postWithSelections.isSelected()}" th:name="|postWithSelections[${itemStat.index}].selected|" />
@@ -45,9 +59,5 @@
                 </div>
             </div>
         </div>
-
-
-<!--        <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">-->
     </body>
-
 </html>

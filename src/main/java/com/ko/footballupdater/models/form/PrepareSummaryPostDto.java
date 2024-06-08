@@ -16,6 +16,8 @@ public class PrepareSummaryPostDto {
 
     private List<PostWithSelection> postWithSelections;
 
+    private ImageGenParams imageGenParams = new ImageGenParams();
+
     private String error;
 
     public void addPostWithSelection(PostWithSelection postWithSelection) {

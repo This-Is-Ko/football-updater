@@ -13,7 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -68,6 +71,34 @@ public class PostHelper {
         }
         strBuilder.append(generatePlayerHashtags(player)).append(" ").append(additionalHashtags);
         return strBuilder.toString();
+    }
+
+    public String generateSummaryPostCaption(List<Post> playerPosts, String additionalHashtags) {
+        StringBuilder hashtags = new StringBuilder();
+        StringBuilder playerHashtags = new StringBuilder();
+        StringBuilder teamHashtags = new StringBuilder();
+        if (additionalHashtags != null) {
+            hashtags.append(additionalHashtags);
+        }
+        String previousTeam = null;
+        for (Post playerPost : playerPosts) {
+            playerHashtags.append(generatePlayerHashtags(playerPost.getPlayer()).replaceAll("\n\n", " "));
+            if (playerPost.getPlayerMatchPerformanceStats() != null
+                && playerPost.getPlayerMatchPerformanceStats().getMatch() != null
+                && playerPost.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null
+                && !playerPost.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam().equals(previousTeam)) {
+                teamHashtags.append(generateTeamHashtags(playerPost.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam()));
+                previousTeam = playerPost.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam();
+            }
+        }
+        hashtags.append(playerHashtags);
+        hashtags.append(teamHashtags);
+
+        // Remove any duplicate hashtags
+        String[] hashtagArray = hashtags.toString().split(" ");
+        Set<String> uniqueHashtags = new LinkedHashSet<>(Arrays.asList(hashtagArray));
+
+        return String.join(" ", uniqueHashtags);
     }
 
     public static String generateMatchName(PlayerMatchPerformanceStats playerMatchPerformanceStats) {

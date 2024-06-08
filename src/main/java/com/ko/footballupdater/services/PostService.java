@@ -208,11 +208,19 @@ public class PostService {
             throw new GenerateStandoutPostException("No posts selected to use for generating summary post");
         }
 
+        // Group players into teams
+        List<Post> sortedPostsByTeam = postsToInclude.stream()
+                .filter(post -> post.getPlayer() != null && post.getPlayer().getTeam() != null)
+                .sorted(Comparator.comparing(post -> post.getPlayer().getTeam().getName()))
+                .collect(Collectors.toList());
+
         try {
             // Generate summary image using selected posts
-            imageGeneratorService.generateSummaryImage(summaryPost, postsToInclude);
+            imageGeneratorService.generateSummaryImage(summaryPost, sortedPostsByTeam, prepareSummaryPostDto.getImageGenParams());
             // Upload images to s3
-            amazonS3Service.uploadToS3(summaryPost, true);
+            amazonS3Service.uploadToS3(summaryPost, false);
+            // Generate caption
+            summaryPost.setCaption(postHelper.generateSummaryPostCaption(sortedPostsByTeam, instagramPostProperies.getDefaultHashtags()));
             // Save post
             postRepository.save(summaryPost);
             log.atInfo().setMessage("Successfully created summary image and saved").log();
