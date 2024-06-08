@@ -1,4 +1,4 @@
-package com.ko.footballupdater.controllers;
+package com.ko.footballupdater.controllers.views;
 
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.PostType;

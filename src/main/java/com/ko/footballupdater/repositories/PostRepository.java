@@ -18,6 +18,7 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
     List<Post> findAllByOrderByDateGeneratedDesc(Pageable pageable);
 
     List<Post> findByPostedStatus(boolean postedStatus);
+
     List<Post> findByPostedStatusOrderByDateGeneratedDesc(boolean postedStatus, Pageable pageable);
 
     @Modifying

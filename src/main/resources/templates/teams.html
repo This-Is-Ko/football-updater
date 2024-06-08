@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-    <head th:insert="~{fragments/head.html :: head (title='Football Updater | Team Hashtags')}">
+    <head th:insert="~{fragments/head.html :: head (title='Football Updater | Teams')}">
     </head>
     <body>
         <div class="container">
@@ -11,30 +11,30 @@
             <div class="table-responsive">
                 <table class="table table-bordered">
                     <thead>
-                    <tr>
-                        <th>Team</th>
-                        <th>Hashtags</th>
-                        <th>Alt. Names</th>
-                        <th>Logo</th>
-                        <th>ID</th>
-                    </tr>
+                        <tr>
+                            <th>Team</th>
+                            <th>Hashtags</th>
+                            <th>Alt. Names</th>
+                            <th>Logo</th>
+                            <th>ID</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="team : ${data.teams}">
-                        <td th:text="${team.name}"></td>
-                        <td>
-                            <ul th:each="hashtag : ${team.additionalHashtags}">
-                                <li th:text="${hashtag.value}"></li>
-                            </ul>
-                        </td>
-                        <td>
-                            <ul th:each="altTeamNames : ${team.alternativeTeamNames}">
-                                <li th:text="${altTeamNames.value}"></li>
-                            </ul>
-                        </td>
-                        <td th:text="${team.logoFileName}"></td>
-                        <td th:text="${team.id}"></td>
-                    </tr>
+                        <tr th:each="team : ${data.teams}">
+                            <td th:text="${team.name}"></td>
+                            <td>
+                                <ul th:each="hashtag : ${team.additionalHashtags}">
+                                    <li th:text="${hashtag.value}"></li>
+                                </ul>
+                            </td>
+                            <td>
+                                <ul th:each="altTeamNames : ${team.alternativeTeamNames}">
+                                    <li th:text="${altTeamNames.value}"></li>
+                                </ul>
+                            </td>
+                            <td th:text="${team.logoFileName}"></td>
+                            <td th:text="${team.id}"></td>
+                        </tr>
                     </tbody>
                 </table>
             </div>

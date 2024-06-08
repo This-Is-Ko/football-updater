@@ -81,7 +81,7 @@ public class AmazonS3ServiceTest {
 
         verify(s3Client, times(2)).putObject(any(PutObjectRequest.class));
 
-        verify(post, times(4)).getImagesUrls();
+        verify(post, times(6)).getImagesUrls();
         assertEquals(2, post.getImagesUrls().size());
     }
 

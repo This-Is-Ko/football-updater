@@ -158,7 +158,11 @@ public class PostService {
 
         // Update existing post type to reflect new type
         Post post = postSearchResult.get();
-        post.setPostType(PostType.STANDOUT_STATS_POST);
+        if (PostType.SUMMARY_POST.equals(post.getPostType())) {
+            post.setPostType(PostType.SUMMARY_WITH_STANDOUT_IMAGE_POST);
+        } else {
+            post.setPostType(PostType.STANDOUT_STATS_POST);
+        }
         post.setImagesUrls(new ArrayList<>(post.getImagesUrls()));
 
         // Only use selected stats
