@@ -18,5 +18,6 @@ public class AddTeamRequest {
     private ArrayList<String> alternativeNames;
     private ArrayList<String> additionalHashtags;
     private Boolean populatePlayers;
+    private String logoFileName;
 
 }
