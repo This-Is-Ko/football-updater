@@ -168,7 +168,7 @@ public class PostViewController {
             prepareStandoutImageForm.setError(ex.getMessage());
             model.addAttribute("form", prepareStandoutImageForm);
             model.addAttribute("prepareStandoutImageForm", prepareStandoutImageForm);
-            return "redirect:/posts/prepare?postId=" + prepareStandoutImageForm.getPostId();
+            return "redirect:/posts/prepare-standout-image?postId=" + prepareStandoutImageForm.getPostId();
         }
     }
 

@@ -82,7 +82,7 @@ public class ParsingServiceTest {
     }
 
     @Test
-    void testParsePlayerMatchData_MultipleDataSourcesAvailable_Successful() {
+    void testParsePlayerMatchData_MultipleDataSourcesAvailable_Successful() throws InterruptedException {
         // Priority FOTMOB, FBREF
         // return FOTMOB successful
         Set<DataSource> dataSources = new HashSet<>();
@@ -97,7 +97,7 @@ public class ParsingServiceTest {
     }
 
     @Test
-    void testParsePlayerMatchData_MultipleDataSourcesAvailableForPlayer_DifferentOrder_Successful() {
+    void testParsePlayerMatchData_MultipleDataSourcesAvailableForPlayer_DifferentOrder_Successful() throws InterruptedException {
         // Priority FOTMOB, FBREF
         // User datasource order is FBREF, FOTMOB
         // return FOTMOB successful
@@ -114,7 +114,7 @@ public class ParsingServiceTest {
 
 
     @Test
-    void testParsePlayerMatchData_MultipleDataSourcesAvailable_DifferentPriorityOrder_Successful() {
+    void testParsePlayerMatchData_MultipleDataSourcesAvailable_DifferentPriorityOrder_Successful() throws InterruptedException {
         dataSourcePriority = new ArrayList<>(){{
             add(DataSourceSiteName.FBREF);
             add(DataSourceSiteName.FOTMOB);
@@ -134,7 +134,7 @@ public class ParsingServiceTest {
     }
 
     @Test
-    void testParsePlayerMatchData_OneDataSourceAvailable_FOTMOB_Successful() {
+    void testParsePlayerMatchData_OneDataSourceAvailable_FOTMOB_Successful() throws InterruptedException {
         // Priority FOTMOB, FBREF
         // User datasource order is FOTMOB
         // return FOTMOB successful
@@ -149,7 +149,7 @@ public class ParsingServiceTest {
     }
 
     @Test
-    void testParsePlayerMatchData_OneDataSourcesAvailable_FBREF_Successful() {
+    void testParsePlayerMatchData_OneDataSourcesAvailable_FBREF_Successful() throws InterruptedException {
         // Priority FOTMOB, FBREF
         // User datasource order is FBREF
         // return FBREF successful
@@ -164,7 +164,7 @@ public class ParsingServiceTest {
     }
 
     @Test
-    void testParsePlayerMatchData_MultipleDataSourcesAvailable_PriorityFails_Fallback_Successful() {
+    void testParsePlayerMatchData_MultipleDataSourcesAvailable_PriorityFails_Fallback_Successful() throws InterruptedException {
         when(fotmobDataSource.parsePlayerMatchData(any(Player.class), any(Document.class), anyString(), anyBoolean())).thenReturn(null);
         // Priority FOTMOB, FBREF
         // FOTMOB failes, fallback to FBREF
@@ -181,7 +181,7 @@ public class ParsingServiceTest {
     }
 
     @Test
-    void testParsePlayerMatchData_NoDataSource_Unsuccessful() {
+    void testParsePlayerMatchData_NoDataSource_Unsuccessful() throws InterruptedException {
         // Priority FOTMOB, FBREF
         // return null
         Set<DataSource> dataSources = new HashSet<>();
@@ -193,7 +193,7 @@ public class ParsingServiceTest {
     }
 
     @Test
-    void testParsePlayerMatchData_MultipleDataSourcesAvailable_AllDataSourcesFail_Unsuccessful() {
+    void testParsePlayerMatchData_MultipleDataSourcesAvailable_AllDataSourcesFail_Unsuccessful() throws InterruptedException {
         when(fotmobDataSource.parsePlayerMatchData(any(Player.class), any(Document.class), anyString(), anyBoolean())).thenReturn(null);
         when(fbrefDataSource.parsePlayerMatchData(any(Player.class), any(Document.class), anyString(), anyBoolean())).thenReturn(null);
         // Priority FOTMOB, FBREF
@@ -210,7 +210,7 @@ public class ParsingServiceTest {
     }
 
     @Test
-    void testParsePlayerMatchData_ErrorFromJsoupConnect_AllDataSources_Unsuccessful() throws IOException {
+    void testParsePlayerMatchData_ErrorFromJsoupConnect_AllDataSources_Unsuccessful() throws IOException, InterruptedException {
         Connection newConnection = mock(Connection.class);
         when(Jsoup.connect(anyString())).thenReturn(newConnection);
         when(newConnection.ignoreContentType(anyBoolean())).thenReturn(newConnection);

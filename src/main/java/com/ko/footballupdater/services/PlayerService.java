@@ -111,7 +111,7 @@ public class PlayerService {
         return playerRepository.findAll();
     }
 
-    public UpdatePlayersResponse updateDataForAllPlayers() {
+    public UpdatePlayersResponse updateDataForAllPlayers() throws InterruptedException {
         // Find latest match data for each player
         Iterator<Player> playerIterator = playerRepository.findAll().iterator();
         List<Player> requestPlayersToUpdate = new ArrayList<>();
@@ -124,7 +124,7 @@ public class PlayerService {
         return updateDataForPlayers(requestPlayersToUpdate);
     }
 
-    public UpdatePlayersResponse updateDataForPlayer(Integer playerId) throws NotFoundException {
+    public UpdatePlayersResponse updateDataForPlayer(Integer playerId) throws NotFoundException, InterruptedException {
         // Find latest match data for individual player
         Optional<Player> requestPlayersToUpdate = playerRepository.findById(playerId);
         if (requestPlayersToUpdate.isEmpty()) {
@@ -133,7 +133,7 @@ public class PlayerService {
         return updateDataForPlayers(requestPlayersToUpdate.stream().toList());
     }
 
-    public UpdatePlayersResponse updateDataForPlayers(List<Player> requestPlayersToUpdate) {
+    public UpdatePlayersResponse updateDataForPlayers(List<Player> requestPlayersToUpdate) throws InterruptedException {
         UpdatePlayersResponse response = new UpdatePlayersResponse();
 
         // Find latest match data for each player

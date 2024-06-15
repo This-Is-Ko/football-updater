@@ -156,6 +156,8 @@ public class PlayerServiceTest {
             playerService.updateDataForPlayer(playerId);
         } catch (NotFoundException e) {
             assertEquals("Player name not found", e.getErrorMessage());
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -245,7 +247,7 @@ public class PlayerServiceTest {
     }
 
     @Test
-    public void updateDataForPlayers_onePlayer_parsingFailed_noPlayersUpdated() {
+    public void updateDataForPlayers_onePlayer_parsingFailed_noPlayersUpdated() throws InterruptedException {
         List<Player> players = new ArrayList<>();
         Integer playerId = 1;
         Player playerToUpdate = new Player("Player1");
@@ -341,7 +343,7 @@ public class PlayerServiceTest {
     }
 
     @Test
-    public void updateDataForPlayers_multiplePlayers_parsingForAllFailed_noPlayersUpdated() {
+    public void updateDataForPlayers_multiplePlayers_parsingForAllFailed_noPlayersUpdated() throws InterruptedException {
         // Both players fail to parse
         List<Player> players = new ArrayList<>();
         Player playerToUpdate1 = new Player("Player1");

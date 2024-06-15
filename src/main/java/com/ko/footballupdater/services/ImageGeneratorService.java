@@ -163,6 +163,9 @@ public class ImageGeneratorService {
         BufferedImage background;
         float scale = 1;
 
+        if (downloadedImage == null) {
+            throw new IOException(String.format("Downloaded image is missing - image from %s", imageUrl));
+        }
         // Landscape image
         if (downloadedImage.getWidth() >= downloadedImage.getHeight()) {
             // Scale image down to height of 1000 - change width proportionally
