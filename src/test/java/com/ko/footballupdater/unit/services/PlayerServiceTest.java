@@ -237,7 +237,7 @@ public class PlayerServiceTest {
     }
 
     @Test
-    public void updateDataForPlayers_noPlayersToUpdate_returnEmptyResponse() {
+    public void updateDataForPlayers_noPlayersToUpdate_returnEmptyResponse() throws InterruptedException {
         List<Player> noPlayers = new ArrayList<>();
         UpdatePlayersResponse response = playerService.updateDataForPlayers(noPlayers);
 
