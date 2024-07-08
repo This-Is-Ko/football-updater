@@ -392,9 +392,11 @@ public class ImageGeneratorService {
             image = setUpBaseImageWithBackgroundImageUrl(backgroundImageGenParams);
 
             // Add individual player stats
+            log.atInfo().setMessage("Adding player stats to summary image").log();
             List<BufferedImage> outputImages = summaryDrawPlayerStats(image, playerPosts);
 
             // Add side image
+            log.atInfo().setMessage("Adding side image to summary image").log();
             summaryDrawSideImage(outputImages, imageGenParams);
 
             // Save the modified image
@@ -677,12 +679,13 @@ public class ImageGeneratorService {
 
         // Crop image
         int horizontalOffset = (imageGenParams.getImageHorizontalOffset() != null ? imageGenParams.getImageHorizontalOffset() : 0);
-        BufferedImage croppedImage = downloadedImage.getSubimage(horizontalOffset, 0, 1000 - statsDrawingAreaWidth, 1000);
+        BufferedImage croppedImage = scaledImage.getSubimage(horizontalOffset, 0, 1000 - statsDrawingAreaWidth, 1000);
 
         for (BufferedImage image : outputImages) {
             Graphics2D imageGraphics = image.createGraphics();
             imageGraphics.drawImage(croppedImage, statsDrawingAreaWidth, 0, null);
             imageGraphics.dispose();
+            log.atInfo().setMessage("Added side image to summary image").log();
         }
     }
 

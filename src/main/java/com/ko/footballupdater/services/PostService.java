@@ -3,6 +3,7 @@ package com.ko.footballupdater.services;
 
 import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.exceptions.GenerateStandoutPostException;
+import com.ko.footballupdater.exceptions.GenerateSummaryPostException;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.PostType;
@@ -209,7 +210,7 @@ public class PostService {
         });
 
         if (postsToInclude.isEmpty()) {
-            throw new GenerateStandoutPostException("No posts selected to use for generating summary post");
+            throw new GenerateSummaryPostException("No posts selected to use for generating summary post");
         }
 
         // Group players into teams
@@ -218,7 +219,12 @@ public class PostService {
                 .sorted(Comparator.comparing(post -> post.getPlayer().getTeam().getName()))
                 .collect(Collectors.toList());
 
+        if (sortedPostsByTeam.isEmpty()) {
+            throw new GenerateSummaryPostException("No posts left to use for generating summary post after filtering");
+        }
+
         try {
+            log.atInfo().setMessage(String.format("%d players have been selected to add into summary image", sortedPostsByTeam.size())).log();
             // Generate summary image using selected posts
             imageGeneratorService.generateSummaryImage(summaryPost, sortedPostsByTeam, prepareSummaryPostDto.getImageGenParams());
             // Upload images to s3
@@ -230,7 +236,7 @@ public class PostService {
             log.atInfo().setMessage("Successfully created summary image and saved").log();
         } catch (Exception ex) {
             log.atWarn().setMessage("Something went wrong while summary post").setCause(ex).log();
-            throw new GenerateStandoutPostException("Something went wrong while creating summary post: " + ex.getMessage());
+            throw new GenerateSummaryPostException("Something went wrong while creating summary post: " + ex.getMessage());
         }
     }
 
