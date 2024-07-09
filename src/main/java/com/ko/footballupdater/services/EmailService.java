@@ -47,11 +47,12 @@ public class EmailService {
         StringBuilder emailContent = new StringBuilder();
         for (Post postHolder : posts) {
             emailContent.append("############").append(postHolder.getPlayer().getName()).append(" - ").append(postHolder.getPlayerMatchPerformanceStats().getDataSourceSiteName().toString()).append(" - ").append(DateTimeHelper.getDateAsFormattedString(postHolder.getPlayerMatchPerformanceStats().getMatch().getDate())).append("############\n\n");
-            emailContent.append(postHolder.getCaption()).append("\n\n");
-            if (!postHolder.getImagesUrls().isEmpty()) {
-                emailContent.append("Stat image(s)\n").append(PostHelper.generateS3UrlList(postHolder)).append("\n");
-            }
-            emailContent.append("Google image search links\n").append(postHolder.getImageSearchUrls()).append("\n\n\n");
+//            emailContent.append(postHolder.getCaption()).append("\n\n");
+//            if (!postHolder.getImagesUrls().isEmpty()) {
+//                emailContent.append("Stat image(s)\n").append(PostHelper.generateS3UrlList(postHolder)).append("\n");
+//            }
+//            emailContent.append("Google image search links\n").append(postHolder.getImageSearchUrls()).append("\n\n\n");
+            emailContent.append("\n\n\n");
 
             // Add images to attachment - config driven
             if (mailerProperties.isAttachImages()) {
