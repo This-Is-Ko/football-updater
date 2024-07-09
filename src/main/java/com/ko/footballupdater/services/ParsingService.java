@@ -67,6 +67,7 @@ public class ParsingService {
                             log.atWarn().setMessage("Unable to retrieve page at " + dataSource.getUrl()).setCause(ex).addKeyValue("player", player.getName()).log();
                             if (ex.getStatusCode() == 429) {
                                 // Sleep for longer
+                                log.atInfo().setMessage("Added wait time of 15 sec").addKeyValue("player", player.getName()).log();
                                 TimeUnit.SECONDS.sleep(15);
                             }
                             return null;
