@@ -67,7 +67,7 @@ public class ParsingService {
                             log.atWarn().setMessage("Unable to retrieve page at " + dataSource.getUrl()).setCause(ex).addKeyValue("player", player.getName()).log();
                             if (ex.getStatusCode() == 429) {
                                 // Sleep for longer
-                                TimeUnit.SECONDS.sleep(5);
+                                TimeUnit.SECONDS.sleep(15);
                             }
                             return null;
                         } catch (IOException ex) {
