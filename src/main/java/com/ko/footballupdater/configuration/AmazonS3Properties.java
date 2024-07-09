@@ -34,6 +34,9 @@ public class AmazonS3Properties {
 
     private String objectKeyPrefix;
 
+    @NotNull
+    private String environment;
+
     @Bean
     public AmazonS3 s3Client() {
         // Set up S3 client

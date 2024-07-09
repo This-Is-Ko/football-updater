@@ -10,7 +10,7 @@ public class LogHelper {
         String subject;
         if (post != null && (PostType.ALL_STAT_POST.equals(post.getPostType()) || PostType.STANDOUT_STATS_POST.equals(post.getPostType()))) {
             subject = post.getPlayer().getName();
-        } else if (post.getPostType() != null) {
+        } else if (post != null && post.getPostType() != null) {
             subject = post.getPostType().toString();
         } else {
             subject = "generic_post";

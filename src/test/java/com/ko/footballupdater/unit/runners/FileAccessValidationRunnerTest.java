@@ -66,7 +66,7 @@ class FileAccessValidationRunnerTest {
         when(validFile1.canRead()).thenReturn(true);
         when(validFile2.canRead()).thenReturn(true);
 
-        fileAccessValidationRunner.validateFileAccess(directory);
+        fileAccessValidationRunner.validateFileAccess();
 
         List<ILoggingEvent> logsList = listAppender.list;
         assertEquals("Found 2 files in input directory: src/test/resources/input", logsList.get(0).getMessage());
@@ -90,7 +90,7 @@ class FileAccessValidationRunnerTest {
         when(validFile1.canRead()).thenReturn(true);
 
 
-        fileAccessValidationRunner.validateFileAccess(directory);
+        fileAccessValidationRunner.validateFileAccess();
 
         List<ILoggingEvent> logsList = listAppender.list;
         assertEquals("Found 1 files in input directory: src/test/resources/input", logsList.get(0).getMessage());
@@ -121,7 +121,7 @@ class FileAccessValidationRunnerTest {
         when(validFile1.canRead()).thenReturn(false);
         when(validFile2.canRead()).thenReturn(false);
 
-        fileAccessValidationRunner.validateFileAccess(directory);
+        fileAccessValidationRunner.validateFileAccess();
 
         List<ILoggingEvent> logsList = listAppender.list;
         assertEquals("Found 2 files in input directory: src/test/resources/input", logsList.get(0).getMessage());

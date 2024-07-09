@@ -4,7 +4,11 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.ListObjectsV2Request;
+import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.ko.footballupdater.configuration.AmazonS3Properties;
 import com.ko.footballupdater.configuration.ImageGeneratorProperties;
 import com.ko.footballupdater.models.Post;
@@ -45,7 +49,7 @@ public class AmazonS3Service {
                     String filePath = imageGeneratorProperties.getOutputPath() + "/" + imageFileName;
                     File file = new File(filePath);
                     // Save to specific path/key prefix if configured
-                    String imageKey = amazonS3Properties.getObjectKeyPrefix() != null ? amazonS3Properties.getObjectKeyPrefix() + imageFileName : imageFileName;
+                    String imageKey = amazonS3Properties.getObjectKeyPrefix() != null ? amazonS3Properties.getEnvironment() + "/" + amazonS3Properties.getObjectKeyPrefix() + imageFileName : imageFileName;
                     PutObjectRequest request = new PutObjectRequest(amazonS3Properties.getBucketName(), imageKey, file)
                             .withCannedAcl(CannedAccessControlList.PublicRead);
                     s3Client.putObject(request);
@@ -82,6 +86,27 @@ public class AmazonS3Service {
             }
         } else {
             log.atInfo().setMessage(post.getPlayer().getName() + " - No images to upload").log();
+        }
+    }
+
+    public void listFilesInS3BucketFolder(String folderPath) {
+        try {
+            ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
+            listObjectsV2Request.setBucketName(amazonS3Properties.getBucketName());
+            listObjectsV2Request.withPrefix(amazonS3Properties.getEnvironment() + folderPath);
+
+            ListObjectsV2Result listObjectsV2Result;
+            do {
+                listObjectsV2Result = s3Client.listObjectsV2(listObjectsV2Request);
+                for (S3ObjectSummary s3ObjectSummary : listObjectsV2Result.getObjectSummaries()) {
+                    log.atInfo().setMessage(" - " + s3ObjectSummary.getKey()).log();
+                }
+                // If there are more than maxKeys keys in the bucket, get a continuation token
+                String token = listObjectsV2Result.getNextContinuationToken();
+                listObjectsV2Request.setContinuationToken(token);
+            } while (listObjectsV2Result.isTruncated());
+        } catch (Exception e) {
+            log.atInfo().setCause(e).log();
         }
     }
 

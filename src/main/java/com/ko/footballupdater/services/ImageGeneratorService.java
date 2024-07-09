@@ -32,6 +32,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.ko.footballupdater.utils.ImageGeneratorConstants.ASSIST_ICON_FILE_NAME;
+import static com.ko.footballupdater.utils.ImageGeneratorConstants.BASE_IMAGE_DIRECTORY;
+import static com.ko.footballupdater.utils.ImageGeneratorConstants.BASE_IMAGE_FILE_NAME;
+import static com.ko.footballupdater.utils.ImageGeneratorConstants.GOAL_ICON_FILE_NAME;
+import static com.ko.footballupdater.utils.ImageGeneratorConstants.ICON_DIRECTORY;
+import static com.ko.footballupdater.utils.ImageGeneratorConstants.RED_CARD_ICON_FILE_NAME;
+import static com.ko.footballupdater.utils.ImageGeneratorConstants.STANDOUT_BASE_IMAGE_FILE_NAME;
+import static com.ko.footballupdater.utils.ImageGeneratorConstants.STAT_Y_COORDINATE;
+import static com.ko.footballupdater.utils.ImageGeneratorConstants.TEAM_LOGO_DIRECTORY;
+import static com.ko.footballupdater.utils.ImageGeneratorConstants.YELLOW_CARD_ICON_FILE_NAME;
+
 @Slf4j
 @Service
 public class ImageGeneratorService {
@@ -44,18 +55,9 @@ public class ImageGeneratorService {
 
     @Autowired
     private TeamProperties teamProperties;
-
-    private final int STAT_Y_COORDINATE = 350;
-    private final String BASE_IMAGE_FILE_NAME = "_base_player_stat_image.jpg";
-    private final String STANDOUT_BASE_IMAGE_FILE_NAME = "_standout_base_player_stat_image.jpg";
-    private final String TEAM_LOGO_DIRECTORY = "/team-logos";
-    private final String ICON_DIRECTORY = "/icons";
-    private final String GOAL_ICON_FILE_NAME = "goal_icon.png";
-    private final String ASSIST_ICON_FILE_NAME = "assist_icon.png";
-    private final String YELLOW_CARD_ICON_FILE_NAME = "yellow_card_icon.png";
-    private final String RED_CARD_ICON_FILE_NAME = "red_card_icon.png";
-    private Map<String, BufferedImage> teamLogoCache = new HashMap<>();
-    private Map<String, BufferedImage> iconCache = new HashMap<>();
+    private final Map<String, BufferedImage> teamLogoCache = new HashMap<>();
+    private final Map<String, BufferedImage> iconCache = new HashMap<>();
+    private final Map<String, BufferedImage> baseImageCache = new HashMap<>();
 
     public void generatePlayerStatImage(Post post) throws Exception {
         if (!imageGeneratorProperties.isEnabled()) {
@@ -64,35 +66,32 @@ public class ImageGeneratorService {
 
         try {
             // Load the base image - priority order:
-
-            // 1. Team specific image base
-            // 2. Player specific image base
-            // 3. Generic image base
+            // 1. Team specific base image
+            // 2. Player specific base image
+            // 3. Generic base image
             BufferedImage image = null;
-            String selectedBaseImageFilePath = null;
+            BufferedImage selectedBaseImage = null;
             try {
                 if (post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null) {
-                    String teamSpecificPlayerImageBaseFilePath = imageGeneratorProperties.getInputPath() + post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() + "/" + post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME;
-                    image = loadImage(teamSpecificPlayerImageBaseFilePath);
-                    selectedBaseImageFilePath = teamSpecificPlayerImageBaseFilePath;
+                    image = getImageUsingCache(post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME, imageGeneratorProperties.getExternalImageStoreUri() + BASE_IMAGE_DIRECTORY + imageGeneratorProperties.getInputPath() + post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam().replaceAll(" ", "") + "/", baseImageCache);
+                    selectedBaseImage = image;
                 }
-            } catch (IOException ex) {
+            } catch (IOException | IllegalArgumentException ex) {
                 log.atDebug().setMessage("No team specific base image found" + post.getPlayer().getName()).log();
             }
 
             if (image == null) {
                 // Use default base image for player
                 try {
-                    String playerImageBaseFilePath = imageGeneratorProperties.getInputPath() + "/" + post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME;
-                    image = loadImage(playerImageBaseFilePath);
-                    selectedBaseImageFilePath = playerImageBaseFilePath;
+                    image = getImageUsingCache(post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME, imageGeneratorProperties.getExternalImageStoreUri() + BASE_IMAGE_DIRECTORY + imageGeneratorProperties.getInputPath() + "/", baseImageCache);
+                    selectedBaseImage = image;
                 } catch (IOException ex) {
                     log.atDebug().setMessage("No player base image found" + post.getPlayer().getName()).log();
                 }
                 if (image == null) {
-                    String genericPlayerImageBaseFilePath = imageGeneratorProperties.getInputPath() + "/" + imageGeneratorProperties.getGenericBaseImageFile();
-                    image = loadImage(genericPlayerImageBaseFilePath);
-                    selectedBaseImageFilePath = genericPlayerImageBaseFilePath;
+                    // Generic base image
+                    image = getImageUsingCache(imageGeneratorProperties.getGenericBaseImageFile(), imageGeneratorProperties.getExternalImageStoreUri() + BASE_IMAGE_DIRECTORY + imageGeneratorProperties.getInputPath() + "/", baseImageCache);
+                    selectedBaseImage = image;
                 }
             }
 
@@ -108,9 +107,11 @@ public class ImageGeneratorService {
             int attributeCounter = 0;
             int createdImageCounter = 0;
             for (Field field : post.getPlayerMatchPerformanceStats().getClass().getDeclaredFields()) {
-                field.setAccessible(true); // Make the private field accessible
+                // Make the private field accessible
+                field.setAccessible(true);
                 try {
-                    Object value = field.get(post.getPlayerMatchPerformanceStats()); // Get the field's value
+                    // Get the field's value
+                    Object value = field.get(post.getPlayerMatchPerformanceStats());
                     // Only use stat values which are populated and filter select stats if they are NOT zero
                     if (value != null && !field.getName().equals("match") && !field.getName().equals("dataSourceSiteName")) {
                         List<String> zeroValueFilter = getZeroValueFilter();
@@ -130,7 +131,7 @@ public class ImageGeneratorService {
                         if (attributeCounter % 12 == 0) {
                             createdImageCounter++;
                             saveImage(post, image, generateFileName(post, createdImageCounter, PostType.ALL_STAT_POST), createdImageCounter);
-                            image = loadImage(selectedBaseImageFilePath);
+                            image = selectedBaseImage;
                             drawAllStatsPlayerName(image, post);
                             graphics = setUpStatsGraphicsDefaults(image);
                             statY = STAT_Y_COORDINATE;
@@ -722,10 +723,13 @@ public class ImageGeneratorService {
         // Download image and store in cache
         if (cachedImage == null) {
             URL imageUrl = URI.create(fileLocation + fileName).toURL();
+            log.atInfo().setMessage("Attempting to retrieve image - " + imageUrl).log();
             cachedImage = ImageIO.read(imageUrl);
             if (cache != null) {
                 cache.put(fileName, cachedImage);
             }
+        } else {
+            log.atInfo().setMessage("Using image in cache - " + fileName).log();
         }
         return cachedImage;
     }
