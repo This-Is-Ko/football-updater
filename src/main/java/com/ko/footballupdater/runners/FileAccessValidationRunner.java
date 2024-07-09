@@ -28,11 +28,11 @@ public class FileAccessValidationRunner implements ApplicationRunner {
     }
 
     public void validateFileAccess() {
-        log.atInfo().setMessage("S3 Bucket path " + BASE_IMAGE_DIRECTORY + " contains the following: ").log();
+        log.atInfo().setMessage("S3 Bucket path " + BASE_IMAGE_DIRECTORY + " contains the following:").log();
         amazonS3Service.listFilesInS3BucketFolder(BASE_IMAGE_DIRECTORY + imageGeneratorProperties.getInputPath() + "/");
-        log.atInfo().setMessage("S3 Bucket path " + TEAM_LOGO_DIRECTORY + " contains the following: ").log();
+        log.atInfo().setMessage("S3 Bucket path " + TEAM_LOGO_DIRECTORY + " contains the following:").log();
         amazonS3Service.listFilesInS3BucketFolder(TEAM_LOGO_DIRECTORY + "/");
-        log.atInfo().setMessage("S3 Bucket path " + ICON_DIRECTORY + " contains the following: ").log();
+        log.atInfo().setMessage("S3 Bucket path " + ICON_DIRECTORY + " contains the following:").log();
         amazonS3Service.listFilesInS3BucketFolder(ICON_DIRECTORY + "/");
     }
 }

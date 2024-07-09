@@ -106,7 +106,7 @@ public class AmazonS3Service {
                 listObjectsV2Request.setContinuationToken(token);
             } while (listObjectsV2Result.isTruncated());
         } catch (Exception e) {
-            log.atInfo().setCause(e).log();
+            log.atError().setMessage("Unable to list files in S3 bucket").setCause(e).log();
         }
     }
 
