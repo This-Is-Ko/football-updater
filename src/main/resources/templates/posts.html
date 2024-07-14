@@ -8,6 +8,10 @@
             <br>
             <h2>Latest Posts</h2>
             <br>
+                <div th:if="${message}" th:classappend="${messageType == 'success' ? 'success-message' : 'error-message'}">
+                    <p th:text="${message}"></p>
+                </div>
+            <br>
             <div class="d-flex flex-row justify-content-between">
                 <a th:if="${param.postedStatus == null}" class="btn btn-secondary btn-sm action-button" th:href="@{/posts?postedStatus=false}">Filter not posted only</a>
                 <a th:if="${param.postedStatus != null}" class="btn btn-secondary btn-sm action-button" th:href="@{/posts}">No filter</a>

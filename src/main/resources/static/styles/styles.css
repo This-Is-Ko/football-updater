@@ -9,3 +9,6 @@
 .text-input-container            { margin-bottom: 10px }
 
 .hide                            { display:none }
+
+.success-message                 { color: green; }
+.error-message                   { color: red; }

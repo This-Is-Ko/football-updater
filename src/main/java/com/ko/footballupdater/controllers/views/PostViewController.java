@@ -12,6 +12,7 @@ import com.ko.footballupdater.models.form.UploadPostDto;
 import com.ko.footballupdater.services.FacebookApiService;
 import com.ko.footballupdater.services.PlayerService;
 import com.ko.footballupdater.services.PostService;
+import com.ko.footballupdater.utils.MessageType;
 import com.ko.footballupdater.utils.PostHelper;
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -123,14 +125,17 @@ public class PostViewController {
      * @return create post page
      */
     @PostMapping("/create/submit")
-    public String submitCreatePost(@ModelAttribute CreatePostDto createPostDto) {
+    public String submitCreatePost(@ModelAttribute CreatePostDto createPostDto, RedirectAttributes redirectAttributes) {
         try {
             postService.createPost(createPostDto);
+            redirectAttributes.addFlashAttribute("message", "Post created successfully!");
+            redirectAttributes.addFlashAttribute("messageType", MessageType.SUCCESS.getType());
             return "redirect:/posts";
         } catch (Exception ex) {
             log.atError().setMessage("Create post submit failed").setCause(ex).log();
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Create post submit failed", ex);
+            redirectAttributes.addFlashAttribute("message", "Post creation failed! - " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", MessageType.ERROR.getType());
+            return "redirect:/posts";
         }
     }
 
@@ -156,18 +161,22 @@ public class PostViewController {
      * @return redirect to posts view
      */
     @PostMapping("/generate")
-    public String generatePost(Model model, @ModelAttribute PrepareStandoutImageDto prepareStandoutImageForm, BindingResult result) {
+    public String generatePost(Model model, @ModelAttribute PrepareStandoutImageDto prepareStandoutImageForm, BindingResult result, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             return "redirect:/posts";
         }
         try {
             postService.generateStandoutPost(prepareStandoutImageForm);
+            redirectAttributes.addFlashAttribute("message", "Post image generate successfully!");
+            redirectAttributes.addFlashAttribute("messageType", MessageType.SUCCESS.getType());
             return "redirect:/posts";
         } catch (Exception ex) {
             log.atError().setMessage("Updating post status failed").setCause(ex).log();
             prepareStandoutImageForm.setError(ex.getMessage());
             model.addAttribute("form", prepareStandoutImageForm);
             model.addAttribute("prepareStandoutImageForm", prepareStandoutImageForm);
+            redirectAttributes.addFlashAttribute("message", "Post image generate failed - " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", MessageType.ERROR.getType());
             return "redirect:/posts/prepare-standout-image?postId=" + prepareStandoutImageForm.getPostId();
         }
     }
@@ -199,18 +208,22 @@ public class PostViewController {
      * @return redirect to posts view
      */
     @PostMapping("/generate/summary")
-    public String generateSummaryPost(Model model, @ModelAttribute PrepareSummaryPostDto prepareSummaryPostDto, BindingResult result) {
+    public String generateSummaryPost(Model model, @ModelAttribute PrepareSummaryPostDto prepareSummaryPostDto, BindingResult result, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             return "redirect:/posts";
         }
         try {
             postService.generateSummaryPost(prepareSummaryPostDto);
+            redirectAttributes.addFlashAttribute("message", "Summary image generated successfully!");
+            redirectAttributes.addFlashAttribute("messageType", MessageType.SUCCESS.getType());
             return "redirect:/posts";
         } catch (Exception ex) {
             log.atError().setMessage("Updating post status failed").setCause(ex).log();
             prepareSummaryPostDto.setError(ex.getMessage());
             model.addAttribute("form", prepareSummaryPostDto);
             model.addAttribute("prepareStandoutImageForm", prepareSummaryPostDto);
+            redirectAttributes.addFlashAttribute("message", "Summary image generate failed! - " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", MessageType.ERROR.getType());
             return "redirect:/posts";
         }
     }
@@ -220,7 +233,7 @@ public class PostViewController {
      * @return redirect to upload post view
      */
     @GetMapping("/prepare-upload")
-    public String prepareUploadPost(Model model, @RequestParam Integer postId) {
+    public String prepareUploadPost(Model model, @RequestParam Integer postId, RedirectAttributes redirectAttributes) {
         try {
             UploadPostDto uploadPostDto = new UploadPostDto();
             uploadPostDto.setPost(postService.getPostById(postId));
@@ -236,6 +249,8 @@ public class PostViewController {
             return "uploadPost";
         } catch (Exception ex) {
             log.atError().setMessage("Preparing post to upload").setCause(ex).log();
+            redirectAttributes.addFlashAttribute("message", "Getting post info failed! - " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", MessageType.ERROR.getType());
             return "redirect:/posts";
         }
     }
@@ -245,15 +260,19 @@ public class PostViewController {
      * @return redirect to posts view
      */
     @PostMapping("/upload")
-    public String uploadPost(Model model, @ModelAttribute UploadPostDto uploadPostForm, BindingResult result) {
+    public String uploadPost(Model model, @ModelAttribute UploadPostDto uploadPostForm, BindingResult result, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             return "redirect:/posts";
         }
         try {
             postService.uploadPost(uploadPostForm);
+            redirectAttributes.addFlashAttribute("message", "Upload completed successfully!");
+            redirectAttributes.addFlashAttribute("messageType", MessageType.SUCCESS.getType());
             return "redirect:/posts";
         } catch (Exception ex) {
             log.atError().setMessage("Updating post status failed").setCause(ex).log();
+            redirectAttributes.addFlashAttribute("message", "Uploading to Instagram failed! - " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", MessageType.ERROR.getType());
             return "redirect:/posts";
         }
     }
@@ -263,12 +282,16 @@ public class PostViewController {
      * @return redirect to upload post view
      */
     @GetMapping("/check-for-new")
-    public String checkForNewPosts(Model model) {
+    public String checkForNewPosts(Model model, RedirectAttributes redirectAttributes) {
         try {
             playerService.updateDataForAllPlayers();
+            redirectAttributes.addFlashAttribute("message", "Checking new player data completed successfully!");
+            redirectAttributes.addFlashAttribute("messageType", MessageType.SUCCESS.getType());
             return "redirect:/posts";
         } catch (Exception ex) {
             log.atError().setMessage("Force updating players failed").setCause(ex).log();
+            redirectAttributes.addFlashAttribute("message", "Checking new player data failed! - " + ex.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", MessageType.ERROR.getType());
             return "redirect:/posts";
         }
     }

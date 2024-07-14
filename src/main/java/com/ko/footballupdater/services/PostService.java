@@ -213,10 +213,25 @@ public class PostService {
             throw new GenerateSummaryPostException("No posts selected to use for generating summary post");
         }
 
+        // Set relevantTeam if not set
+        for (Post post : postsToInclude) {
+            if (post.getPlayerMatchPerformanceStats() != null
+                    && post.getPlayerMatchPerformanceStats().getMatch() != null
+                    && post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() == null
+                    && post.getPlayer() != null
+                    && post.getPlayer().getTeam() != null) {
+
+                String teamName = post.getPlayer().getTeam().getName();
+                post.getPlayerMatchPerformanceStats().getMatch().setRelevantTeam(teamName);
+            }
+        }
+
         // Group players into teams
         List<Post> sortedPostsByTeam = postsToInclude.stream()
-                .filter(post -> post.getPlayer() != null && post.getPlayer().getTeam() != null)
-                .sorted(Comparator.comparing(post -> post.getPlayer().getTeam().getName()))
+                .filter(post -> post.getPlayerMatchPerformanceStats() != null
+                        && post.getPlayerMatchPerformanceStats().getMatch() != null
+                        && post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null)
+                .sorted(Comparator.comparing(post -> post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam()))
                 .collect(Collectors.toList());
 
         if (sortedPostsByTeam.isEmpty()) {

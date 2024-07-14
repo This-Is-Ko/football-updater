@@ -172,9 +172,11 @@ public class PlayerService {
             }
             posts.add(post);
         }
+        log.atInfo().setMessage("Updating all players completed").log();
 
         // No updates
         if (posts.isEmpty()) {
+            log.atInfo().setMessage("No posts created").log();
             return response;
         }
 
@@ -200,6 +202,4 @@ public class PlayerService {
         response.setNumPlayersUpdated(playersToUpdate.size());
         return response;
     }
-
-
 }
