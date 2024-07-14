@@ -32,6 +32,7 @@ public class SecurityConfig {
                         .requestMatchers("/posts/**").permitAll()
                         .requestMatchers("/teams/**").permitAll()
                         .requestMatchers("/players/**").permitAll()
+                        .requestMatchers("/performance/**").permitAll()
                         .requestMatchers("/facebook/auth").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/webjars/**").permitAll()

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head th:insert="~{fragments/head.html :: head (title='Football Updater | Prepare Summary Post')}">
+    </head>
+    <body>
+        <div class="container">
+            <div th:replace="~{fragments/header.html :: header}"></div>
+            <br>
+            <h2>Create Summary Post</h2>
+            <br>
+            <div>
+                <form th:if="${ not#lists.isEmpty(form.postWithSelections)}" th:object="${postsForm}" method="post" th:action="@{/posts/generate/summary}">
+                    <div class="mb-3">
+                        <label for="imageUrl" class="form-label">Side Image (leave blank for default): </label>
+                        <div class="input-group mb-3">
+                            <input id="imageUrl" type="text" class="form-control" name="imageGenParams.imageUrl" size="100">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="imageHorizontalOffset" class="form-label">Horizontal offset from left side only (leave blank for 0): </label>
+                        <div class="input-group mb-3">
+                            <input id="imageHorizontalOffset" type="number" step="10" min="0" class="form-control" name="imageGenParams.imageHorizontalOffset" size="100">
+                        </div>
+                    </div>
+                    <div class="table-responsive table-fixed-head">
+                        <table
+                                id="post-table"
+                                class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th style="min-width:100px" >Date</th>
+                                    <th>Player</th>
+                                    <th>Caption</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="postWithSelections, itemStat : ${form.postWithSelections}">
+                                    <td style="min-width:100px">
+                                        <p th:text="${#dates.format(postWithSelections.post.dateGenerated, 'dd-MM-yyyy hh:mm:ss')}"></p>
+                                        <p th:text="${postWithSelections.post.postType}"></p>
+                                    </td>
+                                    <td th:text="${postWithSelections.post.player.name}"></td>
+                                    <td th:id="'post-caption-' + ${itemStat.index}" th:text="${postWithSelections.post.caption}"></td>
+                                    <td>
+                                        <input hidden th:name="|postWithSelections[${itemStat.index}].post.id|" th:value="${postWithSelections.post.getId()}"/>
+                                        <input type="checkbox" th:checked="${postWithSelections.isSelected()}" th:name="|postWithSelections[${itemStat.index}].selected|" />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex flex-row justify-content-between">
+                        <button class="btn btn-primary action-button" type="submit">Generate summary with selected</button>
+                    </div>
+                </form>
+                <div th:if="${ #lists.isEmpty(form.postWithSelections)}">
+                    <p>No posts available</p>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

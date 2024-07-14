@@ -1,20 +1,26 @@
 package com.ko.footballupdater.runners;
 
-import com.ko.footballupdater.configuration.ImageGeneratorProperies;
+import com.ko.footballupdater.configuration.ImageGeneratorProperties;
+import com.ko.footballupdater.services.AmazonS3Service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
+import static com.ko.footballupdater.utils.ImageGeneratorConstants.BASE_IMAGE_DIRECTORY;
+import static com.ko.footballupdater.utils.ImageGeneratorConstants.ICON_DIRECTORY;
+import static com.ko.footballupdater.utils.ImageGeneratorConstants.TEAM_LOGO_DIRECTORY;
 
 @Slf4j
 @Component
 public class FileAccessValidationRunner implements ApplicationRunner {
 
     @Autowired
-    private ImageGeneratorProperies imageGeneratorProperies;
+    private ImageGeneratorProperties imageGeneratorProperties;
+
+    @Autowired
+    private AmazonS3Service amazonS3Service;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -22,35 +28,11 @@ public class FileAccessValidationRunner implements ApplicationRunner {
     }
 
     public void validateFileAccess() {
-        File dir = new File(imageGeneratorProperies.getInputPath());
-        validateFileAccess(dir);
-    }
-
-    public void validateFileAccess(File dir) {
-        File[] directoryListing = dir.listFiles();
-        boolean isGenericBaseImageSet = false;
-        if (directoryListing != null) {
-            log.info(String.format("Found %d files in input directory: %s", directoryListing.length, imageGeneratorProperies.getInputPath()));
-            for (File child : directoryListing) {
-                try {
-                    if (child.exists() && child.canRead()) {
-                        log.debug("File access is valid for " + child.getAbsolutePath());
-                        if (imageGeneratorProperies.getGenericBaseImageFile().equals(child.getName())) {
-                            isGenericBaseImageSet = true;
-                        }
-                    } else {
-                        throw new RuntimeException("File access is not valid");
-                    }
-                } catch (Exception e) {
-                    log.error("File access is not valid for " + child.getAbsolutePath());
-                }
-            }
-            if (!isGenericBaseImageSet) {
-                log.warn("Generic base image file was not found");
-            }
-            log.info("Completed input directory file access check");
-        } else {
-            log.warn("Input directory contains no files");
-        }
+        log.atInfo().setMessage("S3 Bucket path " + BASE_IMAGE_DIRECTORY + " contains the following:").log();
+        amazonS3Service.listFilesInS3BucketFolder(BASE_IMAGE_DIRECTORY + imageGeneratorProperties.getInputPath() + "/");
+        log.atInfo().setMessage("S3 Bucket path " + TEAM_LOGO_DIRECTORY + " contains the following:").log();
+        amazonS3Service.listFilesInS3BucketFolder(TEAM_LOGO_DIRECTORY + "/");
+        log.atInfo().setMessage("S3 Bucket path " + ICON_DIRECTORY + " contains the following:").log();
+        amazonS3Service.listFilesInS3BucketFolder(ICON_DIRECTORY + "/");
     }
 }

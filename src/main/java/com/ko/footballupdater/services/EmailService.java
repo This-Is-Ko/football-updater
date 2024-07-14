@@ -1,6 +1,6 @@
 package com.ko.footballupdater.services;
 
-import com.ko.footballupdater.configuration.ImageGeneratorProperies;
+import com.ko.footballupdater.configuration.ImageGeneratorProperties;
 import com.ko.footballupdater.configuration.MailerProperties;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.utils.DateTimeHelper;
@@ -28,7 +28,7 @@ public class EmailService {
     private MailerProperties mailerProperties;
 
     @Autowired
-    private ImageGeneratorProperies imageGeneratorProperies;
+    private ImageGeneratorProperties imageGeneratorProperties;
 
     public boolean sendEmailUpdate(List<Post> posts){
         // Check config for email enabled status
@@ -47,17 +47,18 @@ public class EmailService {
         StringBuilder emailContent = new StringBuilder();
         for (Post postHolder : posts) {
             emailContent.append("############").append(postHolder.getPlayer().getName()).append(" - ").append(postHolder.getPlayerMatchPerformanceStats().getDataSourceSiteName().toString()).append(" - ").append(DateTimeHelper.getDateAsFormattedString(postHolder.getPlayerMatchPerformanceStats().getMatch().getDate())).append("############\n\n");
-            emailContent.append(postHolder.getCaption()).append("\n\n");
-            if (!postHolder.getImagesUrls().isEmpty()) {
-                emailContent.append("Stat image(s)\n").append(PostHelper.generateS3UrlList(postHolder)).append("\n");
-            }
-            emailContent.append("Google image search links\n").append(postHolder.getImageSearchUrls()).append("\n\n\n");
+//            emailContent.append(postHolder.getCaption()).append("\n\n");
+//            if (!postHolder.getImagesUrls().isEmpty()) {
+//                emailContent.append("Stat image(s)\n").append(PostHelper.generateS3UrlList(postHolder)).append("\n");
+//            }
+//            emailContent.append("Google image search links\n").append(postHolder.getImageSearchUrls()).append("\n\n\n");
+            emailContent.append("\n\n\n");
 
             // Add images to attachment - config driven
             if (mailerProperties.isAttachImages()) {
                 if (!postHolder.getImagesFileNames().isEmpty()) {
                     for (String fileName : postHolder.getImagesFileNames()) {
-                        attachments.add(new AttachmentResource(fileName, new FileDataSource(imageGeneratorProperies.getOutputPath() + fileName)));
+                        attachments.add(new AttachmentResource(fileName, new FileDataSource(imageGeneratorProperties.getOutputPath() + fileName)));
                     }
                 }
             }

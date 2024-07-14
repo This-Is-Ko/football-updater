@@ -2,7 +2,8 @@ package com.ko.footballupdater.services;
 
 
 import com.ko.footballupdater.configuration.InstagramPostProperies;
-import com.ko.footballupdater.exceptions.GenerateStandoutException;
+import com.ko.footballupdater.exceptions.GenerateStandoutPostException;
+import com.ko.footballupdater.exceptions.GenerateSummaryPostException;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.PostType;
@@ -10,6 +11,7 @@ import com.ko.footballupdater.models.form.CreatePostDto;
 import com.ko.footballupdater.models.form.CreatePostPlayerDto;
 import com.ko.footballupdater.models.form.ImageUrlEntry;
 import com.ko.footballupdater.models.form.PrepareStandoutImageDto;
+import com.ko.footballupdater.models.form.PrepareSummaryPostDto;
 import com.ko.footballupdater.models.form.StatisticEntryGenerateDto;
 import com.ko.footballupdater.models.form.UploadPostDto;
 import com.ko.footballupdater.repositories.PlayerRepository;
@@ -157,7 +159,11 @@ public class PostService {
 
         // Update existing post type to reflect new type
         Post post = postSearchResult.get();
-        post.setPostType(PostType.STANDOUT_STATS_POST);
+        if (PostType.SUMMARY_POST.equals(post.getPostType())) {
+            post.setPostType(PostType.SUMMARY_WITH_STANDOUT_IMAGE_POST);
+        } else {
+            post.setPostType(PostType.STANDOUT_STATS_POST);
+        }
         post.setImagesUrls(new ArrayList<>(post.getImagesUrls()));
 
         // Only use selected stats
@@ -181,7 +187,71 @@ public class PostService {
             prepareStandoutImageDto.setPost(post);
             // Skip if image generation or upload fails, allows future retry
             log.atWarn().setMessage("Something went wrong while creating standout post").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
-            throw new GenerateStandoutException("Something went wrong while creating standout post: " + ex.getMessage());
+            throw new GenerateStandoutPostException("Something went wrong while creating standout post: " + ex.getMessage());
+        }
+    }
+
+    public void generateSummaryPost(PrepareSummaryPostDto prepareSummaryPostDto) throws Exception {
+        if (prepareSummaryPostDto.getPostWithSelections().isEmpty()) {
+            throw new NoSuchElementException("Post ids is empty");
+        }
+
+        Post summaryPost = new Post();
+        summaryPost.setPostType(PostType.SUMMARY_POST);
+        List<Post> postsToInclude = new ArrayList<>();
+        prepareSummaryPostDto.getPostWithSelections().forEach(postWithSelection -> {
+            if (postWithSelection.isSelected()) {
+                Optional<Post> postSearchResult = postRepository.findById(postWithSelection.getPost().getId());
+                if (postSearchResult.isEmpty()) {
+                    throw new NoSuchElementException("Post id not found");
+                }
+                postsToInclude.add(postSearchResult.get());
+            }
+        });
+
+        if (postsToInclude.isEmpty()) {
+            throw new GenerateSummaryPostException("No posts selected to use for generating summary post");
+        }
+
+        // Set relevantTeam if not set
+        for (Post post : postsToInclude) {
+            if (post.getPlayerMatchPerformanceStats() != null
+                    && post.getPlayerMatchPerformanceStats().getMatch() != null
+                    && post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() == null
+                    && post.getPlayer() != null
+                    && post.getPlayer().getTeam() != null) {
+
+                String teamName = post.getPlayer().getTeam().getName();
+                post.getPlayerMatchPerformanceStats().getMatch().setRelevantTeam(teamName);
+            }
+        }
+
+        // Group players into teams
+        List<Post> sortedPostsByTeam = postsToInclude.stream()
+                .filter(post -> post.getPlayerMatchPerformanceStats() != null
+                        && post.getPlayerMatchPerformanceStats().getMatch() != null
+                        && post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null)
+                .sorted(Comparator.comparing(post -> post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam()))
+                .collect(Collectors.toList());
+
+        if (sortedPostsByTeam.isEmpty()) {
+            throw new GenerateSummaryPostException("No posts left to use for generating summary post after filtering");
+        }
+
+        try {
+            log.atInfo().setMessage(String.format("%d players have been selected to add into summary image", sortedPostsByTeam.size())).log();
+            // Generate summary image using selected posts
+            imageGeneratorService.generateSummaryImage(summaryPost, sortedPostsByTeam, prepareSummaryPostDto.getImageGenParams());
+            // Upload images to s3
+            amazonS3Service.uploadToS3(summaryPost, false);
+            // Generate caption
+            summaryPost.setCaption(postHelper.generateSummaryPostCaption(sortedPostsByTeam, instagramPostProperies.getDefaultHashtags()));
+            // Save post
+            postRepository.save(summaryPost);
+            log.atInfo().setMessage("Successfully created summary image and saved").log();
+        } catch (Exception ex) {
+            log.atWarn().setMessage("Something went wrong while summary post").setCause(ex).log();
+            throw new GenerateSummaryPostException("Something went wrong while creating summary post: " + ex.getMessage());
         }
     }
 
@@ -244,7 +314,10 @@ public class PostService {
                 .sorted(Comparator.comparingInt(ImageUrlEntry::getImageIndex))
                 .toList();
 
-        facebookApiService.postToInstagram(post, imagesToUpload, uploadPostForm.getCaption());
+        // Update caption from form
+        post.setCaption(uploadPostForm.getCaption());
+
+        facebookApiService.postToInstagram(post, imagesToUpload);
 
         post.setPostedStatus(true);
         postRepository.save(post);

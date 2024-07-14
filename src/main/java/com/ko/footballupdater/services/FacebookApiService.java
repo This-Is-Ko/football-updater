@@ -8,6 +8,7 @@ import com.ko.footballupdater.models.facebookApi.InstagramUserMedia;
 import com.ko.footballupdater.models.form.FacebookApiDto;
 import com.ko.footballupdater.models.form.ImageUrlEntry;
 import com.ko.footballupdater.utils.FacebookApiHelper;
+import com.ko.footballupdater.utils.LogHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
@@ -147,8 +148,8 @@ public class FacebookApiService {
      * 3. Use the POST /{ig-user-id}/media_publish endpoint to publish the carousel container.
      * Refer to <a href="https://developers.facebook.com/docs/instagram-api/guides/content-publishing#carousel-posts">...</a>
      */
-    public void postToInstagram(Post post, List<ImageUrlEntry> imagesToUpload, String caption) throws Exception {
-        log.atInfo().setMessage("Attempting to post to Instagram").addKeyValue("player", post.getPlayer().getName()).log();
+    public void postToInstagram(Post post, List<ImageUrlEntry> imagesToUpload) throws Exception {
+        LogHelper.logWithSubject(log.atInfo().setMessage("Attempting to post to Instagram"), post);
 
         // Validate token has required permissions
 //        DebugTokenReponse debugTokenReponse = callDebugToken();
@@ -163,7 +164,7 @@ public class FacebookApiService {
                 throw new RuntimeException(e);
             }
             if (response.getId() != null && !response.getId().isEmpty()) {
-                log.atInfo().setMessage("Successfully saved single image to Instagram").addKeyValue("player", post.getPlayer().getName()).log();
+                LogHelper.logWithSubject(log.atInfo().setMessage("Successfully saved single image to Instagram"), post);
             } else {
                 throw new RuntimeException("No container ID in Instagram User Media Api response");
             }
@@ -173,7 +174,8 @@ public class FacebookApiService {
             if (publishResponse == null || publishResponse.getId() == null || publishResponse.getId().isEmpty()) {
                 throw new Exception("Attempt to publish single image post failed");
             }
-            log.atInfo().setMessage("Successfully published single image post").addKeyValue("player", post.getPlayer().getName()).log();
+            LogHelper.logWithSubject(log.atInfo().setMessage("Successfully published single image post"), post);
+
         } else {
             // Multiple images, use carousel (does not allow single images)
             List<String> individualImageContainer = new ArrayList<>();
@@ -187,7 +189,8 @@ public class FacebookApiService {
                     throw new RuntimeException(e);
                 }
                 if (response.getId() != null && !response.getId().isEmpty()) {
-                    log.atInfo().setMessage("Successfully saved image to Instagram: " + imageUrlEntry.getImageIndex()).addKeyValue("player", post.getPlayer().getName()).log();
+                    LogHelper.logWithSubject(log.atInfo().setMessage("Successfully saved image to Instagram: " + imageUrlEntry.getImageIndex()), post);
+
                     individualImageContainer.add(response.getId());
                 }
             });
@@ -198,20 +201,16 @@ public class FacebookApiService {
 
             // Step 2 - create carousel container
             // Sample request "https://graph.facebook.com/v18.0/90010177253934/media?caption=Fruit%20candies&media_type=CAROUSEL&children=17899506308402767%2C18193870522147812%2C17853844403701904&access_token=EAAOc..."
-            // Use caption if passed from form otherwise use prepared caption
-            if (caption == null || caption.isEmpty()) {
-                caption = post.getCaption();
-            }
-            InstagramUserMedia carouselCreateResponse = callInstagramUserMediaApi(facebookApiProperties.getInstagram().getUserId(), null, caption, false, "CAROUSEL", individualImageContainer);
+            InstagramUserMedia carouselCreateResponse = callInstagramUserMediaApi(facebookApiProperties.getInstagram().getUserId(), null, post.getCaption(), false, "CAROUSEL", individualImageContainer);
             String carouselId = carouselCreateResponse.getId();
-            log.atInfo().setMessage("Successfully created Instagram carousel container").addKeyValue("player", post.getPlayer().getName()).log();
+            LogHelper.logWithSubject(log.atInfo().setMessage("Successfully created Instagram carousel container"), post);
 
             // Step 3 - publish carousel container
             InstagramUserMedia publishResponse = callInstagramUserMediaPublishApi(facebookApiProperties.getInstagram().getUserId(), carouselId);
             if (publishResponse == null || publishResponse.getId() == null || publishResponse.getId().isEmpty()) {
                 throw new Exception("Attempt to publish carousel failed");
             }
-            log.atInfo().setMessage("Successfully published carousel").addKeyValue("player", post.getPlayer().getName()).log();
+            LogHelper.logWithSubject(log.atInfo().setMessage("Successfully published carousel"), post);
         }
     }
 

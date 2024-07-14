@@ -8,6 +8,10 @@
             <br>
             <h2>Latest Posts</h2>
             <br>
+                <div th:if="${message}" th:classappend="${messageType == 'success' ? 'success-message' : 'error-message'}">
+                    <p th:text="${message}"></p>
+                </div>
+            <br>
             <div class="d-flex flex-row justify-content-between">
                 <a th:if="${param.postedStatus == null}" class="btn btn-secondary btn-sm action-button" th:href="@{/posts?postedStatus=false}">Filter not posted only</a>
                 <a th:if="${param.postedStatus != null}" class="btn btn-secondary btn-sm action-button" th:href="@{/posts}">No filter</a>
@@ -38,7 +42,8 @@
                                         <p th:text="${#dates.format(post.dateGenerated, 'dd-MM-yyyy hh:mm:ss')}"></p>
                                         <p th:text="${post.postType}"></p>
                                     </td>
-                                    <td th:text="${post.player.name}"></td>
+                                    <td th:if="${post.player != null}" th:text="${post.player.name}"></td>
+                                    <td th:if="${post.player == null}">Summary post</td>
                                     <td th:id="'post-caption-' + ${itemStat.index}" th:text="${post.caption}"></td>
                                     <td>
                                         <ul th:if="${post.imagesUrls != null AND !post.imagesUrls.isEmpty()}" th:each="imageUrl, imageIter : ${post.imagesUrls}">

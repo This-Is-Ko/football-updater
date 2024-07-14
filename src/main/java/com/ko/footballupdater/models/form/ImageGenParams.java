@@ -7,7 +7,7 @@ import lombok.Setter;
 @Setter
 public class ImageGenParams {
 
-    private String backgroundImageUrl;
+    private String imageUrl;
 
     private Boolean forceScaleImage = true;
 

@@ -9,6 +9,7 @@ import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Team;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -33,11 +35,11 @@ public class ParsingService {
     @Value("#{'${datasource.priority}'.split(',')}")
     private List<DataSourceSiteName> dataSourcePriority;
 
-    public PlayerMatchPerformanceStats parsePlayerMatchData(Player player) {
+    public PlayerMatchPerformanceStats parsePlayerMatchData(Player player) throws InterruptedException {
         return parsePlayerMatchData(player, false);
     }
 
-    public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, boolean skipLatestMatchCheck) {
+    public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, boolean skipLatestMatchCheck) throws InterruptedException {
         // Use data source based on config order
         // If the data source does not resolve a new match, try the next data source using match date to compare
         List<DataSource> dataSources = new ArrayList<>();
@@ -61,6 +63,14 @@ public class ParsingService {
                                 player.getCheckedStatus().setSiteName(dataSource.getSiteName());
                                 return playerMatchPerformanceStats;
                             }
+                        } catch (HttpStatusException ex) {
+                            log.atWarn().setMessage("Unable to retrieve page at " + dataSource.getUrl()).setCause(ex).addKeyValue("player", player.getName()).log();
+                            if (ex.getStatusCode() == 429) {
+                                // Sleep for longer
+                                log.atInfo().setMessage("Added wait time of 15 sec").addKeyValue("player", player.getName()).log();
+                                TimeUnit.SECONDS.sleep(15);
+                            }
+                            return null;
                         } catch (IOException ex) {
                             log.atWarn().setMessage("Unable to retrieve page at " + dataSource.getUrl()).setCause(ex).addKeyValue("player", player.getName()).log();
                             return null;

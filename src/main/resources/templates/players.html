@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-    <head th:insert="~{fragments/head.html :: head (title='Football Updater | Player Information')}">
+    <head th:insert="~{fragments/head.html :: head (title='Football Updater | Players')}">
     </head>
     <body>
         <div class="container">
@@ -17,7 +17,8 @@
                         <th>Data Sources</th>
                         <th>Last Checked</th>
                         <th>Last Match</th>
-                        <th>Link</th>
+                        <th>Match Date</th>
+                        <th>Team</th>
                         <th>ID</th>
                     </tr>
                     </thead>
@@ -37,6 +38,8 @@
                         <td th:text="${player.checkedStatus.lastChecked}"></td>
                         <td th:text="${player.checkedStatus.latestCheckedMatchUrl}"></td>
                         <td th:text="${player.checkedStatus.latestCheckedMatchDate}"></td>
+                        <td th:if="${ player.team != null}" th:text="${player.team.name}"></td>
+                        <td th:if="${ player.team == null}"></td>
                         <td th:text="${player.id}"></td>
                     </tr>
                     </tbody>

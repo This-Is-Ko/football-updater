@@ -1,9 +1,11 @@
 package com.ko.footballupdater.utils;
 
+import com.ko.footballupdater.configuration.TeamProperties;
 import com.ko.footballupdater.models.Hashtag;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Post;
+import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.models.Team;
 import com.ko.footballupdater.repositories.TeamRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -68,21 +73,87 @@ public class PostHelper {
         return strBuilder.toString();
     }
 
+    public String generateSummaryPostCaption(List<Post> playerPosts, String additionalHashtags) {
+        StringBuilder hashtags = new StringBuilder();
+        StringBuilder playerHashtags = new StringBuilder();
+        StringBuilder teamHashtags = new StringBuilder();
+        if (additionalHashtags != null) {
+            hashtags.append(additionalHashtags);
+        }
+        String previousTeam = null;
+        for (Post playerPost : playerPosts) {
+            playerHashtags.append(generatePlayerHashtags(playerPost.getPlayer()).replaceAll("\n\n", " "));
+            if (playerPost.getPlayerMatchPerformanceStats() != null
+                && playerPost.getPlayerMatchPerformanceStats().getMatch() != null
+                && playerPost.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null
+                && !playerPost.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam().equals(previousTeam)) {
+                teamHashtags.append(generateTeamHashtags(playerPost.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam()));
+                previousTeam = playerPost.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam();
+            }
+        }
+        hashtags.append(playerHashtags);
+        hashtags.append(teamHashtags);
+
+        // Remove any duplicate hashtags
+        String[] hashtagArray = hashtags.toString().split(" ");
+        Set<String> uniqueHashtags = new LinkedHashSet<>(Arrays.asList(hashtagArray));
+
+        return String.join(" ", uniqueHashtags);
+    }
+
     public static String generateMatchName(PlayerMatchPerformanceStats playerMatchPerformanceStats) {
+        if (playerMatchPerformanceStats.getMatch() == null) {
+            log.atInfo().setMessage("Unable to create match name string as match data is missing").log();
+        }
         return String.format("%s VS %s",
                 playerMatchPerformanceStats.getMatch().getHomeTeamName(),
                 playerMatchPerformanceStats.getMatch().getAwayTeamName()
         );
     }
 
-    public void generatePostImageSearchUrl(Post post) {
-        String relevantTeam = "";
-        if (post.getPlayerMatchPerformanceStats() != null && post.getPlayerMatchPerformanceStats().getMatch() != null) {
-            relevantTeam = post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam();
+    public static String generateMatchNameWithSuffixRemoved(PlayerMatchPerformanceStats playerMatchPerformanceStats, TeamProperties teamProperties) {
+        if (playerMatchPerformanceStats.getMatch() == null
+                || playerMatchPerformanceStats.getMatch().getHomeTeamName() == null
+                || playerMatchPerformanceStats.getMatch().getAwayTeamName() == null) {
+            log.atInfo().setMessage("Unable to create match name string as match data is missing").log();
         }
-        String searchPhrase = post.getPlayer().getName() + " " + relevantTeam;
-        post.getImageSearchUrls().add(String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:d", searchPhrase.replaceAll(" ", "%20")));
-        post.getImageSearchUrls().add(String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:w", searchPhrase.replaceAll(" ", "%20")));
+
+        String homeTeamName = playerMatchPerformanceStats.getMatch().getHomeTeamName();
+        String awayTeamName = playerMatchPerformanceStats.getMatch().getAwayTeamName();
+        if (teamProperties != null && teamProperties.getNameSuffixesToRemove() != null && !teamProperties.getNameSuffixesToRemove().isEmpty()) {
+            for (String suffix : teamProperties.getNameSuffixesToRemove()) {
+                if (homeTeamName != null) {
+                    homeTeamName = homeTeamName.replace(suffix, "").trim();
+                }
+                if (awayTeamName != null) {
+                    awayTeamName = awayTeamName.replace(suffix, "").trim();
+                }
+            }
+        }
+
+        return String.format("%s VS %s", homeTeamName, awayTeamName);
+    }
+
+    public static String generateMatchScore(PlayerMatchPerformanceStats playerMatchPerformanceStats) {
+        if (playerMatchPerformanceStats.getMatch() == null) {
+            log.atInfo().setMessage("Unable to create match score string as match data is missing").log();
+        }
+        return String.format("(%s - %s)",
+                playerMatchPerformanceStats.getMatch().getHomeTeamScore(),
+                playerMatchPerformanceStats.getMatch().getAwayTeamScore()
+        );
+    }
+
+    public void generatePostImageSearchUrl(Post post) {
+        if (post.getPostType() != null && (PostType.ALL_STAT_POST.equals(post.getPostType()) || PostType.STANDOUT_STATS_POST.equals(post.getPostType()))) {
+            String relevantTeam = "";
+            if (post.getPlayerMatchPerformanceStats() != null && post.getPlayerMatchPerformanceStats().getMatch() != null) {
+                relevantTeam = post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam();
+            }
+            String searchPhrase = post.getPlayer().getName() + " " + relevantTeam;
+            post.getImageSearchUrls().add(String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:d", searchPhrase.replaceAll(" ", "%20")));
+            post.getImageSearchUrls().add(String.format("https://www.google.com/search?q=%s&tbm=isch&hl=en&tbs=qdr:w", searchPhrase.replaceAll(" ", "%20")));
+        }
     }
 
     public String generatePlayerHashtags(Player player) {

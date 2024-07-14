@@ -164,7 +164,7 @@ Update the application-[env].properties with the relevant config
 
 One way to transfer jar to EC2
 
-    scp -i .\[key.pem] .\build\libs\footballupdater-0.0.1-SNAPSHOT.jar ec2-user@[ec2 public dns]:[save path]
+    scp -i .\[key.pem] .\build\libs\app.jar ec2-user@[ec2 public dns]:[save path]
 
 Install Java 20 onto instance
 
@@ -185,7 +185,7 @@ Inside football-updater.service
     
     [Service]
     User=[USER/root]
-    ExecStart=[Jar Run command]
+    ExecStart=java -jar /home/ec2-user/app.jar --spring.profiles.active=prod
     SuccessExitStatus=143
     TimeoutStopSec=10
     Restart=on-failure

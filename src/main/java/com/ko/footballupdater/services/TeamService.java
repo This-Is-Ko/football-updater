@@ -54,6 +54,7 @@ public class TeamService {
         // Construct team object from request
         Team newTeam = new Team();
         newTeam.setName(addTeamRequest.getName());
+        newTeam.setLogoFileName(addTeamRequest.getLogoFileName());
         if (addTeamRequest.getAdditionalHashtags() != null) {
             Set<Hashtag> additionalHashtags = new HashSet<>();
             for (String hashtag : addTeamRequest.getAdditionalHashtags()) {

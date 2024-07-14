@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head th:insert="~{fragments/head.html :: head (title='Football Updater | Performance Highlights')}">
+    </head>
+    <body>
+        <div class="container">
+            <div th:replace="~{fragments/header.html :: header}"></div>
+            <br>
+            <h2>Performance Highlights</h2>
+            <br>
+            <td class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Player Name</th>
+                            <th>Highlight</th>
+                            <th>Link to Post</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="postEntry : ${data.postsWithHighlights}">
+                            <td th:if="${postEntry.key.player != null}" th:text="${postEntry.key.player.name}"></td>
+                            <td>
+                                <div th:each="highlight : ${postEntry.value}">
+                                    <p th:text="${highlight.key}"></p>
+                                    <p th:text="${highlight.value}"></p>
+                                </div>
+                            </td>
+                            <td>
+                                <a class="btn btn-primary action-button full-width-button" th:href="@{/posts/prepare-standout-image?postId={id}(id=${postEntry.key.id})}">Custom image</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </body>
+</html>

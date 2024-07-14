@@ -9,7 +9,8 @@
                 <form th:if="${ not#lists.isEmpty(form.allStats)}" th:object="${prepareStandoutImageForm}" method="post" th:action="@{/posts/generate}">
                     <br>
                     <h2>Prepare Post</h2>
-                    <h4 th:text="${form.post.player.name}"></h4>
+                    <h4 th:if="${form.post.player != null}" th:text="${form.post.player.name}"></h4>
+                    <h4 th:if="${form.post.player == null}">Not a player</h4>
                     <br>
                     <input hidden th:field="${form.postId}" th:value="${form.post.id}"/>
                     <div class="mb-3">
@@ -20,9 +21,9 @@
                     </div>
                     <hr>
                     <div class="mb-3">
-                        <label for="backgroundImageUrl" class="form-label">Background Image (leave blank for default): </label>
+                        <label for="imageUrl" class="form-label">Background Image (leave blank for default): </label>
                         <div class="input-group mb-3">
-                            <input id="backgroundImageUrl" type="text" class="form-control" name="imageGenParams.backgroundImageUrl" size="100">
+                            <input id="imageUrl" type="text" class="form-control" name="imageGenParams.imageUrl" size="100">
                         </div>
                     </div>
                     <div class="mb-3 form-check">

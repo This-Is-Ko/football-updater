@@ -9,8 +9,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-import jakarta.validation.constraints.NotNull;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -28,8 +28,8 @@ public class Team {
     @GeneratedValue(strategy= GenerationType.AUTO)
     private Integer id;
 
-    @Column
     @NotNull
+    @Column
     private String name;
 
     @OneToMany(cascade = CascadeType.ALL)
@@ -47,6 +47,10 @@ public class Team {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Hashtag> additionalHashtags;
+
+    @NotNull
+    @Column
+    private String logoFileName;
 
     public Team() {
     }
