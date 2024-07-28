@@ -31,8 +31,8 @@ public class FacebookApiService {
     @Autowired
     FacebookApiProperties facebookApiProperties;
 
-    private final String FACEBOOK_API_BASE_URL = "https://www.facebook.com/v18.0/dialog/oauth";
-    private final String FACEBOOK_GRAPH_API_BASE_URL = "https://graph.facebook.com/v18.0";
+    private static final String FACEBOOK_API_BASE_URL = "https://www.facebook.com/v18.0/dialog/oauth";
+    private static final String FACEBOOK_GRAPH_API_BASE_URL = "https://graph.facebook.com/v18.0";
 
     private String state;
     private String accessToken;
