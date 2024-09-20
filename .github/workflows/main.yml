@@ -37,7 +37,7 @@ jobs:
           action_fail: 'true'
 
       - name: Upload test report
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: test-case reports
           path: build/test-results
