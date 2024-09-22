@@ -51,7 +51,7 @@ public class ParsingService {
             if (dataSources.stream().anyMatch(o -> o.getSiteName().equals(source))) {
                 DataSource dataSource = dataSources.stream().filter(o -> o.getSiteName().equals(source)).findFirst().get();
 
-                log.atInfo().setMessage("Attempting dataSource " + dataSource.getSiteName()).addKeyValue("player", player.getName()).log();
+                log.atInfo().setMessage(dataSource.getSiteName() + " - Attempting dataSource").addKeyValue("player", player.getName()).log();
 
                 for (DataSourceParser dataSourceParser : dataSourceParsers) {
                     if (dataSourceParser.getDataSourceSiteName().equals(dataSource.getSiteName())) {
@@ -62,17 +62,19 @@ public class ParsingService {
                                 log.atInfo().setMessage(dataSource.getSiteName() + " - Successfully parse player data").addKeyValue("player", player.getName()).log();
                                 player.getCheckedStatus().setSiteName(dataSource.getSiteName());
                                 return playerMatchPerformanceStats;
+                            } else {
+                                log.atInfo().setMessage(dataSource.getSiteName() + " - Unable to construct stats object").addKeyValue("player", player.getName()).log();
                             }
                         } catch (HttpStatusException ex) {
-                            log.atWarn().setMessage("Unable to retrieve page at " + dataSource.getUrl()).setCause(ex).addKeyValue("player", player.getName()).log();
+                            log.atWarn().setMessage(dataSource.getSiteName() + " - Status=" + ex.getStatusCode() + " - Unable to retrieve page at " + dataSource.getUrl()).addKeyValue("player", player.getName()).log();
                             if (ex.getStatusCode() == 429) {
                                 // Sleep for longer
-                                log.atInfo().setMessage("Added wait time of 15 sec").addKeyValue("player", player.getName()).log();
-                                TimeUnit.SECONDS.sleep(15);
+                                log.atInfo().setMessage("Added wait time of 20 sec").addKeyValue("player", player.getName()).log();
+                                TimeUnit.SECONDS.sleep(20);
                             }
                             return null;
                         } catch (IOException ex) {
-                            log.atWarn().setMessage("Unable to retrieve page at " + dataSource.getUrl()).setCause(ex).addKeyValue("player", player.getName()).log();
+                            log.atWarn().setMessage(dataSource.getSiteName() + " - Unable to retrieve page at " + dataSource.getUrl()).setCause(ex).addKeyValue("player", player.getName()).log();
                             return null;
                         }
                         break;
