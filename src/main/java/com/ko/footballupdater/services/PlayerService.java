@@ -197,6 +197,7 @@ public class PlayerService {
             playersToUpdate.add(post.getPlayer());
         }
         playerRepository.saveAll(playersToUpdate);
+        log.atInfo().setMessage("Updated player entries with latest data").log();
         // Populate response
         response.setPlayersUpdated(playersToUpdate);
         response.setNumPlayersUpdated(playersToUpdate.size());
