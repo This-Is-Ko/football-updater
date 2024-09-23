@@ -397,11 +397,11 @@ public class ImageGeneratorService {
             image = setUpBaseImageWithBackgroundImageUrl(backgroundImageGenParams);
 
             // Add individual player stats
-            log.atInfo().setMessage("Adding player stats to summary image").log();
+            log.atInfo().setMessage("Adding player stats to summary image(s)").log();
             List<BufferedImage> outputImages = summaryDrawPlayerStats(image, playerPosts);
 
             // Add side image
-            log.atInfo().setMessage("Adding side image to summary image").log();
+            log.atInfo().setMessage("Adding side image to summary image(s)").log();
             summaryDrawSideImage(outputImages, imageGenParams);
 
             // Save the modified image
@@ -546,9 +546,12 @@ public class ImageGeneratorService {
                         Graphics2D imageGraphics = currentImage.createGraphics();
                         imageGraphics.drawImage(teamLogo, 70, currentNameY - teamLogoOffsetFromNameY, null);
                         imageGraphics.dispose();
+                        log.atInfo().setMessage("Team logo added to summary image").addKeyValue("player", playerPost.getPlayer().getName()).log();
+                    } else {
+                        log.atWarn().setMessage("Unable to determine team to draw team logo").addKeyValue("player", playerPost.getPlayer().getName()).log();
                     }
                 } catch (IOException e) {
-                    log.atWarn().setMessage("URL to team logo was invalid").log();
+                    log.atWarn().setMessage("URL to team logo was invalid").addKeyValue("player", playerPost.getPlayer().getName()).log();
                 }
 
                 playerNameGraphic.setColor(Color.BLACK);
@@ -692,11 +695,13 @@ public class ImageGeneratorService {
         int horizontalOffset = (imageGenParams.getImageHorizontalOffset() != null ? imageGenParams.getImageHorizontalOffset() : 0);
         BufferedImage croppedImage = scaledImage.getSubimage(horizontalOffset, 0, 1000 - statsDrawingAreaWidth, 1000);
 
+        int imageCount = 1;
         for (BufferedImage image : outputImages) {
             Graphics2D imageGraphics = image.createGraphics();
             imageGraphics.drawImage(croppedImage, statsDrawingAreaWidth, 0, null);
             imageGraphics.dispose();
-            log.atInfo().setMessage("Added side image to summary image").log();
+            log.atInfo().setMessage("Added side image to summary image " + imageCount).log();
+            imageCount++;
         }
     }
 

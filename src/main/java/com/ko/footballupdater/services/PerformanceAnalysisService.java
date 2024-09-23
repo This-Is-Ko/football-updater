@@ -21,7 +21,7 @@ public class PerformanceAnalysisService {
     private PostRepository postRepository;
 
     public Map<Post, Map<String, Integer>> checkMatchPerformances() {
-        List<Post> recentPosts = postRepository.findAllByOrderByDateGeneratedDesc(PageRequest.of(1, 10));
+        List<Post> recentPosts = postRepository.findAllByOrderByDateGeneratedDesc(PageRequest.of(0, 20));
 
         Map<Post, Map<String, Integer>> postsWithHighlights = new HashMap<>();
         // Check stats in each recent post for highlights
@@ -61,5 +61,4 @@ public class PerformanceAnalysisService {
         }
         return highlights;
     }
-
 }

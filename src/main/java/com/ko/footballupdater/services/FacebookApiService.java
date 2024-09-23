@@ -203,7 +203,7 @@ public class FacebookApiService {
             // Sample request "https://graph.facebook.com/v18.0/90010177253934/media?caption=Fruit%20candies&media_type=CAROUSEL&children=17899506308402767%2C18193870522147812%2C17853844403701904&access_token=EAAOc..."
             InstagramUserMedia carouselCreateResponse = callInstagramUserMediaApi(facebookApiProperties.getInstagram().getUserId(), null, post.getCaption(), false, "CAROUSEL", individualImageContainer);
             String carouselId = carouselCreateResponse.getId();
-            LogHelper.logWithSubject(log.atInfo().setMessage("Successfully created Instagram carousel container"), post);
+            LogHelper.logWithSubject(log.atInfo().setMessage("Successfully created Instagram carousel container with id=" + carouselId), post);
 
             // Step 3 - publish carousel container
             InstagramUserMedia publishResponse = callInstagramUserMediaPublishApi(facebookApiProperties.getInstagram().getUserId(), carouselId);
@@ -250,6 +250,7 @@ public class FacebookApiService {
         if (caption != null) {
             // Refer to https://stackoverflow.com/questions/54099777/inconsistent-line-breaks-when-posting-to-instagram
             // https://www.fileformat.info/info/unicode/char/2063/index.htm
+            // Maximum 2200 characters, 30 hashtags, and 20 @ tags
             urlBuilder.queryParam("caption", FacebookApiHelper.encodeTextToUtf8(caption.replace("\n", "\u2063\n")));
         }
         String apiUrl = urlBuilder
