@@ -17,6 +17,8 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
 
     List<Post> findAllByOrderByDateGeneratedDesc(Pageable pageable);
 
+    List<Post> findAllByOrderByDateGeneratedAsc(Pageable pageable);
+
     List<Post> findByPostedStatus(boolean postedStatus);
 
     List<Post> findByPostedStatusOrderByDateGeneratedDesc(boolean postedStatus, Pageable pageable);
@@ -24,6 +26,4 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
     @Modifying
     @Query("update Post p set p.postedStatus = :postedStatus where p.id = :id")
     void updatePostSetPostedStatusForId(@Param("postedStatus") boolean postedStatus, @Param("id") int id);
-
-
 }
