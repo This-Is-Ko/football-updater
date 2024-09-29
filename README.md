@@ -209,9 +209,19 @@ Next move the JKS into path which matches the config > server.ssl.key-store
 
 ### Fonts
 
-To set up fonts for image generation, copy font files across to ec2
+To set up fonts for image generation, add font files into 
+
+    /src/resources/fonts
+
+These fonts will be registered on startup and displayed in the Font Validator to ensure they are registered
+
+Alternatively you can copy font files on to the server and follow below commands
 
     scp -i .\[key.pem] .\src\main\resources\fonts\* ec2-user@[ec2 public dns]:~/.local/share/fonts
+
+Install fontconfig packages
+
+    sudo apt install fontconfig
 
 Add the following font files
 

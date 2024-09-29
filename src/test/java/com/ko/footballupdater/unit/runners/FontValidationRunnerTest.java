@@ -14,7 +14,9 @@ import org.mockito.MockitoAnnotations;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 
+import java.awt.FontFormatException;
 import java.awt.GraphicsEnvironment;
+import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,7 +43,7 @@ public class FontValidationRunnerTest {
     }
 
     @Test
-    void run_validateFontAvailability_shouldLogAvailableFonts() {
+    void run_registerFontsAndValidateFontAvailability_shouldLogAvailableFonts() throws IOException, FontFormatException {
         // Set up log appender
         Logger fooLogger = (Logger) LoggerFactory.getLogger(FontValidationRunner.class);
         ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
@@ -49,15 +51,17 @@ public class FontValidationRunnerTest {
         fooLogger.addAppender(listAppender);
 
         GraphicsEnvironment graphicsEnvironment = mock(GraphicsEnvironment.class);
-        when(graphicsEnvironment.getAvailableFontFamilyNames()).thenReturn(new String[]{"Arial", "Times New Roman"});
+        when(graphicsEnvironment.getAvailableFontFamilyNames()).thenReturn(new String[]{"Arial", "Times New Roman", "Chakra Petch Bold"});
 
         when(GraphicsEnvironment.getLocalGraphicsEnvironment()).thenReturn(graphicsEnvironment);
 
         fontValidationRunner.run(applicationArguments);
 
         List<ILoggingEvent> logsList = listAppender.list;
-        assertEquals("Available fonts: [Arial, Times New Roman]", logsList.get(0).getMessage());
         assertEquals(Level.INFO, logsList.get(0).getLevel());
+        assertEquals("Font registered: Chakra Petch Bold", logsList.get(0).getMessage());
+        assertEquals(Level.INFO, logsList.get(1).getLevel());
+        assertEquals("Available fonts: [Arial, Times New Roman, Chakra Petch Bold]", logsList.get(1).getMessage());
     }
 
     @Test
@@ -81,5 +85,4 @@ public class FontValidationRunnerTest {
         assertEquals("Available fonts: []", logsList.get(0).getMessage());
         assertEquals(Level.INFO, logsList.get(0).getLevel());
     }
-
 }

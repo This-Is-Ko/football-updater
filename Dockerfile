@@ -1,4 +1,5 @@
-FROM arm64v8/eclipse-temurin:21.0.4_7-jdk-alpine
+#FROM arm64v8/eclipse-temurin:21.0.4_7-jdk-alpine
+FROM amd64/eclipse-temurin:21.0.4_7-jdk-alpine
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 RUN echo "Running on $BUILDPLATFORM, building for $TARGETPLATFORM" > /log
