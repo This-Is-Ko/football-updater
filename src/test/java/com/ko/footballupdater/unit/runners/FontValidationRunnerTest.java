@@ -56,7 +56,7 @@ public class FontValidationRunnerTest {
         fooLogger.addAppender(listAppender);
 
         GraphicsEnvironment graphicsEnvironment = mock(GraphicsEnvironment.class);
-        when(graphicsEnvironment.getAvailableFontFamilyNames()).thenReturn(new String[]{"Arial", "Times New Roman"});
+        when(graphicsEnvironment.getAvailableFontFamilyNames()).thenReturn(new String[]{"Arial", "Times New Roman", "Chakra Petch Bold"});
 
         when(GraphicsEnvironment.getLocalGraphicsEnvironment()).thenReturn(graphicsEnvironment);
 
