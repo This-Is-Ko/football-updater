@@ -10,6 +10,7 @@ import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Team;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -78,6 +79,18 @@ public class SofascoreDataSource implements DataSourceParser {
                     log.atInfo().setMessage("Selected match is not newer than last checked").addKeyValue("player", player.getName()).log();
                     return null;
                 }
+            }
+
+            // Check that match is finished
+            if (matchEntry.hasNonNull("status") && matchEntry.get("status").hasNonNull("code")) {
+                int matchStatusCode = matchEntry.get("status").get("code").intValue();
+                if (matchStatusCode != 100) {
+                    log.atInfo().setMessage("Selected match status is not 100 - not finished").addKeyValue("player", player.getName()).log();
+                    return null;
+                }
+            } else {
+                log.atInfo().setMessage("Selected match is missing status node or status code").addKeyValue("player", player.getName()).log();
+                return null;
             }
 
             // Construct player match statistics url
@@ -162,6 +175,8 @@ public class SofascoreDataSource implements DataSourceParser {
             Match match = new Match(url, selectedMatchDate, homeTeam, awayTeam, relevantTeamName, homeTeamScore, awayTeamScore);
             playerMatchPerformanceStats.setMatch(match);
             return playerMatchPerformanceStats;
+        } catch (HttpStatusException ex) {
+            log.atWarn().setMessage("Error while trying to update player - HTTP code: " + ex.getStatusCode() + " - url: " + ex.getUrl()).addKeyValue("player", player.getName()).log();
         } catch (Exception ex) {
             log.atWarn().setMessage("Error while trying to update player").setCause(ex).addKeyValue("player", player.getName()).log();
         }
