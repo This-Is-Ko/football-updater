@@ -7,7 +7,7 @@ import com.ko.footballupdater.models.facebookApi.FacebookAccessTokenResponse;
 import com.ko.footballupdater.models.facebookApi.InstagramUserMedia;
 import com.ko.footballupdater.models.form.FacebookApiDto;
 import com.ko.footballupdater.models.form.ImageUrlEntry;
-import com.ko.footballupdater.utils.FacebookApiHelper;
+import com.ko.footballupdater.utils.StringHelper;
 import com.ko.footballupdater.utils.LogHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -227,10 +227,10 @@ public class FacebookApiService {
         }
 
         UriComponentsBuilder urlBuilder = UriComponentsBuilder.fromUriString(FACEBOOK_GRAPH_API_BASE_URL + "/" + instagramUserId + "/media");
-        urlBuilder.queryParam("access_token", FacebookApiHelper.encodeTextToUtf8(accessToken));
+        urlBuilder.queryParam("access_token", StringHelper.encodeTextToUtf8(accessToken));
 
         if (imageUrl != null) {
-            urlBuilder.queryParam("image_url", FacebookApiHelper.encodeTextToUtf8(imageUrl));
+            urlBuilder.queryParam("image_url", StringHelper.encodeTextToUtf8(imageUrl));
         }
 
         if (mediaType != null) {
@@ -240,7 +240,7 @@ public class FacebookApiService {
         if (children != null) {
             // Children param - e.g. children=17899506308402767%2C18193870522147812%2C17853844403701904
             String cihldrenString = String.join(",", children);
-            urlBuilder.queryParam("children", FacebookApiHelper.encodeTextToUtf8(cihldrenString));
+            urlBuilder.queryParam("children", StringHelper.encodeTextToUtf8(cihldrenString));
         }
 
         if (isCarouselItem != null) {
@@ -251,7 +251,7 @@ public class FacebookApiService {
             // Refer to https://stackoverflow.com/questions/54099777/inconsistent-line-breaks-when-posting-to-instagram
             // https://www.fileformat.info/info/unicode/char/2063/index.htm
             // Maximum 2200 characters, 30 hashtags, and 20 @ tags
-            urlBuilder.queryParam("caption", FacebookApiHelper.encodeTextToUtf8(caption.replace("\n", "\u2063\n")));
+            urlBuilder.queryParam("caption", StringHelper.encodeTextToUtf8(caption.replace("\n", "\u2063\n")));
         }
         String apiUrl = urlBuilder
                 .build()
@@ -296,7 +296,7 @@ public class FacebookApiService {
 
     private ExchangeFilterFunction logRequest() {
         return (clientRequest, next) -> {
-            log.debug("Request: {} {}", clientRequest.method(), FacebookApiHelper.maskAccessToken(clientRequest.url().toString()));
+            log.debug("Request: {} {}", clientRequest.method(), StringHelper.maskAccessToken(clientRequest.url().toString()));
             clientRequest.headers()
                     .forEach((name, values) -> values.forEach(value -> log.info("{}={}", name, value)));
             return next.exchange(clientRequest);
