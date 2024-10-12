@@ -21,16 +21,16 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Getter
 @Slf4j
 @Component
 @Qualifier("sofascore")
 public class SofascoreDataSource implements DataSourceParser {
 
-    @Getter
     private final DataSourceSiteName dataSourceSiteName = DataSourceSiteName.SOFASCORE;
 
-    private final String BASEURL = "https://api.sofascore.com";
-    private final String API_MATCH_BASE_URL = "/api/v1/event";
+    private static final String BASEURL = "https://api.sofascore.com";
+    private static final String API_MATCH_BASE_URL = "/api/v1/event";
 
     @Override
     public PlayerMatchPerformanceStats parsePlayerMatchData(Player player, Document document) {
