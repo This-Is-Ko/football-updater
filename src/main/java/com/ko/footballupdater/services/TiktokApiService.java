@@ -135,7 +135,7 @@ public class TiktokApiService extends AbstractAuthClass {
                         "",
                         post.getCaption(),
                         false,
-                        "PUBLIC_TO_EVERYONE",
+                        tiktokApiProperties.getPrivacyLevel(),
                         false
                 ),
                 new PostPhotoRequestSourceInfo(

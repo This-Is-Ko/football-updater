@@ -24,4 +24,7 @@ public class TiktokApiProperties {
     @NotNull
     private String redirectUri;
 
+    @NotNull
+    private String privacyLevel;
+
 }
