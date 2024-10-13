@@ -1,21 +1,16 @@
 package com.ko.footballupdater.models.form;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ImageUrlEntry {
 
     private Integer imageIndex;
 
     private String url;
 
-    public ImageUrlEntry() {
-    }
-
-    public ImageUrlEntry(Integer imageIndex, String url) {
-        this.imageIndex = imageIndex;
-        this.url = url;
-    }
 }

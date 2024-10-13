@@ -15,13 +15,13 @@ public abstract class AbstractAuthClass {
     Calendar expiresAt;
 
     public void storeTokensInMemory(AccessTokenResponse response) throws Exception {
-        if (response.getAccess_token() == null) {
+        if (response.getAccessToken() == null) {
             throw new Exception("Access token is null");
         }
-        this.accessToken = response.getAccess_token();
+        this.accessToken = response.getAccessToken();
         // Calculate token expiry time
         this.expiresAt = Calendar.getInstance();
-        expiresAt.add(Calendar.SECOND, response.getExpires_in());
+        expiresAt.add(Calendar.SECOND, response.getExpiresIn());
         log.atInfo().setMessage("Saved access token - Expires at: " + expiresAt.toString()).log();
     }
 

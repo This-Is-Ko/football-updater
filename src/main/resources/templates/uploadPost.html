@@ -45,6 +45,13 @@
                             <textarea id="caption" name="caption" rows="4" th:text="${form.post.caption}" class="form-control"></textarea>
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <label for="uploadDestination">Select upload service:</label>
+                        <select id="uploadDestination" th:field="*{uploadDestination}" class="form-control">
+                            <option value="INSTAGRAM">Instagram</option>
+                            <option value="TIKTOK">TikTok</option>
+                        </select>
+                    </div>
                     <button class="btn btn-primary action-button" type="submit">Upload</button>
                 </form>
                 <div th:if="${ form.post == null OR form.imageUrls == null }">

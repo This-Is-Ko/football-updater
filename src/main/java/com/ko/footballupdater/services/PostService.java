@@ -54,6 +54,9 @@ public class PostService {
     private FacebookApiService facebookApiService;
 
     @Autowired
+    private TiktokApiService tiktokApiService;
+
+    @Autowired
     private PostHelper postHelper;
 
     @Autowired
@@ -317,7 +320,21 @@ public class PostService {
         // Update caption from form
         post.setCaption(uploadPostForm.getCaption());
 
-        facebookApiService.postToInstagram(post, imagesToUpload);
+        // Use selected upload destination
+        if (uploadPostForm.getUploadDestination() == null) {
+            throw new IllegalArgumentException("Cannot upload as destination is not selected");
+        }
+        switch (uploadPostForm.getUploadDestination()) {
+            case INSTAGRAM -> {
+                facebookApiService.postToInstagram(post, imagesToUpload);
+                break;
+            }
+            case TIKTOK -> {
+                tiktokApiService.postToTiktok(post, imagesToUpload);
+                break;
+            }
+        }
+
 
         post.setPostedStatus(true);
         postRepository.save(post);
