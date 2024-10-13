@@ -3,13 +3,13 @@ package com.ko.footballupdater.services;
 import com.ko.footballupdater.configuration.TiktokApiProperties;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.form.ImageUrlEntry;
+import com.ko.footballupdater.models.form.TiktokApiDto;
 import com.ko.footballupdater.models.tiktokApi.CreatorInfoResponse;
 import com.ko.footballupdater.models.tiktokApi.PostPhotoRequest;
 import com.ko.footballupdater.models.tiktokApi.PostPhotoRequestPostInfo;
 import com.ko.footballupdater.models.tiktokApi.PostPhotoRequestSourceInfo;
 import com.ko.footballupdater.models.tiktokApi.PostPhotoResponse;
 import com.ko.footballupdater.models.tiktokApi.TiktokAccessTokenResponse;
-import com.ko.footballupdater.models.form.TiktokApiDto;
 import com.ko.footballupdater.utils.LogHelper;
 import com.ko.footballupdater.utils.StringHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +22,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -124,6 +123,7 @@ public class TiktokApiService extends AbstractAuthClass {
         if (creatorInfoResponse == null) {
             throw new Exception("Tiktok Creator Info API response is empty");
         }
+        LogHelper.logWithSubject(log.atInfo().setMessage("Successfully called Tiktok Creator Info for user: " + creatorInfoResponse.getData().getCreatorUsername()), post);
 
         List<String> imageUrls = imagesToUpload.stream()
                 .map(ImageUrlEntry::getUrl)

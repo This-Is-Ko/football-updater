@@ -1,6 +1,5 @@
 package com.ko.footballupdater.controllers;
 
-import com.ko.footballupdater.services.FacebookApiService;
 import com.ko.footballupdater.services.TiktokApiService;
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;

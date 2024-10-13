@@ -7,20 +7,18 @@ import com.ko.footballupdater.models.facebookApi.FacebookAccessTokenResponse;
 import com.ko.footballupdater.models.facebookApi.InstagramUserMedia;
 import com.ko.footballupdater.models.form.FacebookApiDto;
 import com.ko.footballupdater.models.form.ImageUrlEntry;
-import com.ko.footballupdater.utils.StringHelper;
 import com.ko.footballupdater.utils.LogHelper;
+import com.ko.footballupdater.utils.StringHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 

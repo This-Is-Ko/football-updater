@@ -327,14 +327,11 @@ public class PostService {
         switch (uploadPostForm.getUploadDestination()) {
             case INSTAGRAM -> {
                 facebookApiService.postToInstagram(post, imagesToUpload);
-                break;
             }
             case TIKTOK -> {
                 tiktokApiService.postToTiktok(post, imagesToUpload);
-                break;
             }
         }
-
 
         post.setPostedStatus(true);
         postRepository.save(post);
