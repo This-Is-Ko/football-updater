@@ -26,28 +26,28 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-public class FacebookApiService {
+public class FacebookApiService extends AbstractAuthClass {
 
     @Autowired
     FacebookApiProperties facebookApiProperties;
 
-    private final String FACEBOOK_API_BASE_URL = "https://www.facebook.com/v18.0/dialog/oauth";
-    private final String FACEBOOK_GRAPH_API_BASE_URL = "https://graph.facebook.com/v18.0";
-
-    private String state;
-    private String accessToken;
-    private Calendar expiresAt;
+    private static final String FACEBOOK_API_BASE_URL = "https://www.facebook.com/v18.0/dialog/oauth";
+    private static final String FACEBOOK_GRAPH_API_BASE_URL = "https://graph.facebook.com/v18.0";
 
     private final WebClient facebookWebClient;
     private final WebClient facebookWebClientNoEncoding;
 
     public FacebookApiService(WebClient.Builder facebookWebClientBuilder, WebClient.Builder facebookWebClientBuilder1) {
-        this.facebookWebClient = facebookWebClientBuilder.baseUrl(FACEBOOK_GRAPH_API_BASE_URL).filter(logRequest())
+        this.facebookWebClient = facebookWebClientBuilder
+                .baseUrl(FACEBOOK_GRAPH_API_BASE_URL)
+                .filter(logRequest())
                 .filter(logResponse()).build();
         DefaultUriBuilderFactory defaultUriBuilderFactory = new DefaultUriBuilderFactory();
         defaultUriBuilderFactory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
-        this.facebookWebClientNoEncoding = facebookWebClientBuilder1.uriBuilderFactory(defaultUriBuilderFactory)
-                .baseUrl(FACEBOOK_GRAPH_API_BASE_URL).filter(logRequest())
+        this.facebookWebClientNoEncoding = facebookWebClientBuilder1
+                .uriBuilderFactory(defaultUriBuilderFactory)
+                .baseUrl(FACEBOOK_GRAPH_API_BASE_URL)
+                .filter(logRequest())
                 .filter(logResponse()).build();
     }
 
@@ -62,22 +62,15 @@ public class FacebookApiService {
         return facebookApiDto;
     }
 
-    public Boolean isTokenValid() {
-        if (accessToken == null || accessToken.isEmpty() || expiresAt == null) {
-            return false;
-        }
-        Calendar currentTime = Calendar.getInstance();
-        Calendar expiresAtMinusTenMin = ((Calendar) expiresAt.clone());
-        // 5 minute buffer
-        expiresAtMinusTenMin.add(Calendar.MINUTE, -5);
-
-        return currentTime.before(expiresAtMinusTenMin);
-    }
-
     public String generateLoginString() {
         UUID uuid = UUID.randomUUID();
         state = uuid.toString();
-        return FACEBOOK_API_BASE_URL + String.format("?client_id=%s&response_type=%s&scope=%s&redirect_uri=%s&state=%s", facebookApiProperties.getClientId(), facebookApiProperties.getResponseType(), facebookApiProperties.getScope(), facebookApiProperties.getRedirectUri(), state);
+        return FACEBOOK_API_BASE_URL + String.format("?client_id=%s&response_type=%s&scope=%s&redirect_uri=%s&state=%s",
+                facebookApiProperties.getClientId(),
+                facebookApiProperties.getResponseType(),
+                facebookApiProperties.getScope(),
+                facebookApiProperties.getRedirectUri(),
+                state);
     }
 
     public void handleLogin(String state, String code) throws Exception {
@@ -91,23 +84,6 @@ public class FacebookApiService {
         }
     }
 
-    public void verifyStateValue(String state) throws Exception {
-        if (!this.state.equals(state)) {
-            throw new Exception("State values don't match");
-        }
-    }
-
-    public void storeTokensInMemory(FacebookAccessTokenResponse response) throws Exception {
-        if (response.getAccess_token() == null) {
-            throw new Exception("Access token is null");
-        }
-        this.accessToken = response.getAccess_token();
-        // Calculate token expiry time
-        this.expiresAt = Calendar.getInstance();
-        expiresAt.add(Calendar.SECOND, response.getExpires_in());
-        log.atInfo().setMessage("Saved access token - Expires at: " + expiresAt.toString()).log();
-    }
-
     private FacebookAccessTokenResponse exchangeCodeForAccessToken(String code) {
         // Request URL structure:
         // /access_token?
@@ -115,7 +91,8 @@ public class FacebookApiService {
         //   &redirect_uri={redirect-uri}
         //   &client_secret={app-secret}
         //   &code={code-parameter}
-        String apiUrl = String.format("/oauth/access_token?client_id=%s&redirect_uri=%s&client_secret=%s&code=%s", facebookApiProperties.getClientId(), facebookApiProperties.getRedirectUri(), facebookApiProperties.getClientSecret(), code);
+        String apiUrl = String.format("/oauth/access_token?client_id=%s&redirect_uri=%s&client_secret=%s&code=%s",
+                facebookApiProperties.getClientId(), facebookApiProperties.getRedirectUri(), facebookApiProperties.getClientSecret(), code);
         return facebookWebClient.get()
                 .uri(apiUrl)
                 .retrieve()
@@ -127,7 +104,8 @@ public class FacebookApiService {
         if (!isTokenValid()) {
             throw new Exception("No access token available");
         }
-        String apiUrl = String.format("/debug_token?input_token=%s&access_token=%s", accessToken, facebookApiProperties.getClientId() + "|" + facebookApiProperties.getClientSecret());
+        String apiUrl = String.format("/debug_token?input_token=%s&access_token=%s",
+                accessToken, facebookApiProperties.getClientId() + "|" + facebookApiProperties.getClientSecret());
         return facebookWebClient.get()
                 .uri(apiUrl)
                 .retrieve()
@@ -293,21 +271,4 @@ public class FacebookApiService {
                 .bodyToMono(InstagramUserMedia.class)
                 .block();
     }
-
-    private ExchangeFilterFunction logRequest() {
-        return (clientRequest, next) -> {
-            log.debug("Request: {} {}", clientRequest.method(), StringHelper.maskAccessToken(clientRequest.url().toString()));
-            clientRequest.headers()
-                    .forEach((name, values) -> values.forEach(value -> log.info("{}={}", name, value)));
-            return next.exchange(clientRequest);
-        };
-    }
-
-    private ExchangeFilterFunction logResponse() {
-        return ExchangeFilterFunction.ofResponseProcessor(clientResponse -> {
-            log.debug("Response: {}", clientResponse.headers().asHttpHeaders().get("property-header"));
-            return Mono.just(clientResponse);
-        });
-    }
-
 }

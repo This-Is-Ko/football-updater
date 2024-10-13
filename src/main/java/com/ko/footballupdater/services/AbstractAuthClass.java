@@ -1,6 +1,6 @@
 package com.ko.footballupdater.services;
 
-import com.ko.footballupdater.models.facebookApi.TiktokAccessTokenResponse;
+import com.ko.footballupdater.models.facebookApi.AccessTokenResponse;
 import com.ko.footballupdater.utils.StringHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
@@ -14,7 +14,7 @@ public abstract class AbstractAuthClass {
     String accessToken;
     Calendar expiresAt;
 
-    public void storeTokensInMemory(TiktokAccessTokenResponse response) throws Exception {
+    public void storeTokensInMemory(AccessTokenResponse response) throws Exception {
         if (response.getAccess_token() == null) {
             throw new Exception("Access token is null");
         }

@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-public class TiktokApiService extends AbstractAuthClass{
+public class TiktokApiService extends AbstractAuthClass {
 
     @Autowired
     TiktokApiProperties tiktokApiProperties;
@@ -44,8 +44,13 @@ public class TiktokApiService extends AbstractAuthClass{
 
     public void handleLogin(String state, String code) throws Exception {
         verifyStateValue(state);
-        TiktokAccessTokenResponse response = requestAccessToken(code);
-        storeTokensInMemory(response);
+        // Exchange code for access token
+        if (code != null && !code.isEmpty()) {
+            TiktokAccessTokenResponse response = requestAccessToken(code);
+            storeTokensInMemory(response);
+        } else {
+            throw new Exception("Login code param is empty");
+        }
     }
 
     public TiktokAccessTokenResponse requestAccessToken(String code) {
@@ -69,15 +74,14 @@ public class TiktokApiService extends AbstractAuthClass{
         String codeVerifier = StringHelper.generateRandomString(43);
         String sha256EncodedCodeVerifier = StringHelper.encodeWithSHA256(codeVerifier);
 
-        StringBuilder urlBuilder = new StringBuilder(TIKTOK_AUTH_BASE_URL)
-                .append("/auth/authorize/")
-                .append("?client_key=").append(tiktokApiProperties.getClientKey())
-                .append("&response_type=code")
-                .append("&scope=").append(tiktokApiProperties.getScope())
-                .append("&redirect_uri=").append(tiktokApiProperties.getRedirectUri())
-                .append("&state=").append(state)
-                .append("&code_challenge_method=S256")
-                .append("&code_challenge=").append(sha256EncodedCodeVerifier);
-        return urlBuilder.toString();
+        return TIKTOK_AUTH_BASE_URL +
+                "/auth/authorize/" +
+                "?client_key=" + tiktokApiProperties.getClientKey() +
+                "&response_type=code" +
+                "&scope=" + tiktokApiProperties.getScope() +
+                "&redirect_uri=" + tiktokApiProperties.getRedirectUri() +
+                "&state=" + state +
+                "&code_challenge_method=S256" +
+                "&code_challenge=" + sha256EncodedCodeVerifier;
     }
 }

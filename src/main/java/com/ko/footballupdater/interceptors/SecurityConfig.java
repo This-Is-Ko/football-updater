@@ -34,6 +34,7 @@ public class SecurityConfig {
                         .requestMatchers("/players/**").permitAll()
                         .requestMatchers("/performance/**").permitAll()
                         .requestMatchers("/facebook/auth").permitAll()
+                        .requestMatchers("/tiktok/auth").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/webjars/**").permitAll()
                         .anyRequest().authenticated()
