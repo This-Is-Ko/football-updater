@@ -37,6 +37,7 @@ public class SecurityConfig {
                         .requestMatchers("/tiktok/auth").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/webjars/**").permitAll()
+                        .requestMatchers("/terms-and-privacy.html").permitAll()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())
