@@ -11,7 +11,10 @@
             <div class="d-flex flex-row justify-content-between">
                 <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == false AND facebookStatus.loginUri != null}" class="btn btn-primary btn-sm action-button" th:href="${facebookStatus.loginUri}">Login to Facebook</a>
                 <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == false AND facebookStatus.loginUri == null}" class="btn btn-primary btn-sm action-button disabled" th:href="${facebookStatus.loginUri}">Login to Facebook unavailable</a>
-                <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == true}" class="btn btn-success btn-sm action-button disabled" th:href="${facebookStatus.loginUri}">Logged In</a>
+                <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == true}" class="btn btn-success btn-sm action-button disabled" th:href="${facebookStatus.loginUri}">Facebook Logged In</a>
+                <a th:if="${tiktokStatus != null AND tiktokStatus.currentlyLoggedIn == false AND tiktokStatus.loginUri != null}" class="btn btn-primary btn-sm action-button" th:href="${tiktokStatus.loginUri}">Login to Tiktok</a>
+                <a th:if="${tiktokStatus != null AND tiktokStatus.currentlyLoggedIn == false AND tiktokStatus.loginUri == null}" class="btn btn-primary btn-sm action-button disabled" th:href="${tiktokStatus.loginUri}">Login to Tiktok unavailable</a>
+                <a th:if="${tiktokStatus != null AND tiktokStatus.currentlyLoggedIn == true}" class="btn btn-success btn-sm action-button disabled" th:href="${tiktokStatus.loginUri}">Tiktok Logged In</a>
             </div>
             <div>
                 <form th:if="${ form.post != null AND not#lists.isEmpty(form.imageUrls) }" th:object="${uploadPostForm}" method="post" th:action="@{/posts/upload}">
@@ -44,6 +47,13 @@
                             <label for="caption">Caption:</label>
                             <textarea id="caption" name="caption" rows="4" th:text="${form.post.caption}" class="form-control"></textarea>
                         </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="uploadDestination">Select upload service:</label>
+                        <select id="uploadDestination" th:field="*{uploadDestination}" class="form-control">
+                            <option value="INSTAGRAM">Instagram</option>
+                            <option value="TIKTOK">TikTok</option>
+                        </select>
                     </div>
                     <button class="btn btn-primary action-button" type="submit">Upload</button>
                 </form>

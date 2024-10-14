@@ -1,6 +1,7 @@
 package com.ko.footballupdater.models.form;
 
 import com.ko.footballupdater.models.Post;
+import com.ko.footballupdater.models.UploadDestination;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,5 +19,7 @@ public class UploadPostDto {
     private List<ImageUrlEntry> imageUrls = new ArrayList<>();
 
     private String caption;
+
+    private UploadDestination uploadDestination;
 
 }

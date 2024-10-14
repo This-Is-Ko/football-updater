@@ -17,7 +17,10 @@
                 <a th:if="${param.postedStatus != null}" class="btn btn-secondary btn-sm action-button" th:href="@{/posts}">No filter</a>
                 <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == false AND facebookStatus.loginUri != null}" class="btn btn-primary btn-sm action-button" th:href="${facebookStatus.loginUri}">Login to Facebook</a>
                 <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == false AND facebookStatus.loginUri == null}" class="btn btn-primary btn-sm action-button disabled" th:href="${facebookStatus.loginUri}">Login to Facebook unavailable</a>
-                <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == true}" class="btn btn-success btn-sm action-button disabled" th:href="${facebookStatus.loginUri}">Logged In</a>
+                <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == true}" class="btn btn-success btn-sm action-button disabled" th:href="${facebookStatus.loginUri}">Facebook Logged In</a>
+                <a th:if="${tiktokStatus != null AND tiktokStatus.currentlyLoggedIn == false AND tiktokStatus.loginUri != null}" class="btn btn-primary btn-sm action-button" th:href="${tiktokStatus.loginUri}">Login to Tiktok</a>
+                <a th:if="${tiktokStatus != null AND tiktokStatus.currentlyLoggedIn == false AND tiktokStatus.loginUri == null}" class="btn btn-primary btn-sm action-button disabled" th:href="${tiktokStatus.loginUri}">Login to Tiktok unavailable</a>
+                <a th:if="${tiktokStatus != null AND tiktokStatus.currentlyLoggedIn == true}" class="btn btn-success btn-sm action-button disabled" th:href="${tiktokStatus.loginUri}">Tiktok Logged In</a>
             </div>
             <div>
                 <form th:if="${ not#lists.isEmpty(form.posts)}" th:object="${postsForm}" method="post" th:action="@{/posts/save-all}">
@@ -61,10 +64,8 @@
                                     </td>
                                     <td>
                                         <a class="btn btn-primary action-button full-width-button" th:href="@{/posts/prepare-standout-image?postId={id}(id=${post.id})}">Custom image</a>
-                                        <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == true}" class="btn btn-primary action-button full-width-button" th:href="@{/posts/prepare-upload?postId={id}(id=${post.id})}">Upload post</a>
-                                        <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == false}" class="btn btn-primary action-button full-width-button disabled" th:href="@{/posts/prepare-upload?postId={id}(id=${post.id})}">Upload post</a>
+                                        <a class="btn btn-primary action-button full-width-button" th:href="@{/posts/prepare-upload?postId={id}(id=${post.id})}">Upload post</a>
                                         <a type="button" class="btn btn-danger full-width-button" data-bs-toggle="modal" th:data-bs-target="'#delete-confirm-modal-' + ${post.id}">Delete</a>
-
                                         <div th:id="'delete-confirm-modal-' + ${post.id}" class="modal" tabindex="-1" role="dialog">
                                             <div class="modal-dialog" role="document">
                                                 <div class="modal-content">

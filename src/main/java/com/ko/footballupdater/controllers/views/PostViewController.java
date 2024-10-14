@@ -12,6 +12,7 @@ import com.ko.footballupdater.models.form.UploadPostDto;
 import com.ko.footballupdater.services.FacebookApiService;
 import com.ko.footballupdater.services.PlayerService;
 import com.ko.footballupdater.services.PostService;
+import com.ko.footballupdater.services.TiktokApiService;
 import com.ko.footballupdater.utils.MessageType;
 import com.ko.footballupdater.utils.PostHelper;
 import jakarta.annotation.Nullable;
@@ -47,6 +48,9 @@ public class PostViewController {
     private FacebookApiService facebookApiService;
 
     @Autowired
+    private TiktokApiService tiktokApiService;
+
+    @Autowired
     private PostHelper postHelper;
 
     /**
@@ -68,6 +72,7 @@ public class PostViewController {
         }
         model.addAttribute("form", postsUpdateDto);
         model.addAttribute("facebookStatus", facebookApiService.prepareFacebookApiDto());
+        model.addAttribute("tiktokStatus", tiktokApiService.prepareTiktokApiDto());
         return "posts";
     }
 
@@ -246,6 +251,7 @@ public class PostViewController {
             model.addAttribute("form", uploadPostDto);
             model.addAttribute("uploadPostForm", uploadPostDto);
             model.addAttribute("facebookStatus", facebookApiService.prepareFacebookApiDto());
+            model.addAttribute("tiktokStatus", tiktokApiService.prepareTiktokApiDto());
             return "uploadPost";
         } catch (Exception ex) {
             log.atError().setMessage("Preparing post to upload").setCause(ex).log();
