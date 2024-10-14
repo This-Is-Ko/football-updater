@@ -9,7 +9,6 @@ version = '0.0.24-SNAPSHOT'
 
 java {
 	sourceCompatibility = '20'
-	targetCompatibility = '20'
 }
 
 repositories {
