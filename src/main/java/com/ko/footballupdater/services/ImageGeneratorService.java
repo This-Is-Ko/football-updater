@@ -51,6 +51,7 @@ public class ImageGeneratorService {
 
     @Autowired
     private TeamHelpers teamHelpers;
+
     @Autowired
     private ImageGeneratorProperties imageGeneratorProperties;
 

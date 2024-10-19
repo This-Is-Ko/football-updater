@@ -1,18 +1,17 @@
 package com.ko.footballupdater.services;
 
 import com.amazonaws.services.kms.model.NotFoundException;
+import com.ko.footballupdater.configuration.ImageGeneratorProperties;
 import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.models.AlternativePlayerName;
 import com.ko.footballupdater.models.CheckedStatus;
 import com.ko.footballupdater.models.DataSource;
 import com.ko.footballupdater.models.DataSourceSiteName;
 import com.ko.footballupdater.models.DataSourceType;
-import com.ko.footballupdater.models.Hashtag;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.PostType;
-import com.ko.footballupdater.models.Team;
 import com.ko.footballupdater.repositories.PlayerRepository;
 import com.ko.footballupdater.repositories.PostRepository;
 import com.ko.footballupdater.repositories.TeamRepository;
@@ -63,6 +62,9 @@ public class PlayerService {
 
     @Autowired
     private InstagramPostProperies instagramPostProperies;
+
+    @Autowired
+    private ImageGeneratorProperties imageGeneratorProperties;
 
     public Player addPlayer(Player newPlayer, DataSourceSiteName dataSourceSiteName) throws IllegalArgumentException {
         if (!playerRepository.findByNameEquals(newPlayer.getName()).isEmpty()) {
@@ -148,10 +150,12 @@ public class PlayerService {
             // Generate post and caption
             Post post = new Post(PostType.ALL_STAT_POST, player, playerMatchPerformanceStats);
             try {
-                // Generate stat images
-                imageGeneratorService.generatePlayerStatImage(post);
-                // Upload stat images to s3
-                amazonS3Service.uploadToS3(post);
+                if (imageGeneratorProperties.isEnabled()) {
+                    // Generate stat images
+                    imageGeneratorService.generatePlayerStatImage(post);
+                    // Upload stat images to s3
+                    amazonS3Service.uploadToS3(post);
+                }
                 // Generate any additional team hashtags
                 String hashtags = "";
                 if (post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null && !post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam().isEmpty()) {
@@ -198,6 +202,7 @@ public class PlayerService {
         }
         playerRepository.saveAll(playersToUpdate);
         log.atInfo().setMessage("Updated player entries with latest data").log();
+
         // Populate response
         response.setPlayersUpdated(playersToUpdate);
         response.setNumPlayersUpdated(playersToUpdate.size());

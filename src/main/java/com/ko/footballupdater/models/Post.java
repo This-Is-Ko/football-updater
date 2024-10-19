@@ -113,18 +113,23 @@ public class Post {
         this.postType = postType;
         this.player = player;
         this.playerMatchPerformanceStats = playerMatchPerformanceStats;
-        imagesUrls = new ArrayList<>();
     }
 
     public Post(Integer id, boolean postedStatus) {
         this.id = id;
         this.postedStatus = postedStatus;
-        imagesUrls = new ArrayList<>();
     }
 
     public Post(Player player, List<String> imagesUrls) {
         this.player = player;
         this.imagesUrls = imagesUrls;
         this.postedStatus = false;
+    }
+
+    public List<String> getImagesUrls() {
+        if (imagesUrls == null) {
+            imagesUrls = new ArrayList<>();
+        }
+        return imagesUrls;
     }
 }
