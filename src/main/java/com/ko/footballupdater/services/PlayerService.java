@@ -14,7 +14,6 @@ import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.repositories.PlayerRepository;
 import com.ko.footballupdater.repositories.PostRepository;
-import com.ko.footballupdater.repositories.TeamRepository;
 import com.ko.footballupdater.request.RequestDataSource;
 import com.ko.footballupdater.request.UpdatePlayerRequest;
 import com.ko.footballupdater.responses.UpdatePlayersResponse;
@@ -38,9 +37,6 @@ public class PlayerService {
 
     @Autowired
     private PlayerRepository playerRepository;
-
-    @Autowired
-    private TeamRepository teamRepository;
 
     @Autowired
     private PostRepository postRepository;
