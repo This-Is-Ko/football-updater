@@ -352,6 +352,7 @@ public class ImageGeneratorService {
                 String playerImageBaseFilePath = imageGeneratorProperties.getInputPath() + post.getPlayer().getName().replaceAll(" ", "") + STANDOUT_BASE_IMAGE_FILE_NAME;
                 image = loadImage(playerImageBaseFilePath);
             }
+            log.atDebug().setMessage("Prepared STANDOUT_STATS_POST image object").addKeyValue("player", post.getPlayer().getName()).log();
 
             // Add player name
             Font playerNameFont = new Font("Wagner Modern", Font.PLAIN, 50);
@@ -377,6 +378,7 @@ public class ImageGeneratorService {
                 Font matchDateFont = new Font("Chakra Petch", Font.BOLD, 20);
                 drawXCenteredText(image, matchDateFont, matchDateString, image.getHeight() - 30);
             }
+            log.atDebug().setMessage("Added text to STANDOUT_STATS_POST image").addKeyValue("player", post.getPlayer().getName()).log();
 
             // Save the modified image
             saveImage(post, image, generateFileName(post, 1, PostType.STANDOUT_STATS_POST), 1);
