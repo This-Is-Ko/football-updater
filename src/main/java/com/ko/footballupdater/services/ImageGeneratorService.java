@@ -5,14 +5,13 @@ import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.configuration.TeamProperties;
 import com.ko.footballupdater.models.ImageStatEntry;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
-import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.models.Post;
+import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.models.Team;
 import com.ko.footballupdater.models.form.HorizontalTranslation;
 import com.ko.footballupdater.models.form.ImageGenParams;
 import com.ko.footballupdater.models.form.StatisticEntryGenerateDto;
 import com.ko.footballupdater.models.form.VerticalTranslation;
-import com.ko.footballupdater.repositories.TeamRepository;
 import com.ko.footballupdater.utils.DateTimeHelper;
 import com.ko.footballupdater.utils.LogHelper;
 import com.ko.footballupdater.utils.PostHelper;
@@ -22,7 +21,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.GradientPaint;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -51,6 +56,7 @@ public class ImageGeneratorService {
 
     @Autowired
     private TeamHelpers teamHelpers;
+
     @Autowired
     private ImageGeneratorProperties imageGeneratorProperties;
 
@@ -351,6 +357,7 @@ public class ImageGeneratorService {
                 String playerImageBaseFilePath = imageGeneratorProperties.getInputPath() + post.getPlayer().getName().replaceAll(" ", "") + STANDOUT_BASE_IMAGE_FILE_NAME;
                 image = loadImage(playerImageBaseFilePath);
             }
+            log.atDebug().setMessage("Prepared STANDOUT_STATS_POST image object").addKeyValue("player", post.getPlayer().getName()).log();
 
             // Add player name
             Font playerNameFont = new Font("Wagner Modern", Font.PLAIN, 50);
@@ -376,14 +383,15 @@ public class ImageGeneratorService {
                 Font matchDateFont = new Font("Chakra Petch", Font.BOLD, 20);
                 drawXCenteredText(image, matchDateFont, matchDateString, image.getHeight() - 30);
             }
+            log.atDebug().setMessage("Added text to STANDOUT_STATS_POST image").addKeyValue("player", post.getPlayer().getName()).log();
 
             // Save the modified image
             saveImage(post, image, generateFileName(post, 1, PostType.STANDOUT_STATS_POST), 1);
         } catch (IOException ex) {
-            log.atWarn().setMessage("Unable to find/read image file").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
+            log.atWarn().setMessage("Unable to find/read image file").addKeyValue("player", post.getPlayer().getName()).log();
             throw new Exception(post.getPlayer().getName() + " - Unable to find/read image file ", ex);
         } catch (Exception ex) {
-            log.atWarn().setMessage("Error while generating standout stat image").setCause(ex).addKeyValue("player", post.getPlayer().getName()).log();
+            log.atWarn().setMessage("Error while generating standout stat image").addKeyValue("player", post.getPlayer().getName()).log();
             throw new Exception(post.getPlayer().getName() + " - Error while generating stat image ", ex);
         }
     }
