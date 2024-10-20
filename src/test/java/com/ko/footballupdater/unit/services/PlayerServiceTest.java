@@ -1,6 +1,7 @@
 package com.ko.footballupdater.unit.services;
 
 import com.amazonaws.services.kms.model.NotFoundException;
+import com.ko.footballupdater.configuration.ImageGeneratorProperties;
 import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.models.CheckedStatus;
 import com.ko.footballupdater.models.Hashtag;
@@ -43,6 +44,8 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class PlayerServiceTest {
@@ -77,12 +80,16 @@ public class PlayerServiceTest {
     @Mock
     private InstagramPostProperies instagramPostProperies;
 
+    @Mock
+    private ImageGeneratorProperties imageGeneratorProperties;
+
     @BeforeEach
     public void setup() {
         MockitoAnnotations.openMocks(this);
         when(instagramPostProperies.getVersion()).thenReturn(2);
         when(instagramPostProperies.getDefaultHashtags()).thenReturn("#default");
         when(instagramPostProperies.getAccountName()).thenReturn("Insta account name");
+        when(imageGeneratorProperties.isEnabled()).thenReturn(true);
     }
 
     @Test
@@ -197,6 +204,51 @@ public class PlayerServiceTest {
         assertEquals(2, response.getPlayersUpdated().size());
         assertEquals(playerToUpdate1, response.getPlayersUpdated().get(0));
         assertEquals(playerToUpdate2, response.getPlayersUpdated().get(1));
+
+        // Image gen and upload should be called for each player
+        verify(imageGeneratorService, times(2)).generatePlayerStatImage(any(Post.class));
+        verify(amazonS3Service, times(2)).uploadToS3(any(Post.class));
+    }
+
+    @Test
+    public void updateDataForAllPlayers_playersFound_imageGenIsDisabled_successful() throws Exception {
+        when(imageGeneratorProperties.isEnabled()).thenReturn(false);
+
+        List<Player> players = new ArrayList<>();
+        Player playerToUpdate1 = new Player("Player1");
+        playerToUpdate1.setCheckedStatus(new CheckedStatus());
+        playerToUpdate1.setId(1);
+        Player playerToUpdate2 = new Player("Player1");
+        playerToUpdate2.setCheckedStatus(new CheckedStatus());
+        playerToUpdate2.setId(2);
+        players.add(playerToUpdate1);
+        players.add(playerToUpdate2);
+        when(playerRepository.findAll()).thenReturn(players);
+
+        PlayerMatchPerformanceStats mockPerformanceStats = mock(PlayerMatchPerformanceStats.class);
+        when(parsingService.parsePlayerMatchData(playerToUpdate1)).thenReturn(mockPerformanceStats);
+        when(parsingService.parsePlayerMatchData(playerToUpdate2)).thenReturn(mockPerformanceStats);
+
+        Match match = new Match("https://url", Date.from(Instant.now()), "homeTeamName", "awayTeamName", "relevantTeamName");
+        when(mockPerformanceStats.getMatch()).thenReturn(match);
+
+        when(emailService.sendEmailUpdate(anyList())).thenReturn(true);
+
+        when(postRepository.save(any(Post.class))).thenReturn(new Post());
+
+        when(playerRepository.saveAll(any())).thenReturn(List.of(playerToUpdate1));
+        UpdatePlayersResponse response = playerService.updateDataForAllPlayers();
+
+        assertTrue(response.isEmailSent());
+        assertEquals(2, response.getNumPlayersUpdated());
+        assertNotNull(response.getPlayersUpdated());
+        assertEquals(2, response.getPlayersUpdated().size());
+        assertEquals(playerToUpdate1, response.getPlayersUpdated().get(0));
+        assertEquals(playerToUpdate2, response.getPlayersUpdated().get(1));
+
+        // Should not call image gen
+        verify(imageGeneratorService, times(0)).generatePlayerStatImage(any(Post.class));
+        verify(amazonS3Service, times(0)).uploadToS3(any(Post.class));
     }
 
     @Test
