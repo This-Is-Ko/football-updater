@@ -4,15 +4,12 @@ import com.amazonaws.services.kms.model.NotFoundException;
 import com.ko.footballupdater.configuration.ImageGeneratorProperties;
 import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.models.CheckedStatus;
-import com.ko.footballupdater.models.Hashtag;
 import com.ko.footballupdater.models.Match;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
 import com.ko.footballupdater.models.Post;
-import com.ko.footballupdater.models.Team;
 import com.ko.footballupdater.repositories.PlayerRepository;
 import com.ko.footballupdater.repositories.PostRepository;
-import com.ko.footballupdater.repositories.TeamRepository;
 import com.ko.footballupdater.responses.UpdatePlayersResponse;
 import com.ko.footballupdater.services.AmazonS3Service;
 import com.ko.footballupdater.services.EmailService;
@@ -28,11 +25,9 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -55,9 +50,6 @@ public class PlayerServiceTest {
 
     @Mock
     private PlayerRepository playerRepository;
-
-    @Mock
-    private TeamRepository teamRepository;
 
     @Mock
     private PostRepository postRepository;
