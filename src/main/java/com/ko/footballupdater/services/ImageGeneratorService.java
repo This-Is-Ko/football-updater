@@ -5,14 +5,13 @@ import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.configuration.TeamProperties;
 import com.ko.footballupdater.models.ImageStatEntry;
 import com.ko.footballupdater.models.PlayerMatchPerformanceStats;
-import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.models.Post;
+import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.models.Team;
 import com.ko.footballupdater.models.form.HorizontalTranslation;
 import com.ko.footballupdater.models.form.ImageGenParams;
 import com.ko.footballupdater.models.form.StatisticEntryGenerateDto;
 import com.ko.footballupdater.models.form.VerticalTranslation;
-import com.ko.footballupdater.repositories.TeamRepository;
 import com.ko.footballupdater.utils.DateTimeHelper;
 import com.ko.footballupdater.utils.LogHelper;
 import com.ko.footballupdater.utils.PostHelper;
@@ -22,7 +21,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.GradientPaint;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -51,6 +56,7 @@ public class ImageGeneratorService {
 
     @Autowired
     private TeamHelpers teamHelpers;
+
     @Autowired
     private ImageGeneratorProperties imageGeneratorProperties;
 
@@ -59,6 +65,7 @@ public class ImageGeneratorService {
 
     @Autowired
     private TeamProperties teamProperties;
+
     private final Map<String, BufferedImage> teamLogoCache = new HashMap<>();
     private final Map<String, BufferedImage> iconCache = new HashMap<>();
     private final Map<String, BufferedImage> baseImageCache = new HashMap<>();
@@ -77,26 +84,31 @@ public class ImageGeneratorService {
             BufferedImage selectedBaseImage = null;
             try {
                 if (post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null) {
-                    image = getImageUsingCache(post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME, imageGeneratorProperties.getExternalImageStoreUri() + BASE_IMAGE_DIRECTORY + imageGeneratorProperties.getInputPath() + post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam().replaceAll(" ", "") + "/", baseImageCache);
+                    image = cloneBufferImage(getImageUsingCache(post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME, imageGeneratorProperties.getExternalImageStoreUri() + BASE_IMAGE_DIRECTORY + imageGeneratorProperties.getInputPath() + post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam().replaceAll(" ", "") + "/", baseImageCache));
                     selectedBaseImage = cloneBufferImage(image);
                 }
             } catch (IOException | IllegalArgumentException ex) {
                 log.atDebug().setMessage("No team specific base image found" + post.getPlayer().getName()).log();
             }
 
-            if (image == null) {
+            if (selectedBaseImage == null) {
                 // Use default base image for player
                 try {
-                    image = getImageUsingCache(post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME, imageGeneratorProperties.getExternalImageStoreUri() + BASE_IMAGE_DIRECTORY + imageGeneratorProperties.getInputPath() + "/", baseImageCache);
+                    image = cloneBufferImage(getImageUsingCache(post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME, imageGeneratorProperties.getExternalImageStoreUri() + BASE_IMAGE_DIRECTORY + imageGeneratorProperties.getInputPath() + "/", baseImageCache));
                     selectedBaseImage = cloneBufferImage(image);
                 } catch (IOException ex) {
                     log.atDebug().setMessage("No player base image found" + post.getPlayer().getName()).log();
                 }
                 if (image == null) {
                     // Generic base image
-                    image = getImageUsingCache(imageGeneratorProperties.getGenericBaseImageFile(), imageGeneratorProperties.getExternalImageStoreUri() + BASE_IMAGE_DIRECTORY + imageGeneratorProperties.getInputPath() + "/", baseImageCache);
+                    // Clone image from cache to prevent cached image from being updated instead
+                    image = cloneBufferImage(getImageUsingCache(imageGeneratorProperties.getGenericBaseImageFile(), imageGeneratorProperties.getExternalImageStoreUri() + BASE_IMAGE_DIRECTORY + imageGeneratorProperties.getInputPath() + "/", baseImageCache));
                     selectedBaseImage = cloneBufferImage(image);
                 }
+            }
+
+            if (selectedBaseImage == null) {
+                throw new Exception(post.getPlayer().getName() + " - Unable to determine base image");
             }
 
             drawAllStatsPlayerName(image, post);
@@ -750,9 +762,9 @@ public class ImageGeneratorService {
         return cachedImage;
     }
 
-    public static BufferedImage cloneBufferImage(BufferedImage image) throws Exception {
+    public static BufferedImage cloneBufferImage(BufferedImage image) throws IllegalArgumentException {
         if (image == null) {
-            throw new Exception("Unable to clone image");
+            throw new IllegalArgumentException("Unable to clone image");
         }
         BufferedImage clone = new BufferedImage(image.getWidth(),
                 image.getHeight(), image.getType());
