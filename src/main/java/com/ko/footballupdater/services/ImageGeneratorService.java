@@ -65,6 +65,7 @@ public class ImageGeneratorService {
 
     @Autowired
     private TeamProperties teamProperties;
+
     private final Map<String, BufferedImage> teamLogoCache = new HashMap<>();
     private final Map<String, BufferedImage> iconCache = new HashMap<>();
     private final Map<String, BufferedImage> baseImageCache = new HashMap<>();
@@ -83,26 +84,31 @@ public class ImageGeneratorService {
             BufferedImage selectedBaseImage = null;
             try {
                 if (post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null) {
-                    image = getImageUsingCache(post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME, imageGeneratorProperties.getExternalImageStoreUri() + BASE_IMAGE_DIRECTORY + imageGeneratorProperties.getInputPath() + post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam().replaceAll(" ", "") + "/", baseImageCache);
+                    image = cloneBufferImage(getImageUsingCache(post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME, imageGeneratorProperties.getExternalImageStoreUri() + BASE_IMAGE_DIRECTORY + imageGeneratorProperties.getInputPath() + post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam().replaceAll(" ", "") + "/", baseImageCache));
                     selectedBaseImage = cloneBufferImage(image);
                 }
             } catch (IOException | IllegalArgumentException ex) {
                 log.atDebug().setMessage("No team specific base image found" + post.getPlayer().getName()).log();
             }
 
-            if (image == null) {
+            if (selectedBaseImage == null) {
                 // Use default base image for player
                 try {
-                    image = getImageUsingCache(post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME, imageGeneratorProperties.getExternalImageStoreUri() + BASE_IMAGE_DIRECTORY + imageGeneratorProperties.getInputPath() + "/", baseImageCache);
+                    image = cloneBufferImage(getImageUsingCache(post.getPlayer().getName().replaceAll(" ", "") + BASE_IMAGE_FILE_NAME, imageGeneratorProperties.getExternalImageStoreUri() + BASE_IMAGE_DIRECTORY + imageGeneratorProperties.getInputPath() + "/", baseImageCache));
                     selectedBaseImage = cloneBufferImage(image);
                 } catch (IOException ex) {
                     log.atDebug().setMessage("No player base image found" + post.getPlayer().getName()).log();
                 }
                 if (image == null) {
                     // Generic base image
-                    image = getImageUsingCache(imageGeneratorProperties.getGenericBaseImageFile(), imageGeneratorProperties.getExternalImageStoreUri() + BASE_IMAGE_DIRECTORY + imageGeneratorProperties.getInputPath() + "/", baseImageCache);
+                    // Clone image from cache to prevent cached image from being updated instead
+                    image = cloneBufferImage(getImageUsingCache(imageGeneratorProperties.getGenericBaseImageFile(), imageGeneratorProperties.getExternalImageStoreUri() + BASE_IMAGE_DIRECTORY + imageGeneratorProperties.getInputPath() + "/", baseImageCache));
                     selectedBaseImage = cloneBufferImage(image);
                 }
+            }
+
+            if (selectedBaseImage == null) {
+                throw new Exception(post.getPlayer().getName() + " - Unable to determine base image");
             }
 
             drawAllStatsPlayerName(image, post);
@@ -758,9 +764,9 @@ public class ImageGeneratorService {
         return cachedImage;
     }
 
-    public static BufferedImage cloneBufferImage(BufferedImage image) throws Exception {
+    public static BufferedImage cloneBufferImage(BufferedImage image) throws IllegalArgumentException {
         if (image == null) {
-            throw new Exception("Unable to clone image");
+            throw new IllegalArgumentException("Unable to clone image");
         }
         BufferedImage clone = new BufferedImage(image.getWidth(),
                 image.getHeight(), image.getType());
