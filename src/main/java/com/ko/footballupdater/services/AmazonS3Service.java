@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -56,20 +57,15 @@ public class AmazonS3Service {
                     String imageUrl = s3Client.getUrl(amazonS3Properties.getBucketName(), imageKey).toString();
                     LogHelper.logWithSubject(log.atInfo().setMessage("Successfully uploaded image " + imageFileName + " to S3 @ " + imageUrl), post);
 
-                    // Remove if url exists and add to end of list, keeps the order of the urls to be oldest to newest
-                    // Prevents duplicates of the same url
-                    if (post.getImagesUrls() != null) {
-                        post.getImagesUrls().remove(imageUrl);
-                    } else {
-                        post.setImagesUrls(new ArrayList<>());
-                    }
-                    // Add to front of image url list  if addToFront=true
-                    // Allows the default order of images in post upload to be standoutImage then allStatImage)
+                    // Work with a mutable copy (post.getImagesUrls() may be unmodifiable when loaded from DB)
+                    List<String> urls = post.getImagesUrls() != null ? new ArrayList<>(post.getImagesUrls()) : new ArrayList<>();
+                    urls.remove(imageUrl);
                     if (addToFront) {
-                        post.getImagesUrls().add(0, imageUrl);
+                        urls.add(0, imageUrl);
                     } else {
-                        post.getImagesUrls().add(imageUrl);
+                        urls.add(imageUrl);
                     }
+                    post.setImagesUrls(urls);
 
                     cleanUpFile(file);
                 }
