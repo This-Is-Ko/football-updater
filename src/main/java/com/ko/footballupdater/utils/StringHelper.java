@@ -40,7 +40,7 @@ public class StringHelper {
     }
 
     public static String maskAccessToken(String url) {
-        // Replace the access_token value with a placeholder
-        return url.replaceAll("access_token=([^&]+)", "access_token=********");
+        // Replace token and secret values with a placeholder
+        return url.replaceAll("(access_token|fb_exchange_token|input_token|client_secret)=([^&]+)", "$1=********");
     }
 }

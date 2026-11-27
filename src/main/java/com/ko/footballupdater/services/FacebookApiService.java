@@ -2,6 +2,7 @@ package com.ko.footballupdater.services;
 
 import com.ko.footballupdater.configuration.FacebookApiProperties;
 import com.ko.footballupdater.models.Post;
+import com.ko.footballupdater.models.TokenPlatform;
 import com.ko.footballupdater.models.facebookApi.DebugTokenReponse;
 import com.ko.footballupdater.models.facebookApi.FacebookAccessTokenResponse;
 import com.ko.footballupdater.models.facebookApi.InstagramUserMedia;
@@ -18,6 +19,7 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -31,6 +33,9 @@ public class FacebookApiService extends AbstractAuthClass {
 
     private static final String FACEBOOK_API_BASE_URL = "https://www.facebook.com/v18.0/dialog/oauth";
     private static final String FACEBOOK_GRAPH_API_BASE_URL = "https://graph.facebook.com/v18.0";
+    // Long-lived tokens are valid for ~60 days, used when the response doesn't include expires_in
+    private static final long LONG_LIVED_TOKEN_DEFAULT_LIFETIME_SECONDS = 60L * 24 * 60 * 60;
+    private static final int DEFAULT_TOKEN_REFRESH_THRESHOLD_DAYS = 10;
 
     private final WebClient facebookWebClient;
     private final WebClient facebookWebClientNoEncoding;
@@ -47,6 +52,16 @@ public class FacebookApiService extends AbstractAuthClass {
                 .baseUrl(FACEBOOK_GRAPH_API_BASE_URL)
                 .filter(logRequest())
                 .filter(logResponse()).build();
+    }
+
+    @Override
+    TokenPlatform getPlatform() {
+        return TokenPlatform.INSTAGRAM;
+    }
+
+    @Override
+    long defaultTokenLifetimeSeconds() {
+        return LONG_LIVED_TOKEN_DEFAULT_LIFETIME_SECONDS;
     }
 
     public FacebookApiDto prepareFacebookApiDto() {
@@ -75,8 +90,13 @@ public class FacebookApiService extends AbstractAuthClass {
         verifyStateValue(state);
         // Exchange code for access token
         if (code != null && !code.isEmpty()) {
-            FacebookAccessTokenResponse response = exchangeCodeForAccessToken(code);
-            storeTokensInMemory(response);
+            FacebookAccessTokenResponse shortLivedResponse = exchangeCodeForAccessToken(code);
+            if (shortLivedResponse == null || shortLivedResponse.getAccessToken() == null) {
+                throw new Exception("Access token missing from code exchange response");
+            }
+            // Swap the short-lived token (~1-2 hours) for a long-lived one (~60 days)
+            FacebookAccessTokenResponse longLivedResponse = exchangeForLongLivedToken(shortLivedResponse.getAccessToken());
+            storeTokens(longLivedResponse);
         } else {
             throw new Exception("Login code param is empty");
         }
@@ -96,6 +116,66 @@ public class FacebookApiService extends AbstractAuthClass {
                 .retrieve()
                 .bodyToMono(FacebookAccessTokenResponse.class)
                 .block();
+    }
+
+    /**
+     * Exchange a valid user access token (short or long-lived) for a long-lived token.
+     * Refer to <a href="https://developers.facebook.com/docs/facebook-login/guides/access-tokens/get-long-lived">...</a>
+     */
+    FacebookAccessTokenResponse exchangeForLongLivedToken(String currentToken) throws Exception {
+        // GET /oauth/access_token?
+        //   grant_type=fb_exchange_token
+        //   &client_id={app-id}
+        //   &client_secret={app-secret}
+        //   &fb_exchange_token={your-access-token}
+        FacebookAccessTokenResponse response = facebookWebClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/oauth/access_token")
+                        .queryParam("grant_type", "fb_exchange_token")
+                        .queryParam("client_id", facebookApiProperties.getClientId())
+                        .queryParam("client_secret", facebookApiProperties.getClientSecret())
+                        .queryParam("fb_exchange_token", currentToken)
+                        .build())
+                .retrieve()
+                .onStatus(HttpStatusCode::isError,
+                        clientResponse -> clientResponse.bodyToMono(String.class)
+                                .flatMap(errorBody -> {
+                                    log.error("Error exchanging for long-lived token. Response body: {}", errorBody);
+                                    return Mono.error(new Exception("Unable to exchange for long-lived token"));
+                                })
+                )
+                .bodyToMono(FacebookAccessTokenResponse.class)
+                .block();
+        if (response == null || response.getAccessToken() == null) {
+            throw new Exception("Long-lived token response is empty");
+        }
+        return response;
+    }
+
+    /**
+     * Refresh the long-lived token when it has fewer than the configured number of days left.
+     * An expired token can't be refreshed and requires logging in again via the dashboard.
+     */
+    public void refreshTokenIfExpiringSoon() {
+        if (accessToken == null || accessToken.isEmpty()) {
+            log.atDebug().setMessage("INSTAGRAM - No access token to refresh").log();
+            return;
+        }
+        if (!isTokenValid()) {
+            log.atWarn().setMessage("INSTAGRAM - Access token has expired, login is required to get a new token").log();
+            return;
+        }
+        Integer thresholdDays = facebookApiProperties.getTokenRefreshThresholdDays();
+        Duration threshold = Duration.ofDays(thresholdDays != null ? thresholdDays : DEFAULT_TOKEN_REFRESH_THRESHOLD_DAYS);
+        if (!isTokenExpiringWithin(threshold)) {
+            return;
+        }
+        try {
+            storeTokens(exchangeForLongLivedToken(accessToken));
+            log.atInfo().setMessage("INSTAGRAM - Refreshed long-lived access token").log();
+        } catch (Exception ex) {
+            log.atError().setMessage("INSTAGRAM - Failed to refresh long-lived access token").setCause(ex).log();
+        }
     }
 
     private DebugTokenReponse callDebugToken() throws Exception {
@@ -250,7 +330,7 @@ public class FacebookApiService extends AbstractAuthClass {
     public InstagramUserMedia callInstagramUserMediaPublishApi(String instagramUserId, String creationId) throws Exception {
         // POST "https://graph.facebook.com/v18.0/90010177253934/media_publish?creation_id=18000748627392977&access_token=EAAOc..."
 
-        if (accessToken == null || accessToken.isEmpty()) {
+        if (!isTokenValid()) {
             throw new Exception("No access token available");
         }
 
