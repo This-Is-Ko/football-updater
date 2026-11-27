@@ -99,6 +99,18 @@ Facebook and Instagram API
     FACEBOOK_API_SCOPE
     FACEBOOK_API_REDIRECT_URI
     FACEBOOK_API_INSTAGRAM_USER_ID
+    FACEBOOK_API_TOKEN_REFRESH_THRESHOLD_DAYS - Optional, default 10
+
+After the Facebook login the short-lived token is exchanged for a long-lived token (~60 days), which is saved in the `api_token` table and loaded on startup. It is refreshed automatically once it has fewer than `FACEBOOK_API_TOKEN_REFRESH_THRESHOLD_DAYS` days left. TikTok tokens are saved in the same table and refreshed with the TikTok refresh token. Create the table with `src/main/resources/database/api_token.sql`.
+
+Scheduler (Spring cron format `second minute hour day month weekday`, `-` disables a job)
+
+    SCHEDULER_ZONE - Optional, default UTC
+    SCHEDULER_PLAYER_UPDATE_CRON - Optional, default "-" (disabled). e.g. "0 0 6 * * *" to run the player data update daily at 06:00
+    SCHEDULER_TOKEN_REFRESH_CRON - Optional, default "0 0 * * * *" (hourly check)
+    SCHEDULER_POOL_SIZE - Optional, default 2
+
+The player data update can still be triggered manually with `GET /api/player/data/update`.
 
 ### API
 
