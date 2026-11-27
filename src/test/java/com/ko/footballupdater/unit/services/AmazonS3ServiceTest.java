@@ -73,17 +73,10 @@ public class AmazonS3ServiceTest {
 
     @Test
     public void uploadToS3_imagesExist_successfullyUpload() throws Exception {
-        when(post.getImagesFileNames()).thenReturn(List.of("image1.jpg", "image2.jpg"));
-        when(post.getImagesUrls()).thenReturn(new ArrayList<>());
-
-        File file1 = mock(File.class);
-        File file2 = mock(File.class);
-        String file1Path = "/path/to/output/image1.jpg";
-        String file2Path = "/path/to/output/image2.jpg";
-        when(file1.getAbsolutePath()).thenReturn(file1Path);
-        when(file2.getAbsolutePath()).thenReturn(file2Path);
-        when(file1.delete()).thenReturn(true);
-        when(file2.delete()).thenReturn(true);
+        Post realPost = new Post();
+        realPost.setPlayer(new Player("Player1"));
+        realPost.setImagesFileNames(new ArrayList<>(List.of("image1.jpg", "image2.jpg")));
+        realPost.setImagesUrls(new ArrayList<>());
 
         URL s3Url1 = URI.create("https://s3.bucket/image1.jpg").toURL();
         URL s3Url2 = URI.create("https://s3.bucket/image2.jpg").toURL();
@@ -91,12 +84,25 @@ public class AmazonS3ServiceTest {
         when(s3Client.getUrl(amazonS3Properties.getBucketName(), "image1.jpg")).thenReturn(s3Url1);
         when(s3Client.getUrl(amazonS3Properties.getBucketName(), "image2.jpg")).thenReturn(s3Url2);
 
-        amazonS3Service.uploadToS3(post);
+        amazonS3Service.uploadToS3(realPost);
 
         verify(s3Client, times(2)).putObject(any(PutObjectRequest.class));
+        assertEquals(List.of(s3Url1.toString(), s3Url2.toString()), realPost.getImagesUrls());
+    }
 
-        verify(post, times(6)).getImagesUrls();
-        assertEquals(2, post.getImagesUrls().size());
+    @Test
+    public void uploadToS3_unmodifiableImageUrls_successfullyUpload() throws Exception {
+        Post realPost = new Post();
+        realPost.setPlayer(new Player("Player1"));
+        realPost.setImagesFileNames(new ArrayList<>(List.of("image1.jpg")));
+        realPost.setImagesUrls(Collections.unmodifiableList(new ArrayList<>()));
+
+        URL s3Url = URI.create("https://s3.bucket/image1.jpg").toURL();
+        when(s3Client.getUrl(amazonS3Properties.getBucketName(), "image1.jpg")).thenReturn(s3Url);
+
+        amazonS3Service.uploadToS3(realPost);
+
+        assertEquals(List.of(s3Url.toString()), realPost.getImagesUrls());
     }
 
     @Test
