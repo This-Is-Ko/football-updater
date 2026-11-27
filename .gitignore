@@ -39,3 +39,6 @@ out/
 ### Prod Config ###
 /src/main/resources/application-local.properties
 /src/main/resources/application-prod.properties
+
+## Fonts ##
+/src/main/resources/fonts
