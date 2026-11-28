@@ -27,18 +27,18 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/images/favicon.ico").permitAll()
+                        // Static assets
+                        .requestMatchers("/images/**", "/styles/**", "/webjars/**").permitAll()
+                        // API endpoints are protected by the Auth-Secret header interceptor instead
                         .requestMatchers("/api/**").permitAll()
-                        // The review queue publishes to Instagram, so it requires the dashboard login
-                        .requestMatchers("/posts/review/**", "/posts/review").authenticated()
-                        .requestMatchers("/posts/**").permitAll()
+                        // Post pages can upload, generate and delete posts, so they require the dashboard login
+                        .requestMatchers("/posts", "/posts/**").authenticated()
                         .requestMatchers("/teams/**").permitAll()
                         .requestMatchers("/players/**").permitAll()
                         .requestMatchers("/performance/**").permitAll()
                         .requestMatchers("/facebook/auth").permitAll()
                         .requestMatchers("/tiktok/auth").permitAll()
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers("/webjars/**").permitAll()
                         .requestMatchers("/terms-and-privacy.html").permitAll()
                         .anyRequest().authenticated()
                 )
