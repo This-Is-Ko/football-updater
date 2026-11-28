@@ -14,5 +14,6 @@ public class UpdatePlayerRequest {
     private List<RequestDataSource> dataSources;
     private ArrayList<String> alternativeNames;
     private ArrayList<String> additionalHashtags;
+    private Integer shirtNumber;
 
 }

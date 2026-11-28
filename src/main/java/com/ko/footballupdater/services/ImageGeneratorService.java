@@ -196,12 +196,20 @@ public class ImageGeneratorService {
     private BufferedImage setUpBaseImageWithBackgroundImageUrl(ImageGenParams imageGenParams) throws IOException {
         URL imageUrl = URI.create(imageGenParams.getImageUrl()).toURL();
         BufferedImage downloadedImage = ImageIO.read(imageUrl);
-        BufferedImage background;
-        float scale = 1;
-
         if (downloadedImage == null) {
             throw new IOException(String.format("Downloaded image is missing - image from %s", imageUrl));
         }
+        return setUpBaseImageWithBackgroundImage(downloadedImage, imageGenParams);
+    }
+
+    /**
+     * Scale and translate a background photo into the 1000px standout canvas.
+     * Translation offsets are in source image pixels.
+     */
+    private BufferedImage setUpBaseImageWithBackgroundImage(BufferedImage downloadedImage, ImageGenParams imageGenParams) {
+        BufferedImage background;
+        float scale = 1;
+
         // Landscape image
         if (downloadedImage.getWidth() >= downloadedImage.getHeight()) {
             // Scale image down to height of 1000 - change width proportionally
@@ -375,10 +383,29 @@ public class ImageGeneratorService {
      */
     public boolean generateStandoutStatsImage(Post post, List<StatisticEntryGenerateDto> selectedStats, ImageGenParams imageGenParams,
                                               boolean allowGenericBaseFallback) throws Exception {
+        return generateStandoutStatsImage(post, selectedStats, imageGenParams, allowGenericBaseFallback, null);
+    }
+
+    /**
+     * @param backgroundImage an already downloaded photo to use as the background, framed with imageGenParams.
+     *                        When null, the image url in imageGenParams or the base images are used as before.
+     * @return true if the generic base image was used as the fallback
+     */
+    public boolean generateStandoutStatsImage(Post post, List<StatisticEntryGenerateDto> selectedStats, ImageGenParams imageGenParams,
+                                              boolean allowGenericBaseFallback, BufferedImage backgroundImage) throws Exception {
         boolean usedGenericBase = false;
         try {
             BufferedImage image;
-            if (imageGenParams != null && imageGenParams.getImageUrl() != null && !imageGenParams.getImageUrl().isEmpty()) {
+            if (backgroundImage != null) {
+                image = setUpBaseImageWithBackgroundImage(backgroundImage, imageGenParams != null ? imageGenParams : new ImageGenParams());
+
+                // Add gradient
+                drawGradient(image);
+
+                // Add account name
+                Font accountNameFont = new Font("Nike Ithaca", Font.PLAIN, 20);
+                drawAccountName(image, accountNameFont, "@" + instagramPostProperies.getAccountName());
+            } else if (imageGenParams != null && imageGenParams.getImageUrl() != null && !imageGenParams.getImageUrl().isEmpty()) {
                 // Download and set background image
                 image = setUpBaseImageWithBackgroundImageUrl(imageGenParams);
 

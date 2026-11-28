@@ -3,6 +3,8 @@ package com.ko.footballupdater.llm;
 import com.anthropic.client.AnthropicClient;
 import com.anthropic.client.okhttp.AnthropicOkHttpClient;
 import com.anthropic.errors.AnthropicException;
+import com.anthropic.models.messages.Base64ImageSource;
+import com.anthropic.models.messages.ContentBlockParam;
 import com.anthropic.models.messages.MessageCreateParams;
 import com.anthropic.models.messages.StopReason;
 import com.anthropic.models.messages.StructuredContentBlock;
@@ -15,6 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -62,14 +67,29 @@ public class AnthropicLlmClient implements LlmClient {
 
     @Override
     public <T> T generateStructured(String systemPrompt, String userPrompt, Class<T> responseType) throws LlmException {
+        return generateStructured(llmProperties.getModel(), systemPrompt, userPrompt, List.of(), responseType);
+    }
+
+    @Override
+    public <T> T generateStructured(String model, String systemPrompt, String userPrompt, List<LlmImage> images, Class<T> responseType) throws LlmException {
         if (!isEnabled()) {
             throw new LlmException("LLM is disabled");
         }
+        // Images first, then the text prompt
+        List<ContentBlockParam> content = new ArrayList<>();
+        for (LlmImage image : images) {
+            content.add(ContentBlockParam.ofImage(Base64ImageSource.builder()
+                    .data(Base64.getEncoder().encodeToString(image.data()))
+                    .mediaType(Base64ImageSource.MediaType.of(image.mediaType()))
+                    .build()));
+        }
+        content.add(ContentBlockParam.ofText(userPrompt));
+
         StructuredMessageCreateParams<T> params = MessageCreateParams.builder()
-                .model(llmProperties.getModel())
+                .model(model)
                 .maxTokens(llmProperties.getMaxTokens())
                 .system(systemPrompt)
-                .addUserMessage(userPrompt)
+                .addUserMessageOfContentBlockParams(content)
                 .outputConfig(responseType)
                 .build();
 
@@ -88,7 +108,7 @@ public class AnthropicLlmClient implements LlmClient {
             throw new LlmException("LLM response was truncated (max_tokens)");
         }
         log.atInfo().setMessage("LLM request completed")
-                .addKeyValue("model", llmProperties.getModel())
+                .addKeyValue("model", model)
                 .addKeyValue("inputTokens", response.usage().inputTokens())
                 .addKeyValue("outputTokens", response.usage().outputTokens())
                 .log();

@@ -1,6 +1,13 @@
 package com.ko.footballupdater.unit.services;
 
 import com.ko.footballupdater.configuration.ImageGeneratorProperties;
+import com.ko.footballupdater.configuration.InstagramPostProperies;
+import com.ko.footballupdater.models.form.ImageGenParams;
+import com.ko.footballupdater.photo.CenterFramer;
+import com.ko.footballupdater.photo.FramingMath;
+import javax.imageio.ImageIO;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.form.StatisticEntryGenerateDto;
 import com.ko.footballupdater.services.ImageGeneratorService;
@@ -45,6 +52,9 @@ public class ImageGeneratorServiceStandoutTest {
         properties.setGenericBaseImageFile("Generic_base_player_stat_image.jpg");
         ImageGeneratorService service = new ImageGeneratorService();
         ReflectionTestUtils.setField(service, "imageGeneratorProperties", properties);
+        InstagramPostProperies instagramPostProperies = new InstagramPostProperies();
+        instagramPostProperies.setAccountName("testaccount");
+        ReflectionTestUtils.setField(service, "instagramPostProperies", instagramPostProperies);
         imageGeneratorService = spy(service);
 
         post = LlmTestData.post(1, "Jamie Rivers");
@@ -85,6 +95,48 @@ public class ImageGeneratorServiceStandoutTest {
         doReturn(baseImage()).when(imageGeneratorService).loadGenericBaseImage();
 
         assertTrue(imageGeneratorService.generateStandoutStatsImage(post, stats, null, true));
+    }
+
+    private static BufferedImage photo(int width, int height) {
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = image.createGraphics();
+        graphics.setColor(Color.BLUE);
+        graphics.fillRect(0, 0, width, height);
+        // A red "subject" near the right edge
+        graphics.setColor(Color.RED);
+        graphics.fillRect(width - 400, 0, 300, height);
+        graphics.dispose();
+        return image;
+    }
+
+    @Test
+    public void standout_withFramedPhoto_rendersSquareImageAroundSubject() throws Exception {
+        BufferedImage landscape = photo(2400, 1200);
+        // Subject centre x = 2150, window 1200 wide -> offset clamped to 1200
+        ImageGenParams params = FramingMath.frameAround(2400, 1200, 2150, 600, null);
+
+        boolean usedGeneric = imageGeneratorService.generateStandoutStatsImage(post, stats, params, false, landscape);
+
+        assertFalse(usedGeneric);
+        verify(imageGeneratorService, never()).loadPlayerStandoutBaseImage(post);
+        BufferedImage rendered = ImageIO.read(new File(outputDir.toFile(), post.getImagesFileNames().get(0)));
+        assertEquals(1000, rendered.getWidth());
+        assertEquals(1000, rendered.getHeight());
+        // The subject (red) is in the frame: source x 2000-2300 maps to output x 667-917
+        Color atSubject = new Color(rendered.getRGB(800, 100));
+        assertTrue(atSubject.getRed() > 150 && atSubject.getBlue() < 100, "expected red at subject, got " + atSubject);
+    }
+
+    @Test
+    public void standout_withCenterFramedPortraitPhoto_rendersSquareImage() throws Exception {
+        BufferedImage portrait = photo(900, 1600);
+        ImageGenParams params = new CenterFramer().frame(portrait, 1000);
+
+        imageGeneratorService.generateStandoutStatsImage(post, stats, params, false, portrait);
+
+        BufferedImage rendered = ImageIO.read(new File(outputDir.toFile(), post.getImagesFileNames().get(0)));
+        assertEquals(1000, rendered.getWidth());
+        assertEquals(1000, rendered.getHeight());
     }
 
     @Test

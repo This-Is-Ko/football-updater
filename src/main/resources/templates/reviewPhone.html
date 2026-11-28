@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head th:insert="~{fragments/head.html :: head (title='Football Updater | Review')}">
+    </head>
+    <body>
+        <div class="container phone-review">
+            <h4 class="mt-3">Review draft</h4>
+            <div th:if="${message}" class="alert" th:classappend="${messageType == 'success' ? 'alert-success' : 'alert-danger'}">
+                <span th:text="${message}"></span>
+            </div>
+            <a th:if="${retryToken}" class="btn btn-outline-primary w-100 mb-2" th:href="@{/review/{t}(t=${retryToken})}">Try again</a>
+            <a th:if="${message != null AND dashboardUrl != null}" class="btn btn-outline-secondary w-100" th:href="${dashboardUrl}">Open the review queue</a>
+
+            <div th:if="${post}">
+                <p class="mb-1">
+                    <strong th:text="${post.player != null ? post.player.name : 'Summary post'}"></strong>
+                    <span class="badge bg-secondary" th:text="${post.postType}"></span>
+                </p>
+                <p class="text-muted small mb-2"
+                   th:if="${post.playerMatchPerformanceStats != null AND post.playerMatchPerformanceStats.match != null}"
+                   th:text="${post.playerMatchPerformanceStats.match.homeTeamName + ' vs ' + post.playerMatchPerformanceStats.match.awayTeamName}"></p>
+                <p class="small" th:if="${post.llmReason}"><strong>Why:</strong> <span th:text="${post.llmReason}"></span></p>
+
+                <div class="phone-review-images mb-3">
+                    <img th:each="imageUrl, imageIter : ${post.imagesUrls}" th:src="${imageUrl}" th:alt="'Image ' + ${imageIter.count}">
+                </div>
+                <p th:if="${#lists.isEmpty(post.imagesUrls)}" class="text-danger">No images yet, so this can only be approved from the dashboard after adding them.</p>
+
+                <form method="post" th:action="@{/review/{t}/approve(t=${token})}">
+                    <label for="caption" class="form-label">Caption</label>
+                    <textarea id="caption" name="caption" rows="8" th:text="${post.caption}" class="form-control mb-3"></textarea>
+                    <button class="btn btn-success btn-lg w-100 mb-2" type="submit"
+                            th:disabled="${#lists.isEmpty(post.imagesUrls)}"
+                            onclick="this.disabled=true; this.form.submit();">Approve and post</button>
+                </form>
+                <form method="post" th:action="@{/review/{t}/reject(t=${token})}">
+                    <button class="btn btn-outline-danger btn-lg w-100 mb-4" type="submit"
+                            onclick="this.disabled=true; this.form.submit();">Reject</button>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>

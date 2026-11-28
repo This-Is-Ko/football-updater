@@ -106,6 +106,12 @@ public class PlayerService {
             alternativePlayerNames.addAll(newAlternativeNames);
             player.setAlternativeNames(alternativePlayerNames);
         }
+        if (updatePlayerRequest.getShirtNumber() != null) {
+            if (updatePlayerRequest.getShirtNumber() < 0 || updatePlayerRequest.getShirtNumber() > 99) {
+                throw new IllegalArgumentException("Shirt number must be 0 to 99");
+            }
+            player.setShirtNumber(updatePlayerRequest.getShirtNumber());
+        }
         Player updatedPlayer = playerRepository.save(player);
         log.info("Updated player" + updatedPlayer.getName());
         return updatedPlayer;

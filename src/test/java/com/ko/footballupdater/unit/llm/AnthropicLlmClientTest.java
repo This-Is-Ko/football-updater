@@ -89,6 +89,23 @@ public class AnthropicLlmClientTest {
     }
 
     @Test
+    public void generateStructured_withImages_sendsBase64ImagesBeforeTextToGivenModel() throws Exception {
+        responseBody = messageResponse("{\"name\":\"abc\",\"values\":[]}", "end_turn");
+        java.awt.image.BufferedImage image = new java.awt.image.BufferedImage(3000, 1500, java.awt.image.BufferedImage.TYPE_INT_RGB);
+
+        llmClient.generateStructured("claude-opus-5-5", "system prompt", "look at this",
+                List.of(com.ko.footballupdater.photo.VisionImages.toJpeg(image)), Sample.class);
+
+        String body = requestBody.get();
+        assertTrue(body.contains("\"model\":\"claude-opus-5-5\""));
+        assertTrue(body.contains("\"type\":\"image\""));
+        assertTrue(body.contains("\"media_type\":\"image/jpeg\""));
+        assertTrue(body.indexOf("\"type\":\"image\"") < body.indexOf("look at this"));
+        // Downscaled to the 1568px long edge before sending
+        assertEquals(1568, com.ko.footballupdater.photo.VisionImages.downscale(image, 1568).getWidth());
+    }
+
+    @Test
     public void generateStructured_refusal_throws() {
         responseBody = messageResponse("", "refusal");
 

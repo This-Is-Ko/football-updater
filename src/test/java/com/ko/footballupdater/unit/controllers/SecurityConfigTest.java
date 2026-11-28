@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import com.ko.footballupdater.photo.face.FaceEnrolmentService;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
@@ -83,6 +84,8 @@ public class SecurityConfigTest {
     private PlayerViewService playerViewService;
     @MockBean
     private PerformanceAnalysisService performanceAnalysisService;
+    @MockBean
+    private FaceEnrolmentService faceEnrolmentService;
 
     private static MockHttpServletRequestBuilder browser(MockHttpServletRequestBuilder builder) {
         return builder.accept(MediaType.TEXT_HTML);
@@ -183,6 +186,30 @@ public class SecurityConfigTest {
         mockMvc.perform(browser(post("/posts/review/5/reject")).with(csrf()))
                 .andExpect(redirectedUrl("/posts/review"));
         verify(draftReviewService).reject(5);
+    }
+
+    @Test
+    public void reviewPhoto_notLoggedIn_redirectsWithoutFetching() throws Exception {
+        mockMvc.perform(browser(post("/posts/review/5/photo")).with(csrf()).param("photoUrl", "https://photos.example/p.jpg"))
+                .andExpect(redirectedUrlPattern("**/login"));
+        verify(draftReviewService, never()).usePhotoUrl(anyInt(), anyString(), any());
+    }
+
+    @Test
+    @WithMockUser
+    public void reviewPhoto_loggedInWithCsrf_usesPhoto() throws Exception {
+        mockMvc.perform(browser(post("/posts/review/5/photo")).with(csrf())
+                        .param("photoUrl", "https://photos.example/p.jpg").param("licence", "CC BY"))
+                .andExpect(redirectedUrl("/posts/review"));
+        verify(draftReviewService).usePhotoUrl(5, "https://photos.example/p.jpg", "CC BY");
+    }
+
+    @Test
+    @WithMockUser
+    public void reviewPhoto_loggedInWithoutCsrf_forbidden() throws Exception {
+        mockMvc.perform(browser(post("/posts/review/5/photo")).param("photoUrl", "https://photos.example/p.jpg"))
+                .andExpect(status().isForbidden());
+        verify(draftReviewService, never()).usePhotoUrl(anyInt(), anyString(), any());
     }
 
     @Test

@@ -129,6 +129,72 @@ the rule-based highlights and template captions are used. STANDOUT picks get a s
 player's standout base image, or the generic base image (IMAGE_GENERATOR_GENERIC_BASE_IMAGE_FILE) if there isn't one. Approve uploads to Instagram through the normal upload path, Reject removes the draft from the queue.
 Create the new columns with `src/main/resources/database/post_draft_review.sql`.
 
+    LLM_VISION_MODEL - Optional, default claude-opus-5-5, used for photo framing and vision QA
+
+With the LLM enabled, vision QA checks each draft's rendered images and caption after they're generated and shows any
+issues (text overflow, clipped face, caption/stat mismatch, low quality, watermark) as warnings on the review page.
+It only flags issues, it never blocks approval or edits the post.
+
+Standout photo pipeline
+
+    PHOTO_SOURCES - Optional, default NONE. Priority list of photo sources, like DATASOURCE_PRIORITY
+    PHOTO_MATCHER - Optional, default NOOP. NOOP only accepts photos picked on the review page. FACE_SIDECAR matches faces
+    PHOTO_FRAMER - Optional, default CENTER. VISION asks the vision model where the player is
+    PHOTO_MAX_DOWNLOAD_BYTES - Optional, default 10485760
+    PHOTO_DOWNLOAD_TIMEOUT_SECONDS - Optional, default 10
+
+On the review page, "Use photo URL" downloads an http/https image (size limit, timeout, no private addresses), frames
+it, regenerates the standout image, re-runs QA and stores the photo URL and licence on the post. No automatic photo
+source exists yet, so automatic photos are never used. Create the new columns with
+`src/main/resources/database/photo_pipeline.sql`.
+
+Face matching (PHOTO_MATCHER=FACE_SIDECAR)
+
+    FACE_SIDECAR_URL - Optional, default http://localhost:8001
+    FACE_MODEL_PACK - Optional, default buffalo_l. Must match the sidecar's model; embeddings are stored per model
+    FACE_SIDECAR_CONNECT_TIMEOUT_MILLIS - Optional, default 2000
+    FACE_SIDECAR_READ_TIMEOUT_MILLIS - Optional, default 15000
+    FACE_MIN_SIMILARITY - Optional, default 0.30. Automatic photos below this are rejected
+    FACE_CONFIDENT_SIMILARITY - Optional, default 0.45. Matches below this are flagged on the review card
+    FACE_MIN_REFERENCES - Optional, default 3. Reference photos needed before automatic photos are matched
+    FACE_MAX_REFERENCES - Optional, default 5
+    FACE_CROSS_CHECK_ENABLED - Optional, default true. Claude reads the jersey number, shirt name and caption (needs LLM_ENABLED)
+
+`face-sidecar/` is a stateless Python service (InsightFace detection + ArcFace embeddings) that only embeds and
+compares faces. Start it with `docker compose up -d face-sidecar`; the model is baked into the image at build time and
+no port is published (the app reaches it at `http://face-sidecar:8001` on the compose network). Create the table and columns with `src/main/resources/database/face_matching.sql`.
+
+Enrol 3 to 5 reference photos per player, each showing only that player's face:
+
+    POST /api/player/{playerId}/faces   {"urls": ["https://...", "https://...", "https://..."]}
+    GET /api/player/{playerId}/faces    (number of references)
+    DELETE /api/player/{playerId}/faces
+
+Enrolling replaces the player's existing references. Photos with no face, several similar-sized faces, or a face that
+doesn't match the other references are rejected and listed in the response. Set the shirt number with
+`PATCH /api/player/{playerId}` `{"shirtNumber": 10}` so the cross-check can compare it.
+
+When matching, the largest face is compared with the references. An automatic photo is skipped when the sidecar is
+down or slow, the player has too few references, no face is found, the player isn't the main subject, the similarity
+is below FACE_MIN_SIMILARITY, or the jersey number, shirt name or caption contradicts the match. Claude is never asked
+to recognise faces. A photo picked on the review page is always used, but if it couldn't be verified it gets
+confidence 0 and is flagged. Face embeddings are biometric data: keep them to the squad, and delete them
+(`DELETE .../faces`, or deleting the player) when a player leaves. The buffalo_l pretrained models are licensed by
+InsightFace for non-commercial research use only.
+
+Approve from your phone (optional)
+
+    REVIEW_LINK_BASE_URL - Public address of the app, e.g. https://updater.example.com
+    REVIEW_LINK_SECRET - Random value of at least 32 characters used to sign the links
+    REVIEW_LINK_EXPIRY_HOURS - Optional, default 48
+
+When both are set (and the email is enabled), the update email has a review link for each draft. The link opens a
+phone-sized page with the images and an editable caption, and Approve / Reject buttons. No dashboard login is needed:
+the link is signed and single-use, so it stops working once the draft is approved or rejected, when a newer email
+replaces it, or when it expires. Opening the link never approves anything on its own, so mail scanners that preview
+links are harmless. If approving fails (e.g. Instagram is logged out) the link stays usable for a retry.
+Create the new column with `src/main/resources/database/review_link.sql`.
+
 ### API
 
 API endpoints can be configured to check for a secret to prevent unauthorized access. This value can be configured with 

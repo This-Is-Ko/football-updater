@@ -34,6 +34,8 @@ public class SecurityConfig {
                         // Dashboard pages can upload, generate, edit and delete data, so they require the dashboard login
                         .requestMatchers("/posts", "/posts/**", "/teams", "/teams/**", "/players", "/players/**",
                                 "/performance", "/performance/**").authenticated()
+                        // Phone review links carry a signed, single-use token checked by PhoneReviewViewController
+                        .requestMatchers("/review/**").permitAll()
                         .requestMatchers("/facebook/auth").permitAll()
                         .requestMatchers("/tiktok/auth").permitAll()
                         .requestMatchers("/error").permitAll()

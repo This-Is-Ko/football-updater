@@ -49,6 +49,20 @@ public class ReviewViewController {
         return "redirect:/posts/review";
     }
 
+    @PostMapping("/{postId}/photo")
+    public String usePhoto(@PathVariable("postId") Integer postId, @RequestParam("photoUrl") String photoUrl,
+                           @RequestParam(value = "licence", required = false) String licence,
+                           RedirectAttributes redirectAttributes) {
+        try {
+            draftReviewService.usePhotoUrl(postId, photoUrl, licence);
+            addMessage(redirectAttributes, "Standout image regenerated with the photo", MessageType.SUCCESS);
+        } catch (Exception ex) {
+            log.atError().setMessage("Using photo URL failed").setCause(ex).addKeyValue("postId", postId).log();
+            addMessage(redirectAttributes, "Using photo failed - " + ex.getMessage(), MessageType.ERROR);
+        }
+        return "redirect:/posts/review";
+    }
+
     @PostMapping("/{postId}/reject")
     public String reject(@PathVariable("postId") Integer postId, RedirectAttributes redirectAttributes) {
         try {

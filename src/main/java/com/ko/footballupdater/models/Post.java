@@ -1,6 +1,8 @@
 package com.ko.footballupdater.models;
 
 import com.ko.footballupdater.converter.StringListConverter;
+import com.ko.footballupdater.llm.VisionQaService;
+import com.ko.footballupdater.llm.models.QaIssue;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -128,6 +130,62 @@ public class Post {
     @Enumerated(EnumType.STRING)
     private CaptionSource captionSource;
 
+    /**
+     * Vision QA verdict: true if no issues were found, null if QA hasn't run.
+     * QA only flags issues for the reviewer, it never blocks approval.
+     */
+    @Column(name = "qa_passed")
+    private Boolean qaPassed;
+
+    /**
+     * Vision QA issues as a JSON array of {type, detail}.
+     */
+    @Column(name = "qa_issues", length = 4000)
+    private String qaIssues;
+
+    @Column(name = "qa_checked_at")
+    private Date qaCheckedAt;
+
+    /**
+     * Where the standout background photo came from, when a photo was used.
+     */
+    @Column(name = "photo_source_url", length = 2000)
+    private String photoSourceUrl;
+
+    @Column(name = "photo_source_name", length = 64)
+    private String photoSourceName;
+
+    /**
+     * Free-text licence or credit for the photo.
+     */
+    @Column(name = "photo_licence", length = 500)
+    private String photoLicence;
+
+    /**
+     * How sure the player matcher was that the photo shows the player, 0 to 1.
+     */
+    @Column(name = "photo_match_confidence")
+    private Double photoMatchConfidence;
+
+    /**
+     * The matcher's reasons, one per line.
+     */
+    @Column(name = "photo_match_notes", length = 1000)
+    private String photoMatchNotes;
+
+    /**
+     * True when the match was below photo.face.confident-similarity, so the reviewer should check the player.
+     */
+    @Column(name = "photo_match_flagged")
+    private Boolean photoMatchFlagged;
+
+    /**
+     * Nonce of the current phone review link for this draft. A link only works while its nonce matches,
+     * so clearing or replacing this value makes earlier links unusable.
+     */
+    @Column(name = "review_link_nonce", length = 64)
+    private String reviewLinkNonce;
+
     public Post() {
     }
 
@@ -159,6 +217,23 @@ public class Post {
         }
         // The converter turns an empty column into a single empty string
         return featuredStats.stream().filter(stat -> stat != null && !stat.isBlank()).toList();
+    }
+
+    /**
+     * QA issues for display, parsed from {@link #qaIssues}.
+     */
+    public List<QaIssue> getQaIssueList() {
+        return VisionQaService.parseIssues(qaIssues);
+    }
+
+    /**
+     * Matcher reasons for display, from {@link #photoMatchNotes}.
+     */
+    public List<String> getPhotoMatchNoteList() {
+        if (photoMatchNotes == null || photoMatchNotes.isBlank()) {
+            return new ArrayList<>();
+        }
+        return photoMatchNotes.lines().filter(line -> !line.isBlank()).toList();
     }
 
     public List<String> getImagesUrls() {

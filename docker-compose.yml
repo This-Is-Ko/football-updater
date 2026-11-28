@@ -1,0 +1,92 @@
+# Football updater prod stack: tunnel + app + MySQL + face sidecar.
+# Secrets (TUNNEL_TOKEN, DB_PASSWORD, DB_ROOT_PASSWORD, app secrets) live in stack.env only.
+networks:
+  custom_network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+
+services:
+  cloudflared:
+    image: cloudflare/cloudflared          # pin a version tag
+    container_name: cloudflare-tunnel
+    command: tunnel run
+    volumes:
+      - "${HOST_DIR}/cloudflared/config:/config"
+    # No "environment: TUNNEL_TOKEN=" line: an empty value there overrides stack.env
+    env_file:
+      - stack.env
+    restart: unless-stopped
+    depends_on:
+      - footballupdater
+    networks:
+      - custom_network
+
+  footballupdater:
+    image: kobo67/true-shuffle:footballupdater
+    container_name: footballupdater
+    hostname: footballupdater
+    command: java -Xmx512m -jar /app.jar --spring.profiles.active=prod --spring.config.additional-location=file:/config/
+    volumes:
+      - "${HOST_DIR}/footballupdater/data:/data"
+      - "${HOST_DIR}/footballupdater/config:/config"
+      - "${HOST_DIR}/footballupdater/output:/output"
+      # /cert only held the Aiven CA; drop it after cutover if nothing else uses it
+      - "${HOST_DIR}/footballupdater/cert:/cert"
+    env_file:
+      - stack.env
+    environment:
+      SPRING_DATASOURCE_HOST: mysql
+      SPRING_DATASOURCE_PORT: "3306"
+      SPRING_DATASOURCE_NAME: db_football_updater
+      SPRING_DATASOURCE_USERNAME: fu_app
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      FACE_SIDECAR_URL: http://face-sidecar:8001
+    ports:
+      - "127.0.0.1:8081:8081"              # the tunnel reaches it on custom_network; no public port needed
+    depends_on:
+      mysql:
+        condition: service_healthy
+    mem_limit: 900m
+    restart: unless-stopped
+    networks:
+      - custom_network
+
+  mysql:
+    image: mysql:8.0                       # match Aiven's major version
+    container_name: footballupdater-mysql
+    command: >
+      --innodb-buffer-pool-size=256M
+      --performance-schema=OFF
+      --max-connections=30
+      --skip-name-resolve
+    environment:
+      MYSQL_DATABASE: db_football_updater
+      MYSQL_USER: fu_app
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      retries: 12
+    # no ports: only reachable on custom_network
+    mem_limit: 640m
+    restart: unless-stopped
+    networks:
+      - custom_network
+
+  face-sidecar:
+    image: kobo67/true-shuffle:face-sidecar   # built from face-sidecar/ in PR #38 and pushed
+    container_name: face-sidecar
+    environment:
+      FACE_MIN_DET_SCORE: "0.5"
+    read_only: true
+    tmpfs:
+      - /tmp
+    mem_limit: 1g
+    restart: unless-stopped
+    networks:
+      - custom_network

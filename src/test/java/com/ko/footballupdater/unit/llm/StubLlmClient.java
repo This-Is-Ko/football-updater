@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class StubLlmClient implements LlmClient {
 
-    public record Call(String systemPrompt, String userPrompt, Class<?> responseType) {
+    public record Call(String model, String systemPrompt, String userPrompt, List<LlmImage> images, Class<?> responseType) {
     }
 
     private boolean enabled = true;
@@ -42,7 +42,12 @@ public class StubLlmClient implements LlmClient {
 
     @Override
     public <T> T generateStructured(String systemPrompt, String userPrompt, Class<T> responseType) throws LlmException {
-        calls.add(new Call(systemPrompt, userPrompt, responseType));
+        return generateStructured(null, systemPrompt, userPrompt, List.of(), responseType);
+    }
+
+    @Override
+    public <T> T generateStructured(String model, String systemPrompt, String userPrompt, List<LlmImage> images, Class<T> responseType) throws LlmException {
+        calls.add(new Call(model, systemPrompt, userPrompt, images, responseType));
         Object next = responses.poll();
         if (next == null) {
             throw new LlmException("No stubbed response");

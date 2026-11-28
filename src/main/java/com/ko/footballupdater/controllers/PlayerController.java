@@ -1,6 +1,8 @@
 package com.ko.footballupdater.controllers;
 
 import com.ko.footballupdater.models.Player;
+import com.ko.footballupdater.photo.face.FaceEnrolmentService;
+import com.ko.footballupdater.photo.face.FaceSidecarException;
 import com.ko.footballupdater.request.UpdatePlayerRequest;
 import com.ko.footballupdater.request.UpdateTeamRequest;
 import com.ko.footballupdater.responses.AddNewTeamResponse;
@@ -10,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,12 +22,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+import java.util.Map;
+
 @Controller
 @RequestMapping(path="/api/player")
 public class PlayerController {
 
     @Autowired
     private PlayerService playerService;
+
+    @Autowired
+    private FaceEnrolmentService faceEnrolmentService;
+
+    public record EnrolFacesRequest(List<String> urls) {
+    }
 
     /**
      * Create new player entry
@@ -85,5 +97,34 @@ public class PlayerController {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Updating player failed", ex);
         }
+    }
+
+    /**
+     * Replace the player's face reference photos (3 to 5 photos showing only this player).
+     */
+    @PostMapping(path="/{playerId}/faces")
+    public @ResponseBody ResponseEntity<FaceEnrolmentService.EnrolmentResult> enrolFaces(
+            @PathVariable("playerId") Integer playerId,
+            @RequestBody EnrolFacesRequest request) {
+        try {
+            return ResponseEntity.ok(faceEnrolmentService.enrol(playerId, request != null ? request.urls() : null));
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
+        } catch (FaceSidecarException ex) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Face sidecar unavailable, nothing was changed", ex);
+        }
+    }
+
+    @GetMapping(path="/{playerId}/faces")
+    public @ResponseBody Map<String, Integer> faceReferenceCount(@PathVariable("playerId") Integer playerId) {
+        return Map.of("references", faceEnrolmentService.referenceCount(playerId));
+    }
+
+    /**
+     * Delete the player's face embeddings.
+     */
+    @DeleteMapping(path="/{playerId}/faces")
+    public @ResponseBody Map<String, Long> deleteFaces(@PathVariable("playerId") Integer playerId) {
+        return Map.of("deleted", faceEnrolmentService.deleteReferences(playerId));
     }
 }
