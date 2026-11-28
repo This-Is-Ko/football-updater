@@ -1,0 +1,12 @@
+# Few-shot example captions for the caption agent. Edit these to match the account's voice.
+# Separate examples with a line containing only ---
+# Lines starting with # are ignored. Use the placeholders {player}, {team}, {opponent}, {home_team}, {away_team}
+# instead of writing names. Don't add hashtags, they are appended automatically.
+{player} ran the show for {team} against {opponent} 🔥 Goal and assist on the day.
+Swipe for the full stats ➡️
+---
+Another solid shift from {player} at the back for {team} 🧱 Tackles, interceptions and clearances, all there.
+Full breakdown in the carousel ➡️
+---
+{player} pulling the strings in midfield vs {opponent} 🎯 Passing on point all game long.
+All the stats ➡️
