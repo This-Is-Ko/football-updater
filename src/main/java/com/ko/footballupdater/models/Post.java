@@ -179,6 +179,13 @@ public class Post {
     @Column(name = "photo_match_flagged")
     private Boolean photoMatchFlagged;
 
+    /**
+     * Nonce of the current phone review link for this draft. A link only works while its nonce matches,
+     * so clearing or replacing this value makes earlier links unusable.
+     */
+    @Column(name = "review_link_nonce", length = 64)
+    private String reviewLinkNonce;
+
     public Post() {
     }
 

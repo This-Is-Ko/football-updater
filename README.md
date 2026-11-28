@@ -182,6 +182,19 @@ confidence 0 and is flagged. Face embeddings are biometric data: keep them to th
 (`DELETE .../faces`, or deleting the player) when a player leaves. The buffalo_l pretrained models are licensed by
 InsightFace for non-commercial research use only.
 
+Approve from your phone (optional)
+
+    REVIEW_LINK_BASE_URL - Public address of the app, e.g. https://updater.example.com
+    REVIEW_LINK_SECRET - Random value of at least 32 characters used to sign the links
+    REVIEW_LINK_EXPIRY_HOURS - Optional, default 48
+
+When both are set (and the email is enabled), the update email has a review link for each draft. The link opens a
+phone-sized page with the images and an editable caption, and Approve / Reject buttons. No dashboard login is needed:
+the link is signed and single-use, so it stops working once the draft is approved or rejected, when a newer email
+replaces it, or when it expires. Opening the link never approves anything on its own, so mail scanners that preview
+links are harmless. If approving fails (e.g. Instagram is logged out) the link stays usable for a retry.
+Create the new column with `src/main/resources/database/review_link.sql`.
+
 ### API
 
 API endpoints can be configured to check for a secret to prevent unauthorized access. This value can be configured with 

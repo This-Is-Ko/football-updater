@@ -2,6 +2,7 @@ package com.ko.footballupdater.services;
 
 import com.ko.footballupdater.configuration.ImageGeneratorProperties;
 import com.ko.footballupdater.configuration.MailerProperties;
+import com.ko.footballupdater.models.DraftStatus;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.utils.DateTimeHelper;
 import com.ko.footballupdater.utils.PostHelper;
@@ -30,6 +31,9 @@ public class EmailService {
     @Autowired
     private ImageGeneratorProperties imageGeneratorProperties;
 
+    @Autowired
+    private ReviewLinkService reviewLinkService;
+
     public boolean sendEmailUpdate(List<Post> posts){
         // Check config for email enabled status
         if (!mailerProperties.isEnabled()) {
@@ -45,6 +49,11 @@ public class EmailService {
         List<AttachmentResource> attachments = new ArrayList<>();
         // Create email body
         StringBuilder emailContent = new StringBuilder();
+        boolean reviewLinksEnabled = reviewLinkService.isEnabled();
+        if (reviewLinksEnabled && posts.stream().anyMatch(this::isPendingReview)) {
+            emailContent.append("Drafts are ready for review. Tap a link to approve or reject it from your phone, ")
+                    .append("or open the full queue: ").append(reviewLinkService.reviewQueueUrl()).append("\n\n");
+        }
         for (Post postHolder : posts) {
             emailContent.append("############").append(postHolder.getPlayer().getName()).append(" - ").append(postHolder.getPlayerMatchPerformanceStats().getDataSourceSiteName().toString()).append(" - ").append(DateTimeHelper.getDateAsFormattedString(postHolder.getPlayerMatchPerformanceStats().getMatch().getDate())).append("############\n\n");
 //            emailContent.append(postHolder.getCaption()).append("\n\n");
@@ -52,6 +61,13 @@ public class EmailService {
 //                emailContent.append("Stat image(s)\n").append(PostHelper.generateS3UrlList(postHolder)).append("\n");
 //            }
 //            emailContent.append("Google image search links\n").append(postHolder.getImageSearchUrls()).append("\n\n\n");
+            // Signed, single-use review link. The nonce it sets on the post is saved by the caller with the post
+            if (reviewLinksEnabled && isPendingReview(postHolder)) {
+                String reviewLink = reviewLinkService.issueLink(postHolder);
+                if (reviewLink != null) {
+                    emailContent.append("Review: ").append(reviewLink).append("\n");
+                }
+            }
             emailContent.append("\n\n\n");
 
             // Add images to attachment - config driven
@@ -87,5 +103,9 @@ public class EmailService {
         }
         log.info("Sending email was successful");
         return true;
+    }
+
+    private boolean isPendingReview(Post post) {
+        return DraftStatus.PENDING_REVIEW.equals(post.getDraftStatus()) && !post.isPostedStatus();
     }
 }
