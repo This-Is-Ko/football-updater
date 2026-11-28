@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
@@ -96,7 +97,7 @@ public class FacebookApiService extends AbstractAuthClass {
             }
             // Swap the short-lived token (~1-2 hours) for a long-lived one (~60 days)
             FacebookAccessTokenResponse longLivedResponse = exchangeForLongLivedToken(shortLivedResponse.getAccessToken());
-            storeTokens(longLivedResponse);
+            storeLongLivedTokens(longLivedResponse);
         } else {
             throw new Exception("Login code param is empty");
         }
@@ -171,10 +172,62 @@ public class FacebookApiService extends AbstractAuthClass {
             return;
         }
         try {
-            storeTokens(exchangeForLongLivedToken(accessToken));
-            log.atInfo().setMessage("INSTAGRAM - Refreshed long-lived access token").log();
+            storeLongLivedTokens(exchangeForLongLivedToken(accessToken));
+            log.atInfo().setMessage("INSTAGRAM - Refreshed long-lived access token - Expires at: " + expiresAt.getTime()).log();
         } catch (Exception ex) {
             log.atError().setMessage("INSTAGRAM - Failed to refresh long-lived access token").setCause(ex).log();
+        }
+    }
+
+    /**
+     * Store a long-lived token. Facebook doesn't always include expires_in, and exchanging an existing
+     * long-lived token doesn't necessarily extend it, so when expires_in is missing the real expiry is read
+     * from debug_token instead of assuming a fresh 60 days. If that lookup fails and the token is unchanged,
+     * the previously known expiry is kept.
+     */
+    void storeLongLivedTokens(FacebookAccessTokenResponse response) throws Exception {
+        String previousToken = accessToken;
+        Calendar previousExpiresAt = expiresAt;
+        storeTokensInMemory(response);
+        if (response.getExpiresIn() == null) {
+            Calendar actualExpiresAt = lookUpTokenExpiry(accessToken);
+            if (actualExpiresAt != null) {
+                expiresAt = actualExpiresAt;
+            } else if (accessToken.equals(previousToken) && previousExpiresAt != null) {
+                expiresAt = previousExpiresAt;
+            }
+            log.atInfo().setMessage("INSTAGRAM - Token response had no expires_in, using expiry: " + expiresAt.getTime()).log();
+        }
+        persistTokens();
+    }
+
+    /**
+     * @return the token's expiry from debug_token, or null if it can't be determined
+     */
+    Calendar lookUpTokenExpiry(String token) {
+        try {
+            DebugTokenReponse response = facebookWebClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/debug_token")
+                            .queryParam("input_token", token)
+                            .queryParam("access_token", facebookApiProperties.getClientId() + "|" + facebookApiProperties.getClientSecret())
+                            .build())
+                    .retrieve()
+                    .bodyToMono(DebugTokenReponse.class)
+                    .block();
+            if (response == null || response.getData() == null) {
+                return null;
+            }
+            Long expiresAtSeconds = response.getData().getExpires_at();
+            if (expiresAtSeconds == null || expiresAtSeconds <= 0) {
+                return null;
+            }
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(expiresAtSeconds * 1000);
+            return calendar;
+        } catch (Exception ex) {
+            log.atWarn().setMessage("INSTAGRAM - Unable to look up token expiry with debug_token").setCause(ex).log();
+            return null;
         }
     }
 

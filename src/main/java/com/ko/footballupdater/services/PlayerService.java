@@ -29,11 +29,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class PlayerService {
+
+    private final AtomicBoolean allPlayersUpdateRunning = new AtomicBoolean(false);
 
     @Autowired
     private PlayerRepository playerRepository;
@@ -110,16 +113,24 @@ public class PlayerService {
     }
 
     public UpdatePlayersResponse updateDataForAllPlayers() throws InterruptedException {
-        // Find latest match data for each player
-        Iterator<Player> playerIterator = playerRepository.findAll().iterator();
-        List<Player> requestPlayersToUpdate = new ArrayList<>();
-
-        while(playerIterator.hasNext()){
-            Player player = playerIterator.next();
-            requestPlayersToUpdate.add(player);
+        // Only one full update at a time, e.g. the scheduled run and a manual trigger overlapping
+        if (!allPlayersUpdateRunning.compareAndSet(false, true)) {
+            throw new IllegalStateException("A player data update is already running");
         }
+        try {
+            // Find latest match data for each player
+            Iterator<Player> playerIterator = playerRepository.findAll().iterator();
+            List<Player> requestPlayersToUpdate = new ArrayList<>();
 
-        return updateDataForPlayers(requestPlayersToUpdate);
+            while(playerIterator.hasNext()){
+                Player player = playerIterator.next();
+                requestPlayersToUpdate.add(player);
+            }
+
+            return updateDataForPlayers(requestPlayersToUpdate);
+        } finally {
+            allPlayersUpdateRunning.set(false);
+        }
     }
 
     public UpdatePlayersResponse updateDataForPlayer(Integer playerId) throws NotFoundException, InterruptedException {

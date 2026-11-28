@@ -42,9 +42,15 @@ public class FacebookApiServiceTokenTest {
 
     private final List<ClientRequest> requests = new ArrayList<>();
 
+    private String longLivedTokenResponse;
+
+    private String debugTokenResponse;
+
     @BeforeEach
     public void setup() {
         requests.clear();
+        longLivedTokenResponse = LONG_LIVED_TOKEN_RESPONSE;
+        debugTokenResponse = null;
         facebookApiService = new FacebookApiService(stubWebClientBuilder(), stubWebClientBuilder());
 
         FacebookApiProperties facebookApiProperties = new FacebookApiProperties();
@@ -63,7 +69,16 @@ public class FacebookApiServiceTokenTest {
     private WebClient.Builder stubWebClientBuilder() {
         return WebClient.builder().exchangeFunction(request -> {
             requests.add(request);
-            String body = request.url().toString().contains("fb_exchange_token") ? LONG_LIVED_TOKEN_RESPONSE : SHORT_LIVED_TOKEN_RESPONSE;
+            String url = request.url().toString();
+            String body;
+            if (url.contains("/debug_token")) {
+                if (debugTokenResponse == null) {
+                    return Mono.just(ClientResponse.create(HttpStatus.INTERNAL_SERVER_ERROR).build());
+                }
+                body = debugTokenResponse;
+            } else {
+                body = url.contains("fb_exchange_token") ? longLivedTokenResponse : SHORT_LIVED_TOKEN_RESPONSE;
+            }
             return Mono.just(ClientResponse.create(HttpStatus.OK)
                     .header("Content-Type", "application/json")
                     .body(body)
@@ -151,6 +166,32 @@ public class FacebookApiServiceTokenTest {
         assertTrue(requests.get(0).url().toString().contains("fb_exchange_token=expiring-token"));
         assertEquals("long-token", ReflectionTestUtils.getField(facebookApiService, "accessToken"));
         verify(apiTokenRepository).save(any(ApiToken.class));
+    }
+
+    @Test
+    public void refreshTokenIfExpiringSoon_noExpiresIn_usesDebugTokenExpiry() {
+        Instant realExpiry = Instant.now().plus(Duration.ofDays(4)).truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
+        longLivedTokenResponse = "{\"access_token\":\"expiring-token\",\"token_type\":\"bearer\"}";
+        debugTokenResponse = "{\"data\":{\"is_valid\":true,\"expires_at\":" + realExpiry.getEpochSecond() + "}}";
+        givenPersistedToken("expiring-token", Instant.now().plus(Duration.ofDays(5)));
+
+        facebookApiService.refreshTokenIfExpiringSoon();
+
+        assertEquals(realExpiry.toEpochMilli(), facebookApiService.getExpiresAt().getTimeInMillis());
+        ArgumentCaptor<ApiToken> captor = ArgumentCaptor.forClass(ApiToken.class);
+        verify(apiTokenRepository).save(captor.capture());
+        assertEquals(realExpiry.toEpochMilli(), captor.getValue().getExpiresAt().getTime());
+    }
+
+    @Test
+    public void refreshTokenIfExpiringSoon_noExpiresInAndDebugTokenFails_keepsPreviousExpiry() {
+        Instant previousExpiry = Instant.now().plus(Duration.ofDays(5));
+        longLivedTokenResponse = "{\"access_token\":\"expiring-token\",\"token_type\":\"bearer\"}";
+        givenPersistedToken("expiring-token", previousExpiry);
+
+        facebookApiService.refreshTokenIfExpiringSoon();
+
+        assertEquals(previousExpiry.toEpochMilli(), facebookApiService.getExpiresAt().getTimeInMillis());
     }
 
     @Test

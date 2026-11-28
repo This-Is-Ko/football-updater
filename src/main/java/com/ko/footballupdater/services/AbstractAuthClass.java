@@ -7,6 +7,7 @@ import com.ko.footballupdater.repositories.ApiTokenRepository;
 import com.ko.footballupdater.utils.StringHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import reactor.core.publisher.Mono;
 
@@ -162,7 +163,8 @@ public abstract class AbstractAuthClass {
         return (clientRequest, next) -> {
             log.debug("Request: {} {}", clientRequest.method(), StringHelper.maskAccessToken(clientRequest.url().toString()));
             clientRequest.headers()
-                    .forEach((name, values) -> values.forEach(value -> log.info("{}={}", name, value)));
+                    .forEach((name, values) -> values.forEach(value -> log.debug("{}={}", name,
+                            HttpHeaders.AUTHORIZATION.equalsIgnoreCase(name) ? "********" : value)));
             return next.exchange(clientRequest);
         };
     }
