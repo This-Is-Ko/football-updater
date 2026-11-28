@@ -156,6 +156,20 @@ public class PostHelper {
         }
     }
 
+    /**
+     * Hashtags appended after a player post caption, the same as the v2 template caption uses.
+     */
+    public String generateCaptionHashtagSuffix(Post post, String defaultHashtags) {
+        String teamHashtags = "";
+        if (post.getPlayerMatchPerformanceStats() != null
+                && post.getPlayerMatchPerformanceStats().getMatch() != null
+                && post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam() != null
+                && !post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam().isEmpty()) {
+            teamHashtags = generateTeamHashtags(post.getPlayerMatchPerformanceStats().getMatch().getRelevantTeam());
+        }
+        return generatePlayerHashtags(post.getPlayer()) + " " + (defaultHashtags != null ? defaultHashtags : "") + teamHashtags;
+    }
+
     public String generatePlayerHashtags(Player player) {
         return "\n\n#" + player.getName().replaceAll(" ", "").replaceAll("-", "").toLowerCase();
     }

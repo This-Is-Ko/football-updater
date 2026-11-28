@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,5 +61,31 @@ public class PerformanceAnalysisService {
             highlights.put("successful passes", matchPerformanceStats.getPassesAttempted());
         }
         return highlights;
+    }
+
+    /**
+     * Same rules as {@link #checkHighlightsInMatch(Post)}, returning the stat field names.
+     * Used as the fallback when the LLM editor is disabled or fails.
+     */
+    public List<String> highlightStatFields(Post post) {
+        List<String> fields = new ArrayList<>();
+        if (post == null || post.getPlayerMatchPerformanceStats() == null) {
+            return fields;
+        }
+        PlayerMatchPerformanceStats stats = post.getPlayerMatchPerformanceStats();
+        if (stats.getGoals() != null && stats.getGoals() > 0) {
+            fields.add("goals");
+        }
+        if (stats.getAssists() != null && stats.getAssists() > 0) {
+            fields.add("assists");
+        }
+        if (stats.getPassesSuccessPercentage() != null
+                && stats.getPassesAttempted() != null
+                && stats.getPassesSuccessPercentage() > 80
+                && stats.getPassesAttempted() > 40) {
+            fields.add("passesSuccessPercentage");
+            fields.add("passesAttempted");
+        }
+        return fields;
     }
 }

@@ -1,6 +1,8 @@
 package com.ko.footballupdater.runners;
 
+import com.ko.footballupdater.utils.FontRegistry;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.io.Resource;
@@ -9,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import java.awt.Font;
 import java.awt.FontFormatException;
-import java.awt.GraphicsEnvironment;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -20,6 +21,9 @@ public class FontValidationRunner implements ApplicationRunner {
 
     final String FONTS_PATH = "classpath:fonts/*.{ttf,otf}";
 
+    @Autowired
+    private FontRegistry fontRegistry;
+
     @Override
     public void run(ApplicationArguments args) throws IOException, FontFormatException {
         registerFonts();
@@ -29,24 +33,23 @@ public class FontValidationRunner implements ApplicationRunner {
     public void registerFonts() throws IOException, FontFormatException {
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         Resource[] resources = resolver.getResources(FONTS_PATH);
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 
         // Register each font
         for (Resource resource : resources) {
-            InputStream fontStream = resource.getInputStream();
-            // Create the font from the input stream
-            Font font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
+            try (InputStream fontStream = resource.getInputStream()) {
+                // Create the font from the input stream
+                Font font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
 
-            // Register the font with the graphics environment
-            ge.registerFont(font);
+                // Register the font with the graphics environment
+                fontRegistry.registerFont(font);
 
-            log.info("Font registered: " + font.getFontName());
+                log.info("Font registered: " + font.getFontName());
+            }
         }
     }
 
     public void validateFontAvailability() {
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        String[] fonts = ge.getAvailableFontFamilyNames();
+        String[] fonts = fontRegistry.getAvailableFontFamilyNames();
         log.info("Available fonts: " + Arrays.toString(fonts));
     }
 }

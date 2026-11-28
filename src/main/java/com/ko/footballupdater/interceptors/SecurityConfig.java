@@ -27,16 +27,16 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/images/favicon.ico").permitAll()
+                        // Static assets
+                        .requestMatchers("/images/**", "/styles/**", "/webjars/**").permitAll()
+                        // API endpoints are protected by the Auth-Secret header interceptor instead
                         .requestMatchers("/api/**").permitAll()
-                        .requestMatchers("/posts/**").permitAll()
-                        .requestMatchers("/teams/**").permitAll()
-                        .requestMatchers("/players/**").permitAll()
-                        .requestMatchers("/performance/**").permitAll()
+                        // Dashboard pages can upload, generate, edit and delete data, so they require the dashboard login
+                        .requestMatchers("/posts", "/posts/**", "/teams", "/teams/**", "/players", "/players/**",
+                                "/performance", "/performance/**").authenticated()
                         .requestMatchers("/facebook/auth").permitAll()
                         .requestMatchers("/tiktok/auth").permitAll()
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers("/webjars/**").permitAll()
                         .requestMatchers("/terms-and-privacy.html").permitAll()
                         .anyRequest().authenticated()
                 )

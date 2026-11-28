@@ -16,6 +16,7 @@ import com.ko.footballupdater.services.EmailService;
 import com.ko.footballupdater.services.ImageGeneratorService;
 import com.ko.footballupdater.services.ParsingService;
 import com.ko.footballupdater.services.PlayerService;
+import com.ko.footballupdater.services.PostDraftService;
 import com.ko.footballupdater.utils.PostHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -74,6 +75,9 @@ public class PlayerServiceTest {
 
     @Mock
     private ImageGeneratorProperties imageGeneratorProperties;
+
+    @Mock
+    private PostDraftService postDraftService;
 
     @BeforeEach
     public void setup() {
@@ -200,6 +204,27 @@ public class PlayerServiceTest {
         // Image gen and upload should be called for each player
         verify(imageGeneratorService, times(2)).generatePlayerStatImage(any(Post.class));
         verify(amazonS3Service, times(2)).uploadToS3(any(Post.class));
+        // New posts are prepared as drafts for the approval queue
+        verify(postDraftService, times(1)).processNewPosts(org.mockito.ArgumentMatchers.argThat(posts -> posts.size() == 2));
+    }
+
+    @Test
+    public void updateDataForAllPlayers_draftPreparationFails_postsStillSavedAndEmailed() throws Exception {
+        Player player = new Player("Player1");
+        player.setCheckedStatus(new CheckedStatus());
+        player.setId(1);
+        when(playerRepository.findAll()).thenReturn(List.of(player));
+        PlayerMatchPerformanceStats mockPerformanceStats = mock(PlayerMatchPerformanceStats.class);
+        when(parsingService.parsePlayerMatchData(player)).thenReturn(mockPerformanceStats);
+        when(mockPerformanceStats.getMatch()).thenReturn(new Match("https://url", Date.from(Instant.now()), "home", "away", "home"));
+        when(emailService.sendEmailUpdate(anyList())).thenReturn(true);
+        when(postRepository.save(any(Post.class))).thenReturn(new Post());
+        doThrow(new RuntimeException("LLM exploded")).when(postDraftService).processNewPosts(anyList());
+
+        UpdatePlayersResponse response = playerService.updateDataForAllPlayers();
+
+        assertTrue(response.isEmailSent());
+        assertEquals(1, response.getNumPlayersUpdated());
     }
 
     @Test
