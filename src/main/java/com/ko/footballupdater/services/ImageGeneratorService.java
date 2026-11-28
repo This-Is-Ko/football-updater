@@ -170,6 +170,25 @@ public class ImageGeneratorService {
         }
     }
 
+    /**
+     * Player specific standout base image, from the input path.
+     */
+    public BufferedImage loadPlayerStandoutBaseImage(Post post) throws IOException {
+        return loadImage(imageGeneratorProperties.getInputPath() + post.getPlayer().getName().replaceAll(" ", "") + STANDOUT_BASE_IMAGE_FILE_NAME);
+    }
+
+    /**
+     * Generic base image (image.generator.genericBaseImageFile), from the same location the stat images use.
+     */
+    public BufferedImage loadGenericBaseImage() throws IOException {
+        BufferedImage image = getImageUsingCache(imageGeneratorProperties.getGenericBaseImageFile(),
+                imageGeneratorProperties.getExternalImageStoreUri() + BASE_IMAGE_DIRECTORY + imageGeneratorProperties.getInputPath() + "/", baseImageCache);
+        if (image == null) {
+            throw new IOException("Generic base image is missing or unreadable");
+        }
+        return image;
+    }
+
     private BufferedImage loadImage(String baseImagePath) throws IOException {
         return ImageIO.read(new File(baseImagePath));
     }
@@ -346,6 +365,17 @@ public class ImageGeneratorService {
     }
 
     public void generateStandoutStatsImage(Post post, List<StatisticEntryGenerateDto> selectedStats, ImageGenParams imageGenParams) throws Exception {
+        generateStandoutStatsImage(post, selectedStats, imageGenParams, false);
+    }
+
+    /**
+     * @param allowGenericBaseFallback when there is no background image url and the player specific standout base image
+     *                                 is missing, use the generic base image instead of failing
+     * @return true if the generic base image was used as the fallback
+     */
+    public boolean generateStandoutStatsImage(Post post, List<StatisticEntryGenerateDto> selectedStats, ImageGenParams imageGenParams,
+                                              boolean allowGenericBaseFallback) throws Exception {
+        boolean usedGenericBase = false;
         try {
             BufferedImage image;
             if (imageGenParams != null && imageGenParams.getImageUrl() != null && !imageGenParams.getImageUrl().isEmpty()) {
@@ -360,8 +390,19 @@ public class ImageGeneratorService {
                 drawAccountName(image, accountNameFont, "@" + instagramPostProperies.getAccountName());
             } else {
                 // Load the base image
-                String playerImageBaseFilePath = imageGeneratorProperties.getInputPath() + post.getPlayer().getName().replaceAll(" ", "") + STANDOUT_BASE_IMAGE_FILE_NAME;
-                image = loadImage(playerImageBaseFilePath);
+                try {
+                    image = loadPlayerStandoutBaseImage(post);
+                    if (image == null) {
+                        throw new IOException("Unreadable player standout base image");
+                    }
+                } catch (IOException ex) {
+                    if (!allowGenericBaseFallback) {
+                        throw ex;
+                    }
+                    log.atInfo().setMessage("No player standout base image, using generic base image").addKeyValue("player", post.getPlayer().getName()).log();
+                    image = cloneBufferImage(loadGenericBaseImage());
+                    usedGenericBase = true;
+                }
             }
             log.atDebug().setMessage("Prepared STANDOUT_STATS_POST image object").addKeyValue("player", post.getPlayer().getName()).log();
 
@@ -393,6 +434,7 @@ public class ImageGeneratorService {
 
             // Save the modified image
             saveImage(post, image, generateFileName(post, 1, PostType.STANDOUT_STATS_POST), 1);
+            return usedGenericBase;
         } catch (IOException ex) {
             log.atWarn().setMessage("Unable to find/read image file").addKeyValue("player", post.getPlayer().getName()).log();
             throw new Exception(post.getPlayer().getName() + " - Unable to find/read image file ", ex);

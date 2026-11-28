@@ -5,11 +5,13 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import com.ko.footballupdater.runners.FontValidationRunner;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -32,9 +34,17 @@ public class FontValidationRunnerTest {
     @Mock
     private ApplicationArguments applicationArguments;
 
+    private static MockedStatic<GraphicsEnvironment> graphicsEnvironmentMock;
+
     @BeforeAll
     public static void beforeAllSetup() {
-        mockStatic(GraphicsEnvironment.class);
+        graphicsEnvironmentMock = mockStatic(GraphicsEnvironment.class);
+    }
+
+    @AfterAll
+    public static void afterAllTeardown() {
+        // Release the static mock so later tests on this thread can draw images
+        graphicsEnvironmentMock.close();
     }
 
     @BeforeEach

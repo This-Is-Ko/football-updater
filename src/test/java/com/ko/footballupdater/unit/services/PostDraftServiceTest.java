@@ -36,6 +36,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -108,7 +109,7 @@ public class PostDraftServiceTest {
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<StatisticEntryGenerateDto>> statsCaptor = ArgumentCaptor.forClass(List.class);
-        verify(imageGeneratorService).generateStandoutStatsImage(eq(post1), statsCaptor.capture(), isNull());
+        verify(imageGeneratorService).generateStandoutStatsImage(eq(post1), statsCaptor.capture(), isNull(), eq(true));
         assertEquals("goals", statsCaptor.getValue().get(0).getName());
         assertEquals("2", statsCaptor.getValue().get(0).getValue());
         // Singular label when the value is 1
@@ -139,14 +140,14 @@ public class PostDraftServiceTest {
         assertEquals(DraftStatus.REJECTED, post1.getDraftStatus());
         assertTrue(post1.getLlmReason().startsWith("Skipped by editor"));
         verify(captionAgent, never()).generateCaption(any(), anyList(), anyString(), any());
-        verify(imageGeneratorService, never()).generateStandoutStatsImage(any(), anyList(), any());
+        verify(imageGeneratorService, never()).generateStandoutStatsImage(any(), anyList(), any(), anyBoolean());
         verify(postRepository).save(post1);
     }
 
     @Test
     public void processNewPosts_standoutImageFails_keepsAllStatTypeAndNotesReason() throws Exception {
         givenDecisions(new ValidatedEditorDecision(1, true, EditorPostType.STANDOUT, List.of("goals"), "Two goals", true));
-        doThrow(new Exception("missing base image")).when(imageGeneratorService).generateStandoutStatsImage(any(), anyList(), any());
+        doThrow(new Exception("missing base images")).when(imageGeneratorService).generateStandoutStatsImage(any(), anyList(), any(), eq(true));
         when(captionAgent.generateCaption(any(), anyList(), anyString(), any())).thenReturn(new CaptionAgent.CaptionResult("template caption", CaptionSource.TEMPLATE));
 
         postDraftService.processNewPosts(List.of(post1));
@@ -155,6 +156,19 @@ public class PostDraftServiceTest {
         assertTrue(post1.getLlmReason().contains("standout image not generated"));
         assertEquals(DraftStatus.PENDING_REVIEW, post1.getDraftStatus());
         verify(postRepository).save(post1);
+    }
+
+    @Test
+    public void processNewPosts_playerStandoutBaseMissing_genericBaseUsedAndNoted() throws Exception {
+        givenDecisions(new ValidatedEditorDecision(1, true, EditorPostType.STANDOUT, List.of("goals"), "Two goals", true));
+        when(imageGeneratorService.generateStandoutStatsImage(eq(post1), anyList(), isNull(), eq(true))).thenReturn(true);
+        when(captionAgent.generateCaption(any(), anyList(), anyString(), any())).thenReturn(new CaptionAgent.CaptionResult("c", CaptionSource.TEMPLATE));
+
+        postDraftService.processNewPosts(List.of(post1));
+
+        assertEquals(PostType.STANDOUT_STATS_POST, post1.getPostType());
+        assertTrue(post1.getLlmReason().contains("generic base image"));
+        verify(amazonS3Service).uploadToS3(post1, true);
     }
 
     @Test

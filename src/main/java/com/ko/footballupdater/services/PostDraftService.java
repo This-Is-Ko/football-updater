@@ -113,8 +113,11 @@ public class PostDraftService {
                 }
 
                 if (EditorPostType.STANDOUT.equals(decision.postType()) && !decision.featuredStats().isEmpty()) {
-                    if (!generateStandoutImage(post, decision.featuredStats())) {
+                    StandoutImageResult imageResult = generateStandoutImage(post, decision.featuredStats());
+                    if (imageResult == StandoutImageResult.NOT_GENERATED) {
                         reason.append(" (standout image not generated)");
+                    } else if (imageResult == StandoutImageResult.GENERATED_WITH_GENERIC_BASE) {
+                        reason.append(" (standout image uses the generic base image, no player standout base image found)");
                     }
                 } else if (EditorPostType.SUMMARY_MEMBER.equals(decision.postType())) {
                     reason.append(" (suggested for a summary post)");
@@ -172,13 +175,19 @@ public class PostDraftService {
         return notes;
     }
 
+    enum StandoutImageResult {
+        GENERATED,
+        GENERATED_WITH_GENERIC_BASE,
+        NOT_GENERATED
+    }
+
     /**
-     * Generate the standout image with the default background and add it to the front of the post's images.
-     * @return true if the image was generated
+     * Generate the standout image with the player standout base image, or the generic base image when that is
+     * missing, and add it to the front of the post images.
      */
-    boolean generateStandoutImage(Post post, List<String> featuredStats) {
+    StandoutImageResult generateStandoutImage(Post post, List<String> featuredStats) {
         if (!imageGeneratorProperties.isEnabled()) {
-            return false;
+            return StandoutImageResult.NOT_GENERATED;
         }
         Map<String, Object> stats = StatFieldHelper.nonNullStats(post.getPlayerMatchPerformanceStats());
         List<StatisticEntryGenerateDto> selectedStats = new ArrayList<>();
@@ -194,18 +203,18 @@ public class PostDraftService {
             selectedStats.add(new StatisticEntryGenerateDto(displayName, value.toString(), true));
         }
         if (selectedStats.isEmpty()) {
-            return false;
+            return StandoutImageResult.NOT_GENERATED;
         }
         try {
             // Only upload the new standout image, the stat images are already uploaded
             post.setImagesFileNames(new ArrayList<>());
-            imageGeneratorService.generateStandoutStatsImage(post, selectedStats, null);
+            boolean usedGenericBase = imageGeneratorService.generateStandoutStatsImage(post, selectedStats, null, true);
             amazonS3Service.uploadToS3(post, true);
             post.setPostType(PostType.STANDOUT_STATS_POST);
-            return true;
+            return usedGenericBase ? StandoutImageResult.GENERATED_WITH_GENERIC_BASE : StandoutImageResult.GENERATED;
         } catch (Exception ex) {
             log.atWarn().setMessage("Unable to generate standout image").setCause(ex).addKeyValue("postId", post.getId()).log();
-            return false;
+            return StandoutImageResult.NOT_GENERATED;
         }
     }
 

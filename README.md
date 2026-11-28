@@ -126,7 +126,7 @@ caption agent writes the caption in the style of the examples in `src/main/resou
 Every number in an LLM caption must appear in the post's stats or match data and names must match the database,
 otherwise it retries once and then falls back to the template caption. With the LLM disabled (or on any failure),
 the rule-based highlights and template captions are used. STANDOUT picks get a standout image generated with the
-default background. Approve uploads to Instagram through the normal upload path, Reject removes the draft from the queue.
+player's standout base image, or the generic base image (IMAGE_GENERATOR_GENERIC_BASE_IMAGE_FILE) if there isn't one. Approve uploads to Instagram through the normal upload path, Reject removes the draft from the queue.
 Create the new columns with `src/main/resources/database/post_draft_review.sql`.
 
 ### API
@@ -147,7 +147,7 @@ The dashboard can be accessed at
 
     hostname:port/posts
 
-The Spring Security default login page is used and the password can be configured following the above.
+All `/posts` pages require the dashboard login (user `admin`). The Spring Security default login page is used and the password can be configured following the above.
 
     DASHBOARD_PASSWORD
 
