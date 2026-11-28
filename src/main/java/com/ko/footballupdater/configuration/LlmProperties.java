@@ -27,6 +27,11 @@ public class LlmProperties {
     private String model = "claude-sonnet-5-5";
 
     /**
+     * Model used for image input (photo framing and vision QA).
+     */
+    private String visionModel = "claude-opus-5-5";
+
+    /**
      * Maximum number of posts sent to the editor and caption agents per run.
      */
     private int maxPostsPerRun = 10;
