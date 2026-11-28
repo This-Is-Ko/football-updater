@@ -162,7 +162,7 @@ Face matching (PHOTO_MATCHER=FACE_SIDECAR)
 
 `face-sidecar/` is a stateless Python service (InsightFace detection + ArcFace embeddings) that only embeds and
 compares faces. Start it with `docker compose up -d face-sidecar`; the model is baked into the image at build time and
-the port is only bound to localhost. Create the table and columns with `src/main/resources/database/face_matching.sql`.
+no port is published (the app reaches it at `http://face-sidecar:8001` on the compose network). Create the table and columns with `src/main/resources/database/face_matching.sql`.
 
 Enrol 3 to 5 reference photos per player, each showing only that player's face:
 
