@@ -2,6 +2,7 @@ package com.ko.footballupdater.services;
 
 import com.ko.footballupdater.configuration.TiktokApiProperties;
 import com.ko.footballupdater.models.Post;
+import com.ko.footballupdater.models.TokenPlatform;
 import com.ko.footballupdater.models.form.ImageUrlEntry;
 import com.ko.footballupdater.models.form.TiktokApiDto;
 import com.ko.footballupdater.models.tiktokApi.CreatorInfoResponse;
@@ -17,9 +18,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,6 +37,9 @@ public class TiktokApiService extends AbstractAuthClass {
     private static final String TIKTOK_AUTH_BASE_URL = "https://www.tiktok.com/v2";
     private static final String TIKTOK_API_BASE_URL = "https://open.tiktokapis.com/v2";
 
+    // Access tokens last 24 hours, refresh when there is less than this left
+    private static final Duration ACCESS_TOKEN_REFRESH_THRESHOLD = Duration.ofHours(2);
+
     private final WebClient tiktokWebClient;
 
     public TiktokApiService(WebClient.Builder tiktokWebClientBuilder) {
@@ -40,6 +47,11 @@ public class TiktokApiService extends AbstractAuthClass {
                 .baseUrl(TIKTOK_API_BASE_URL)
                 .filter(logRequest())
                 .filter(logResponse()).build();
+    }
+
+    @Override
+    TokenPlatform getPlatform() {
+        return TokenPlatform.TIKTOK;
     }
 
     public TiktokApiDto prepareTiktokApiDto() {
@@ -63,7 +75,7 @@ public class TiktokApiService extends AbstractAuthClass {
                 if (response.getError() != null) {
                     throw new Exception(String.format("Error response from Tiktok auth: %s - %s", response.getError(), response.getErrorDescription()));
                 } else {
-                    storeTokensInMemory(response);
+                    storeTokens(response);
                     log.atInfo().setMessage("Tiktok login completed").log();
                 }
             } else {
@@ -85,6 +97,53 @@ public class TiktokApiService extends AbstractAuthClass {
                 .uri("/oauth/token/")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(BodyInserters.fromValue(body))
+                .retrieve()
+                .bodyToMono(TiktokAccessTokenResponse.class)
+                .block();
+    }
+
+    /**
+     * Use the refresh token to get a new access token when the current one is expired or close to expiring.
+     * Refer to <a href="https://developers.tiktok.com/doc/oauth-user-access-token-management">...</a>
+     */
+    public void refreshTokenIfNeeded() {
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            log.atDebug().setMessage("TIKTOK - No refresh token available").log();
+            return;
+        }
+        if (!isRefreshTokenValid()) {
+            log.atWarn().setMessage("TIKTOK - Refresh token has expired, login is required to get a new token").log();
+            return;
+        }
+        if (isTokenValid() && !isTokenExpiringWithin(ACCESS_TOKEN_REFRESH_THRESHOLD)) {
+            return;
+        }
+        try {
+            TiktokAccessTokenResponse response = requestRefreshedAccessToken();
+            if (response == null) {
+                throw new Exception("Response from Tiktok refresh is empty");
+            }
+            if (response.getError() != null) {
+                throw new Exception(String.format("Error response from Tiktok refresh: %s - %s", response.getError(), response.getErrorDescription()));
+            }
+            storeTokens(response);
+            log.atInfo().setMessage("TIKTOK - Refreshed access token").log();
+        } catch (Exception ex) {
+            log.atError().setMessage("TIKTOK - Failed to refresh access token").setCause(ex).log();
+        }
+    }
+
+    TiktokAccessTokenResponse requestRefreshedAccessToken() {
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("client_key", tiktokApiProperties.getClientKey());
+        formData.add("client_secret", tiktokApiProperties.getClientSecret());
+        formData.add("grant_type", "refresh_token");
+        formData.add("refresh_token", refreshToken);
+
+        return tiktokWebClient.post()
+                .uri("/oauth/token/")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(BodyInserters.fromFormData(formData))
                 .retrieve()
                 .bodyToMono(TiktokAccessTokenResponse.class)
                 .block();

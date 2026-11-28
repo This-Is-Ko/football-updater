@@ -30,4 +30,9 @@ public class FacebookApiProperties {
     @NotNull
     private FacebookApiInstagramProperties instagram;
 
+    /**
+     * Refresh the long-lived token when it has fewer than this many days left.
+     */
+    private Integer tokenRefreshThresholdDays = 10;
+
 }

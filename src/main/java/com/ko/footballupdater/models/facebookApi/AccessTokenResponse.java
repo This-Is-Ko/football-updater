@@ -25,4 +25,7 @@ public abstract class AccessTokenResponse {
     @JsonProperty("expires_in")
     private Integer expiresIn;
 
+    @JsonProperty("refresh_expires_in")
+    private Integer refreshExpiresIn;
+
 }
