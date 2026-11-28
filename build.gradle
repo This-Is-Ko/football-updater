@@ -66,4 +66,6 @@ bootJar {
 
 test {
 	useJUnitPlatform()
+	// Image generation tests render with AWT; run it headless so no display is needed
+	systemProperty 'java.awt.headless', 'true'
 }
