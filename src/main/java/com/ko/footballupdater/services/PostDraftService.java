@@ -1,5 +1,6 @@
 package com.ko.footballupdater.services;
 
+import com.ko.footballupdater.configuration.FaceMatchingProperties;
 import com.ko.footballupdater.configuration.ImageGeneratorProperties;
 import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.configuration.LlmProperties;
@@ -16,6 +17,7 @@ import com.ko.footballupdater.models.DraftStatus;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.models.form.StatisticEntryGenerateDto;
+import com.ko.footballupdater.photo.MatchResult;
 import com.ko.footballupdater.photo.PhotoPipelineService;
 import com.ko.footballupdater.repositories.PostRepository;
 import com.ko.footballupdater.utils.PostHelper;
@@ -49,6 +51,9 @@ public class PostDraftService {
             "yellowCards", "yellowCard",
             "redCards", "redCard"
     );
+
+    @Autowired(required = false)
+    private FaceMatchingProperties faceMatchingProperties;
 
     @Autowired
     private EditorAgent editorAgent;
@@ -248,6 +253,24 @@ public class PostDraftService {
         post.setPhotoSourceUrl(truncate(photo.candidate().url(), 2000));
         post.setPhotoSourceName(photo.candidate().sourceName());
         post.setPhotoLicence(photo.candidate().licence() != null ? truncate(photo.candidate().licence(), 500) : null);
+        applyMatchResult(post, photo.matchResult());
+    }
+
+    /**
+     * Record the player match on the post, flagging it for the reviewer when the confidence is low.
+     */
+    public void applyMatchResult(Post post, MatchResult matchResult) {
+        if (matchResult == null) {
+            post.setPhotoMatchConfidence(null);
+            post.setPhotoMatchNotes(null);
+            post.setPhotoMatchFlagged(null);
+            return;
+        }
+        double threshold = (faceMatchingProperties != null ? faceMatchingProperties : new FaceMatchingProperties()).getConfidentSimilarity();
+        post.setPhotoMatchConfidence(matchResult.confidence());
+        post.setPhotoMatchNotes(matchResult.reasons() == null ? null
+                : truncate(String.join("\n", matchResult.reasons().stream().map(r -> r.replace('\n', ' ')).toList()), 1000));
+        post.setPhotoMatchFlagged(matchResult.confidence() < threshold);
     }
 
     /**

@@ -1,6 +1,10 @@
 package com.ko.footballupdater.unit.photo;
 
+import com.ko.footballupdater.configuration.FaceMatchingProperties;
 import com.ko.footballupdater.configuration.PhotoProperties;
+import com.ko.footballupdater.photo.face.FaceSidecarClient;
+import com.ko.footballupdater.photo.face.IdentityCrossCheck;
+import com.ko.footballupdater.repositories.PlayerFaceEmbeddingRepository;
 import com.ko.footballupdater.models.Match;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.Post;
@@ -75,7 +79,12 @@ public class PhotoPipelineServiceTest {
         };
         ReflectionTestUtils.setField(service, "photoProperties", photoProperties);
         ReflectionTestUtils.setField(service, "photoSources", List.of(new NoPhotoSource(), manualSource, new FakeAutomaticSource()));
-        ReflectionTestUtils.setField(service, "playerMatchers", List.of(new NoOpPlayerMatcher(), new FaceMatcherSidecarClient()));
+        FaceMatcherSidecarClient faceMatcher = new FaceMatcherSidecarClient();
+        ReflectionTestUtils.setField(faceMatcher, "properties", new FaceMatchingProperties());
+        ReflectionTestUtils.setField(faceMatcher, "embeddingRepository", mock(PlayerFaceEmbeddingRepository.class));
+        ReflectionTestUtils.setField(faceMatcher, "sidecarClient", mock(FaceSidecarClient.class));
+        ReflectionTestUtils.setField(faceMatcher, "identityCrossCheck", mock(IdentityCrossCheck.class));
+        ReflectionTestUtils.setField(service, "playerMatchers", List.of(new NoOpPlayerMatcher(), faceMatcher));
         ReflectionTestUtils.setField(service, "framers", List.of(new CenterFramer(), visionFramer));
         ReflectionTestUtils.setField(service, "imageFetcher", imageFetcher);
         ReflectionTestUtils.setField(service, "manualUrlPhotoSource", manualSource);
@@ -120,7 +129,7 @@ public class PhotoPipelineServiceTest {
     }
 
     @Test
-    public void automaticPhoto_faceSidecarStub_neverUsed() {
+    public void automaticPhoto_faceSidecar_playerNotEnrolled_skipped() {
         photoProperties.setSources(List.of("FAKE_AUTO"));
         photoProperties.setMatcher(FaceMatcherSidecarClient.NAME);
 
@@ -146,12 +155,12 @@ public class PhotoPipelineServiceTest {
     }
 
     @Test
-    public void manualPhoto_faceSidecarStub_rejected() {
+    public void manualPhoto_faceSidecar_unverified_passesWithZeroConfidence() throws Exception {
         photoProperties.setMatcher(FaceMatcherSidecarClient.NAME);
 
-        ImageFetchException ex = assertThrows(ImageFetchException.class,
-                () -> service.prepareManualPhoto(post, "https://photos.example/mine.jpg", null));
-        assertTrue(ex.getMessage().contains("not implemented"));
+        PhotoPipelineService.SelectedPhoto photo = service.prepareManualPhoto(post, "https://photos.example/mine.jpg", null);
+        assertTrue(photo.matchResult().passed());
+        assertEquals(0, photo.matchResult().confidence());
     }
 
     @Test

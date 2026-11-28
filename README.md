@@ -138,15 +138,49 @@ It only flags issues, it never blocks approval or edits the post.
 Standout photo pipeline
 
     PHOTO_SOURCES - Optional, default NONE. Priority list of photo sources, like DATASOURCE_PRIORITY
-    PHOTO_MATCHER - Optional, default NOOP. NOOP only accepts photos picked on the review page
+    PHOTO_MATCHER - Optional, default NOOP. NOOP only accepts photos picked on the review page. FACE_SIDECAR matches faces
     PHOTO_FRAMER - Optional, default CENTER. VISION asks the vision model where the player is
     PHOTO_MAX_DOWNLOAD_BYTES - Optional, default 10485760
     PHOTO_DOWNLOAD_TIMEOUT_SECONDS - Optional, default 10
 
 On the review page, "Use photo URL" downloads an http/https image (size limit, timeout, no private addresses), frames
 it, regenerates the standout image, re-runs QA and stores the photo URL and licence on the post. No automatic photo
-source or face matcher exists yet, so automatic photos are never used. Create the new columns with
+source exists yet, so automatic photos are never used. Create the new columns with
 `src/main/resources/database/photo_pipeline.sql`.
+
+Face matching (PHOTO_MATCHER=FACE_SIDECAR)
+
+    FACE_SIDECAR_URL - Optional, default http://localhost:8001
+    FACE_MODEL_PACK - Optional, default buffalo_l. Must match the sidecar's model; embeddings are stored per model
+    FACE_SIDECAR_CONNECT_TIMEOUT_MILLIS - Optional, default 2000
+    FACE_SIDECAR_READ_TIMEOUT_MILLIS - Optional, default 15000
+    FACE_MIN_SIMILARITY - Optional, default 0.30. Automatic photos below this are rejected
+    FACE_CONFIDENT_SIMILARITY - Optional, default 0.45. Matches below this are flagged on the review card
+    FACE_MIN_REFERENCES - Optional, default 3. Reference photos needed before automatic photos are matched
+    FACE_MAX_REFERENCES - Optional, default 5
+    FACE_CROSS_CHECK_ENABLED - Optional, default true. Claude reads the jersey number, shirt name and caption (needs LLM_ENABLED)
+
+`face-sidecar/` is a stateless Python service (InsightFace detection + ArcFace embeddings) that only embeds and
+compares faces. Start it with `docker compose up -d face-sidecar`; the model is baked into the image at build time and
+the port is only bound to localhost. Create the table and columns with `src/main/resources/database/face_matching.sql`.
+
+Enrol 3 to 5 reference photos per player, each showing only that player's face:
+
+    POST /api/player/{playerId}/faces   {"urls": ["https://...", "https://...", "https://..."]}
+    GET /api/player/{playerId}/faces    (number of references)
+    DELETE /api/player/{playerId}/faces
+
+Enrolling replaces the player's existing references. Photos with no face, several similar-sized faces, or a face that
+doesn't match the other references are rejected and listed in the response. Set the shirt number with
+`PATCH /api/player/{playerId}` `{"shirtNumber": 10}` so the cross-check can compare it.
+
+When matching, the largest face is compared with the references. An automatic photo is skipped when the sidecar is
+down or slow, the player has too few references, no face is found, the player isn't the main subject, the similarity
+is below FACE_MIN_SIMILARITY, or the jersey number, shirt name or caption contradicts the match. Claude is never asked
+to recognise faces. A photo picked on the review page is always used, but if it couldn't be verified it gets
+confidence 0 and is flagged. Face embeddings are biometric data: keep them to the squad, and delete them
+(`DELETE .../faces`, or deleting the player) when a player leaves. The buffalo_l pretrained models are licensed by
+InsightFace for non-commercial research use only.
 
 ### API
 

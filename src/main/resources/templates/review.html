@@ -50,6 +50,17 @@
                         <br>
                         <strong>Licence:</strong> <span th:text="${post.photoLicence != null AND !#strings.isEmpty(post.photoLicence) ? post.photoLicence : 'not given'}"></span>
                     </p>
+                    <div th:if="${post.photoSourceUrl != null AND post.photoMatchFlagged != null AND post.photoMatchFlagged}" class="alert alert-danger" role="alert">
+                        <strong>Check the player in this photo</strong>
+                        <span th:text="${'(match confidence ' + #numbers.formatDecimal(post.photoMatchConfidence, 1, 2) + ')'}"></span>
+                        <ul class="mb-0" th:if="${not #lists.isEmpty(post.photoMatchNoteList)}">
+                            <li th:each="note : ${post.photoMatchNoteList}" th:text="${note}"></li>
+                        </ul>
+                    </div>
+                    <p th:if="${post.photoSourceUrl != null AND post.photoMatchFlagged != null AND !post.photoMatchFlagged}" class="text-success">
+                        <span th:text="${'Player match confidence ' + #numbers.formatDecimal(post.photoMatchConfidence, 1, 2)}"></span>
+                        <span th:if="${not #lists.isEmpty(post.photoMatchNoteList)}" class="text-muted" th:text="${'(' + #strings.listJoin(post.photoMatchNoteList, '; ') + ')'}"></span>
+                    </p>
                     <div class="d-flex flex-row flex-wrap mb-3">
                         <div th:each="imageUrl, imageIter : ${post.imagesUrls}" class="me-2 mb-2 text-center">
                             <a th:href="${imageUrl}" target="_blank" rel="noopener noreferrer">

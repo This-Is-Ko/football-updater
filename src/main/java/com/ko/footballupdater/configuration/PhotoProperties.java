@@ -23,7 +23,7 @@ public class PhotoProperties {
     private List<String> sources = new ArrayList<>(List.of("NONE"));
 
     /**
-     * NOOP (default, only reviewer-picked photos pass) or FACE_SIDECAR (step 4, not implemented yet).
+     * NOOP (default, only reviewer-picked photos pass) or FACE_SIDECAR (face matching, see FaceMatchingProperties).
      */
     private String matcher = "NOOP";
 

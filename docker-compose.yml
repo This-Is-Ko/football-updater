@@ -1,0 +1,17 @@
+# Face matching sidecar for photo.matcher=FACE_SIDECAR.
+# Start with: docker compose up -d face-sidecar
+# The app reaches it at FACE_SIDECAR_URL (http://localhost:8001 by default, http://face-sidecar:8001 from a
+# container on the same compose network). It is stateless and only bound to localhost.
+services:
+  face-sidecar:
+    build: ./face-sidecar
+    image: football-updater-face-sidecar:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8001:8001"
+    environment:
+      FACE_MIN_DET_SCORE: "0.5"
+    mem_limit: 2g
+    read_only: true
+    tmpfs:
+      - /tmp

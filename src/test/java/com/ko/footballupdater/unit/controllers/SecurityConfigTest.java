@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import com.ko.footballupdater.photo.face.FaceEnrolmentService;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
@@ -83,6 +84,8 @@ public class SecurityConfigTest {
     private PlayerViewService playerViewService;
     @MockBean
     private PerformanceAnalysisService performanceAnalysisService;
+    @MockBean
+    private FaceEnrolmentService faceEnrolmentService;
 
     private static MockHttpServletRequestBuilder browser(MockHttpServletRequestBuilder builder) {
         return builder.accept(MediaType.TEXT_HTML);

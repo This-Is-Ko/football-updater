@@ -161,6 +161,24 @@ public class Post {
     @Column(name = "photo_licence", length = 500)
     private String photoLicence;
 
+    /**
+     * How sure the player matcher was that the photo shows the player, 0 to 1.
+     */
+    @Column(name = "photo_match_confidence")
+    private Double photoMatchConfidence;
+
+    /**
+     * The matcher's reasons, one per line.
+     */
+    @Column(name = "photo_match_notes", length = 1000)
+    private String photoMatchNotes;
+
+    /**
+     * True when the match was below photo.face.confident-similarity, so the reviewer should check the player.
+     */
+    @Column(name = "photo_match_flagged")
+    private Boolean photoMatchFlagged;
+
     public Post() {
     }
 
@@ -199,6 +217,16 @@ public class Post {
      */
     public List<QaIssue> getQaIssueList() {
         return VisionQaService.parseIssues(qaIssues);
+    }
+
+    /**
+     * Matcher reasons for display, from {@link #photoMatchNotes}.
+     */
+    public List<String> getPhotoMatchNoteList() {
+        if (photoMatchNotes == null || photoMatchNotes.isBlank()) {
+            return new ArrayList<>();
+        }
+        return photoMatchNotes.lines().filter(line -> !line.isBlank()).toList();
     }
 
     public List<String> getImagesUrls() {

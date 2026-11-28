@@ -43,6 +43,12 @@ public class Player {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd")
     private Date dob;
 
+    /**
+     * Current shirt number, used to cross-check photos. Null when unknown.
+     */
+    @Column(name = "shirt_number")
+    private Integer shirtNumber;
+
     @OneToMany
     @JoinColumn(name = "image_id")
     @JdbcTypeCode(SqlTypes.JSON)
