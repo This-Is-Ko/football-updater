@@ -31,11 +31,9 @@ public class SecurityConfig {
                         .requestMatchers("/images/**", "/styles/**", "/webjars/**").permitAll()
                         // API endpoints are protected by the Auth-Secret header interceptor instead
                         .requestMatchers("/api/**").permitAll()
-                        // Post pages can upload, generate and delete posts, so they require the dashboard login
-                        .requestMatchers("/posts", "/posts/**").authenticated()
-                        .requestMatchers("/teams/**").permitAll()
-                        .requestMatchers("/players/**").permitAll()
-                        .requestMatchers("/performance/**").permitAll()
+                        // Dashboard pages can upload, generate, edit and delete data, so they require the dashboard login
+                        .requestMatchers("/posts", "/posts/**", "/teams", "/teams/**", "/players", "/players/**",
+                                "/performance", "/performance/**").authenticated()
                         .requestMatchers("/facebook/auth").permitAll()
                         .requestMatchers("/tiktok/auth").permitAll()
                         .requestMatchers("/error").permitAll()

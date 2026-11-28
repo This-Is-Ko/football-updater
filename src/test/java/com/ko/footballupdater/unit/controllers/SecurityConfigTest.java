@@ -3,8 +3,11 @@ package com.ko.footballupdater.unit.controllers;
 import com.ko.footballupdater.controllers.FacebookApiController;
 import com.ko.footballupdater.controllers.PlayerController;
 import com.ko.footballupdater.controllers.TiktokApiController;
+import com.ko.footballupdater.controllers.views.PerformanceAnalysisViewController;
+import com.ko.footballupdater.controllers.views.PlayerViewController;
 import com.ko.footballupdater.controllers.views.PostViewController;
 import com.ko.footballupdater.controllers.views.ReviewViewController;
+import com.ko.footballupdater.controllers.views.TeamViewController;
 import com.ko.footballupdater.interceptors.SecurityConfig;
 import com.ko.footballupdater.interceptors.ValidateHeaderSecretInterceptor;
 import com.ko.footballupdater.interceptors.WebConfig;
@@ -12,6 +15,9 @@ import com.ko.footballupdater.models.form.FacebookApiDto;
 import com.ko.footballupdater.models.form.TiktokApiDto;
 import com.ko.footballupdater.services.DraftReviewService;
 import com.ko.footballupdater.services.FacebookApiService;
+import com.ko.footballupdater.services.PerformanceAnalysisService;
+import com.ko.footballupdater.services.PlayerViewService;
+import com.ko.footballupdater.services.TeamViewService;
 import com.ko.footballupdater.services.PlayerService;
 import com.ko.footballupdater.services.PostService;
 import com.ko.footballupdater.services.TiktokApiService;
@@ -50,7 +56,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = {PostViewController.class, ReviewViewController.class, FacebookApiController.class,
-        TiktokApiController.class, PlayerController.class})
+        TiktokApiController.class, PlayerController.class, TeamViewController.class, PlayerViewController.class,
+        PerformanceAnalysisViewController.class})
 @Import({SecurityConfig.class, WebConfig.class, ValidateHeaderSecretInterceptor.class})
 @TestPropertySource(properties = {"dashboard.password=test-password", "endpoint.secret=test-secret"})
 public class SecurityConfigTest {
@@ -70,6 +77,12 @@ public class SecurityConfigTest {
     private PostHelper postHelper;
     @MockBean
     private DraftReviewService draftReviewService;
+    @MockBean
+    private TeamViewService teamViewService;
+    @MockBean
+    private PlayerViewService playerViewService;
+    @MockBean
+    private PerformanceAnalysisService performanceAnalysisService;
 
     private static MockHttpServletRequestBuilder browser(MockHttpServletRequestBuilder builder) {
         return builder.accept(MediaType.TEXT_HTML);
@@ -99,14 +112,44 @@ public class SecurityConfigTest {
 
     @Test
     public void posts_notLoggedInNonBrowserClient_unauthorized() throws Exception {
-        mockMvc.perform(get("/posts/delete").param("postId", "1")).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/posts/delete").with(csrf()).param("postId", "1")).andExpect(status().isUnauthorized());
         verify(postService, never()).deletePost(anyInt());
     }
 
     @Test
     public void postsDelete_notLoggedIn_redirectsWithoutDeleting() throws Exception {
-        mockMvc.perform(browser(get("/posts/delete")).param("postId", "1")).andExpect(redirectedUrlPattern("**/login"));
+        mockMvc.perform(browser(post("/posts/delete")).with(csrf()).param("postId", "1")).andExpect(redirectedUrlPattern("**/login"));
         verify(postService, never()).deletePost(anyInt());
+    }
+
+    @Test
+    @WithMockUser
+    public void postsDelete_loggedInPostWithCsrf_deletes() throws Exception {
+        mockMvc.perform(browser(post("/posts/delete")).with(csrf()).param("postId", "4")).andExpect(redirectedUrl("/posts"));
+        verify(postService).deletePost(4);
+    }
+
+    @Test
+    @WithMockUser
+    public void postsDelete_loggedInWithoutCsrf_forbidden() throws Exception {
+        mockMvc.perform(browser(post("/posts/delete")).param("postId", "4")).andExpect(status().isForbidden());
+        verify(postService, never()).deletePost(anyInt());
+    }
+
+    @Test
+    @WithMockUser
+    public void postsDelete_getNoLongerDeletes() throws Exception {
+        mockMvc.perform(browser(get("/posts/delete")).param("postId", "4")).andExpect(status().isMethodNotAllowed());
+        verify(postService, never()).deletePost(anyInt());
+    }
+
+    @Test
+    public void teamsPlayersPerformance_notLoggedIn_redirectToLogin() throws Exception {
+        mockMvc.perform(browser(get("/teams"))).andExpect(redirectedUrlPattern("**/login"));
+        mockMvc.perform(browser(get("/players"))).andExpect(redirectedUrlPattern("**/login"));
+        mockMvc.perform(browser(get("/performance/recent-highlights"))).andExpect(redirectedUrlPattern("**/login"));
+        verify(teamViewService, never()).getTeams();
+        verify(playerViewService, never()).getPlayers();
     }
 
     @Test

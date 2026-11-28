@@ -147,7 +147,7 @@ The dashboard can be accessed at
 
     hostname:port/posts
 
-All `/posts` pages require the dashboard login (user `admin`). The Spring Security default login page is used and the password can be configured following the above.
+All dashboard pages (`/posts`, `/players`, `/teams`, `/performance`) require the dashboard login (user `admin`). The Spring Security default login page is used and the password can be configured following the above.
 
     DASHBOARD_PASSWORD
 

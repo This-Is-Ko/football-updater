@@ -96,7 +96,7 @@ public class PostViewController {
      * Delete selected post
      * @return redirect to posts view
      */
-    @GetMapping("/delete")
+    @PostMapping("/delete")
     public String deletePost(@RequestParam Integer postId) {
         try {
             postService.deletePost(postId);
