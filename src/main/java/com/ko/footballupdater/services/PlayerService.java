@@ -65,6 +65,9 @@ public class PlayerService {
     @Autowired
     private ImageGeneratorProperties imageGeneratorProperties;
 
+    @Autowired
+    private PostDraftService postDraftService;
+
     public Player addPlayer(Player newPlayer, DataSourceSiteName dataSourceSiteName) throws IllegalArgumentException {
         if (!playerRepository.findByNameEquals(newPlayer.getName()).isEmpty()) {
             throw new IllegalArgumentException("Player already exists");
@@ -189,6 +192,20 @@ public class PlayerService {
         if (posts.isEmpty()) {
             log.atInfo().setMessage("No posts created").log();
             return response;
+        }
+
+        // Save new posts so they have ids, then prepare them as drafts for the approval queue
+        for (int i = 0; i < posts.size(); i++) {
+            Post saved = postRepository.save(posts.get(i));
+            if (saved != null && saved.getId() != null) {
+                // Keep transient fields (image file names, search urls) from the in-memory post
+                posts.get(i).setId(saved.getId());
+            }
+        }
+        try {
+            postDraftService.processNewPosts(posts);
+        } catch (Exception ex) {
+            log.atWarn().setMessage("Preparing drafts failed, posts keep their template captions").setCause(ex).log();
         }
 
         // Attempt to send email with updates

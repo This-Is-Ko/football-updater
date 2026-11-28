@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head th:insert="~{fragments/head.html :: head (title='Football Updater | Review Drafts')}">
+    </head>
+    <body>
+        <div class="container">
+            <div th:replace="~{fragments/header.html :: header}"></div>
+            <br>
+            <h2>Review Drafts</h2>
+            <p>Approve uploads the post to Instagram with the images in the order shown and the caption below.</p>
+            <div th:if="${message}" th:classappend="${messageType == 'success' ? 'success-message' : 'error-message'}">
+                <p th:text="${message}"></p>
+            </div>
+            <div class="d-flex flex-row justify-content-between">
+                <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == false AND facebookStatus.loginUri != null}" class="btn btn-primary btn-sm action-button" th:href="${facebookStatus.loginUri}">Login to Facebook</a>
+                <a th:if="${facebookStatus != null AND facebookStatus.currentlyLoggedIn == true}" class="btn btn-success btn-sm action-button disabled">Facebook Logged In</a>
+            </div>
+            <br>
+            <div th:if="${#lists.isEmpty(drafts)}">
+                <p>No drafts waiting for review</p>
+            </div>
+            <div th:each="post : ${drafts}" class="card mb-4">
+                <div class="card-header d-flex flex-row justify-content-between">
+                    <strong th:text="${post.player != null ? post.player.name : 'Summary post'}"></strong>
+                    <span>
+                        <span class="badge bg-secondary" th:text="${post.postType}"></span>
+                        <span class="badge bg-info text-dark" th:text="${'Caption: ' + (post.captionSource != null ? post.captionSource : 'TEMPLATE')}"></span>
+                        <span th:text="${#dates.format(post.dateGenerated, 'dd-MM-yyyy HH:mm')}"></span>
+                    </span>
+                </div>
+                <div class="card-body">
+                    <p th:if="${post.playerMatchPerformanceStats != null AND post.playerMatchPerformanceStats.match != null}"
+                       th:text="${post.playerMatchPerformanceStats.match.homeTeamName + ' vs ' + post.playerMatchPerformanceStats.match.awayTeamName}"></p>
+                    <p><strong>Editor reason:</strong> <span th:text="${post.llmReason}"></span></p>
+                    <p th:if="${not #lists.isEmpty(post.featuredStats)}"><strong>Featured stats:</strong> <span th:text="${#strings.listJoin(post.featuredStats, ', ')}"></span></p>
+                    <div class="d-flex flex-row flex-wrap mb-3">
+                        <div th:each="imageUrl, imageIter : ${post.imagesUrls}" class="me-2 mb-2 text-center">
+                            <a th:href="${imageUrl}" target="_blank" rel="noopener noreferrer">
+                                <img th:src="${imageUrl}" width="200px" th:alt="'Image ' + ${imageIter.count}">
+                            </a>
+                            <div th:text="${imageIter.count}"></div>
+                        </div>
+                        <p th:if="${#lists.isEmpty(post.imagesUrls)}">No images - this post can't be approved until it has images.</p>
+                    </div>
+                    <form method="post" th:action="@{/posts/review/{id}/approve(id=${post.id})}">
+                        <div class="mb-3">
+                            <label th:for="'caption-' + ${post.id}">Caption:</label>
+                            <textarea th:id="'caption-' + ${post.id}" name="caption" rows="6" th:text="${post.caption}" class="form-control"></textarea>
+                        </div>
+                        <div class="d-flex flex-row">
+                            <button class="btn btn-success action-button me-2" type="submit"
+                                    th:disabled="${#lists.isEmpty(post.imagesUrls)}"
+                                    onclick="this.disabled=true; this.form.submit();">Approve and post</button>
+                            <a class="btn btn-secondary action-button me-2" th:href="@{/posts/prepare-standout-image?postId={id}(id=${post.id})}">Custom image</a>
+                        </div>
+                    </form>
+                    <form method="post" th:action="@{/posts/review/{id}/reject(id=${post.id})}" class="mt-2">
+                        <button class="btn btn-danger action-button" type="submit">Reject</button>
+                    </form>
+                </div>
+            </div>
+
+            <h4 th:if="${not #lists.isEmpty(rejectedDrafts)}">Recently rejected or skipped</h4>
+            <table th:if="${not #lists.isEmpty(rejectedDrafts)}" class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Player</th>
+                        <th>Reason</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="post : ${rejectedDrafts}">
+                        <td th:text="${#dates.format(post.dateGenerated, 'dd-MM-yyyy HH:mm')}"></td>
+                        <td th:text="${post.player != null ? post.player.name : 'Summary post'}"></td>
+                        <td th:text="${post.llmReason}"></td>
+                        <td>
+                            <form th:unless="${post.postedStatus}" method="post" th:action="@{/posts/review/{id}/restore(id=${post.id})}">
+                                <button class="btn btn-secondary btn-sm" type="submit">Move back to review</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </body>
+</html>

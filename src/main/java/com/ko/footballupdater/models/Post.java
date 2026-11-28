@@ -101,6 +101,33 @@ public class Post {
     @NotNull
     private boolean postedStatus;
 
+    /**
+     * Approval queue status. Null for posts created before the queue existed.
+     */
+    @Column
+    @Enumerated(EnumType.STRING)
+    private DraftStatus draftStatus;
+
+    /**
+     * Why the editor (LLM or rule-based fallback) picked this post type and stats, shown to the reviewer.
+     */
+    @Column(name = "llm_reason", length = 2000)
+    private String llmReason;
+
+    /**
+     * Stat field names the editor chose to feature.
+     */
+    @Convert(converter = StringListConverter.class)
+    @Column(name = "featured_stats", length = 1000)
+    private List<String> featuredStats;
+
+    /**
+     * Whether the caption was written by the LLM or the template.
+     */
+    @Column
+    @Enumerated(EnumType.STRING)
+    private CaptionSource captionSource;
+
     public Post() {
     }
 
@@ -124,6 +151,14 @@ public class Post {
         this.player = player;
         this.imagesUrls = imagesUrls;
         this.postedStatus = false;
+    }
+
+    public List<String> getFeaturedStats() {
+        if (featuredStats == null) {
+            return new ArrayList<>();
+        }
+        // The converter turns an empty column into a single empty string
+        return featuredStats.stream().filter(stat -> stat != null && !stat.isBlank()).toList();
     }
 
     public List<String> getImagesUrls() {

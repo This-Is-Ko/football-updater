@@ -112,6 +112,23 @@ Scheduler (Spring cron format `second minute hour day month weekday`, `-` disabl
 
 The player data update can still be triggered manually with `GET /api/player/data/update`.
 
+LLM editor and caption agents (optional)
+
+    LLM_ENABLED - Optional, default false
+    ANTHROPIC_API_KEY
+    LLM_MODEL - Optional, default claude-sonnet-5-5
+    LLM_MAX_POSTS_PER_RUN - Optional, default 10
+    LLM_CAPTION_EXAMPLES_LOCATION - Optional, default classpath:llm/caption-examples.txt
+
+After each player update, new posts go into an approval queue at `/posts/review` (requires the dashboard login).
+With the LLM enabled, an editor agent picks which posts to publish, the post type and up to 5 stats to feature, and a
+caption agent writes the caption in the style of the examples in `src/main/resources/llm/caption-examples.txt`.
+Every number in an LLM caption must appear in the post's stats or match data and names must match the database,
+otherwise it retries once and then falls back to the template caption. With the LLM disabled (or on any failure),
+the rule-based highlights and template captions are used. STANDOUT picks get a standout image generated with the
+default background. Approve uploads to Instagram through the normal upload path, Reject removes the draft from the queue.
+Create the new columns with `src/main/resources/database/post_draft_review.sql`.
+
 ### API
 
 API endpoints can be configured to check for a secret to prevent unauthorized access. This value can be configured with 

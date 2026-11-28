@@ -4,6 +4,7 @@ package com.ko.footballupdater.services;
 import com.ko.footballupdater.configuration.InstagramPostProperies;
 import com.ko.footballupdater.exceptions.GenerateStandoutPostException;
 import com.ko.footballupdater.exceptions.GenerateSummaryPostException;
+import com.ko.footballupdater.models.DraftStatus;
 import com.ko.footballupdater.models.Player;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.PostType;
@@ -334,6 +335,10 @@ public class PostService {
         }
 
         post.setPostedStatus(true);
+        // Posting a draft from any page counts as approving it
+        if (post.getDraftStatus() != null) {
+            post.setDraftStatus(DraftStatus.APPROVED);
+        }
         postRepository.save(post);
     }
 }

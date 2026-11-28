@@ -1,5 +1,6 @@
 package com.ko.footballupdater.repositories;
 
+import com.ko.footballupdater.models.DraftStatus;
 import com.ko.footballupdater.models.Post;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
@@ -22,6 +23,8 @@ public interface PostRepository extends CrudRepository<Post, Integer> {
     List<Post> findByPostedStatus(boolean postedStatus);
 
     List<Post> findByPostedStatusOrderByDateGeneratedDesc(boolean postedStatus, Pageable pageable);
+
+    List<Post> findByDraftStatusOrderByDateGeneratedDesc(DraftStatus draftStatus, Pageable pageable);
 
     @Modifying
     @Query("update Post p set p.postedStatus = :postedStatus where p.id = :id")

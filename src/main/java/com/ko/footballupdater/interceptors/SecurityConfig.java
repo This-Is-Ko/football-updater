@@ -29,6 +29,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers("/images/favicon.ico").permitAll()
                         .requestMatchers("/api/**").permitAll()
+                        // The review queue publishes to Instagram, so it requires the dashboard login
+                        .requestMatchers("/posts/review/**", "/posts/review").authenticated()
                         .requestMatchers("/posts/**").permitAll()
                         .requestMatchers("/teams/**").permitAll()
                         .requestMatchers("/players/**").permitAll()
