@@ -33,6 +33,23 @@
                        th:text="${post.playerMatchPerformanceStats.match.homeTeamName + ' vs ' + post.playerMatchPerformanceStats.match.awayTeamName}"></p>
                     <p><strong>Editor reason:</strong> <span th:text="${post.llmReason}"></span></p>
                     <p th:if="${not #lists.isEmpty(post.featuredStats)}"><strong>Featured stats:</strong> <span th:text="${#strings.listJoin(post.featuredStats, ', ')}"></span></p>
+                    <div th:if="${post.qaPassed != null AND !post.qaPassed}" class="alert alert-warning" role="alert">
+                        <strong>Vision QA warnings</strong> (check before approving):
+                        <ul class="mb-0">
+                            <li th:each="issue : ${post.qaIssueList}">
+                                <strong th:text="${issue.type}"></strong>: <span th:text="${issue.detail}"></span>
+                            </li>
+                        </ul>
+                    </div>
+                    <p th:if="${post.qaPassed != null AND post.qaPassed}" class="text-success">Vision QA found no issues</p>
+                    <p th:if="${post.qaPassed == null}" class="text-muted">Vision QA not run</p>
+                    <p th:if="${post.photoSourceUrl != null}">
+                        <strong>Photo:</strong>
+                        <a th:href="${post.photoSourceUrl}" th:text="${post.photoSourceUrl}" target="_blank" rel="noopener noreferrer"></a>
+                        <span th:text="${'(' + post.photoSourceName + ')'}"></span>
+                        <br>
+                        <strong>Licence:</strong> <span th:text="${post.photoLicence != null AND !#strings.isEmpty(post.photoLicence) ? post.photoLicence : 'not given'}"></span>
+                    </p>
                     <div class="d-flex flex-row flex-wrap mb-3">
                         <div th:each="imageUrl, imageIter : ${post.imagesUrls}" class="me-2 mb-2 text-center">
                             <a th:href="${imageUrl}" target="_blank" rel="noopener noreferrer">
@@ -52,6 +69,17 @@
                                     th:disabled="${#lists.isEmpty(post.imagesUrls)}"
                                     onclick="this.disabled=true; this.form.submit();">Approve and post</button>
                             <a class="btn btn-secondary action-button me-2" th:href="@{/posts/prepare-standout-image?postId={id}(id=${post.id})}">Custom image</a>
+                        </div>
+                    </form>
+                    <form th:if="${post.player != null}" method="post" th:action="@{/posts/review/{id}/photo(id=${post.id})}" class="mt-3">
+                        <label th:for="'photo-url-' + ${post.id}">Use photo URL for the standout image:</label>
+                        <div class="d-flex flex-row flex-wrap">
+                            <input th:id="'photo-url-' + ${post.id}" type="url" name="photoUrl" required maxlength="2000"
+                                   placeholder="https://..." class="form-control me-2 mb-2" style="max-width:420px">
+                            <input type="text" name="licence" maxlength="500" placeholder="Licence / credit"
+                                   class="form-control me-2 mb-2" style="max-width:260px">
+                            <button class="btn btn-secondary action-button mb-2" type="submit"
+                                    onclick="this.disabled=true; this.form.submit();">Use photo URL</button>
                         </div>
                     </form>
                     <form method="post" th:action="@{/posts/review/{id}/reject(id=${post.id})}" class="mt-2">

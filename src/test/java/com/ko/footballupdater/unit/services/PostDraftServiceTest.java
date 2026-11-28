@@ -6,6 +6,13 @@ import com.ko.footballupdater.configuration.LlmProperties;
 import com.ko.footballupdater.llm.CaptionAgent;
 import com.ko.footballupdater.llm.EditorAgent;
 import com.ko.footballupdater.llm.LlmClient;
+import com.ko.footballupdater.llm.VisionQaService;
+import com.ko.footballupdater.photo.PhotoCandidate;
+import com.ko.footballupdater.photo.PhotoPipelineService;
+import com.ko.footballupdater.photo.MatchResult;
+import com.ko.footballupdater.models.form.ImageGenParams;
+import java.awt.image.BufferedImage;
+import java.util.Optional;
 import com.ko.footballupdater.llm.models.EditorPostType;
 import com.ko.footballupdater.llm.models.EditorResult;
 import com.ko.footballupdater.llm.models.ValidatedEditorDecision;
@@ -54,6 +61,10 @@ public class PostDraftServiceTest {
     @Mock
     private EditorAgent editorAgent;
     @Mock
+    private PhotoPipelineService photoPipelineService;
+    @Mock
+    private VisionQaService visionQaService;
+    @Mock
     private CaptionAgent captionAgent;
     @Mock
     private LlmClient llmClient;
@@ -84,6 +95,7 @@ public class PostDraftServiceTest {
         when(captionAgent.loadKnownNames()).thenReturn(Set.of("Jamie Rivers"));
         when(postHelper.generateCaptionHashtagSuffix(any(), any())).thenReturn("\n\n#tags");
         when(postRepository.findByPostedStatusOrderByDateGeneratedDesc(eq(false), any())).thenReturn(List.of());
+        when(photoPipelineService.findAutomaticPhoto(any())).thenReturn(Optional.empty());
         post1 = LlmTestData.post(1, "Jamie Rivers");
         post1.setImagesFileNames(new ArrayList<>(List.of("stats1.jpg")));
         post2 = LlmTestData.post(2, "Casey Moor");
@@ -172,6 +184,40 @@ public class PostDraftServiceTest {
     }
 
     @Test
+    public void processNewPosts_llmEnabled_runsVisionQaBeforeSaving() throws Exception {
+        givenDecisions(new ValidatedEditorDecision(1, true, EditorPostType.ALL_STAT, List.of(), "Solid", true));
+        when(captionAgent.generateCaption(any(), anyList(), anyString(), any())).thenReturn(new CaptionAgent.CaptionResult("c", CaptionSource.LLM));
+
+        postDraftService.processNewPosts(List.of(post1));
+
+        org.mockito.InOrder inOrder = org.mockito.Mockito.inOrder(captionAgent, visionQaService, postRepository);
+        inOrder.verify(captionAgent).generateCaption(any(), anyList(), anyString(), any());
+        inOrder.verify(visionQaService).review(post1);
+        inOrder.verify(postRepository).save(post1);
+    }
+
+    @Test
+    public void processNewPosts_automaticPhotoFound_standoutRenderedOnPhoto() throws Exception {
+        givenDecisions(new ValidatedEditorDecision(1, true, EditorPostType.STANDOUT, List.of("goals"), "Two goals", true));
+        BufferedImage photo = new BufferedImage(10, 10, BufferedImage.TYPE_INT_RGB);
+        ImageGenParams params = new ImageGenParams();
+        when(photoPipelineService.findAutomaticPhoto(post1)).thenReturn(Optional.of(new PhotoPipelineService.SelectedPhoto(
+                new PhotoCandidate("https://photos.example/p.jpg", "SOME_SOURCE", "CC BY 4.0", null, null), photo, params,
+                MatchResult.pass(0.9, "match"))));
+        when(captionAgent.generateCaption(any(), anyList(), anyString(), any())).thenReturn(new CaptionAgent.CaptionResult("c", CaptionSource.TEMPLATE));
+
+        postDraftService.processNewPosts(List.of(post1));
+
+        verify(imageGeneratorService).generateStandoutStatsImage(eq(post1), anyList(), eq(params), eq(false), eq(photo));
+        verify(imageGeneratorService, never()).generateStandoutStatsImage(any(), anyList(), isNull(), eq(true));
+        assertEquals(PostType.STANDOUT_STATS_POST, post1.getPostType());
+        assertEquals("https://photos.example/p.jpg", post1.getPhotoSourceUrl());
+        assertEquals("SOME_SOURCE", post1.getPhotoSourceName());
+        assertEquals("CC BY 4.0", post1.getPhotoLicence());
+        assertTrue(post1.getLlmReason().contains("uses a photo from SOME_SOURCE"));
+    }
+
+    @Test
     public void processNewPosts_llmDisabled_noCaptionCallsTemplateKept() throws Exception {
         when(llmClient.isEnabled()).thenReturn(false);
         givenDecisions(new ValidatedEditorDecision(1, true, EditorPostType.ALL_STAT, List.of(), "Rule-based: no standout stats", false));
@@ -179,6 +225,7 @@ public class PostDraftServiceTest {
         postDraftService.processNewPosts(List.of(post1));
 
         verify(captionAgent, never()).generateCaption(any(), anyList(), anyString(), any());
+        verify(visionQaService, never()).review(any());
         assertEquals("template caption", post1.getCaption());
         assertEquals(CaptionSource.TEMPLATE, post1.getCaptionSource());
         assertEquals(DraftStatus.PENDING_REVIEW, post1.getDraftStatus());

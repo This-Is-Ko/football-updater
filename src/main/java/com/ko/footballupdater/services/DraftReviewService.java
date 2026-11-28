@@ -1,6 +1,11 @@
 package com.ko.footballupdater.services;
 
+import com.ko.footballupdater.configuration.ImageGeneratorProperties;
+import com.ko.footballupdater.llm.VisionQaService;
 import com.ko.footballupdater.models.DraftStatus;
+import com.ko.footballupdater.models.PostType;
+import com.ko.footballupdater.models.form.StatisticEntryGenerateDto;
+import com.ko.footballupdater.photo.PhotoPipelineService;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.UploadDestination;
 import com.ko.footballupdater.models.form.ImageUrlEntry;
@@ -30,6 +35,21 @@ public class DraftReviewService {
 
     @Autowired
     private PostService postService;
+
+    @Autowired
+    private PostDraftService postDraftService;
+
+    @Autowired
+    private PhotoPipelineService photoPipelineService;
+
+    @Autowired
+    private VisionQaService visionQaService;
+
+    @Autowired
+    private PerformanceAnalysisService performanceAnalysisService;
+
+    @Autowired
+    private ImageGeneratorProperties imageGeneratorProperties;
 
     // Posts currently being approved, guards against double submits posting twice
     private final Set<Integer> approvalsInProgress = ConcurrentHashMap.newKeySet();
@@ -80,6 +100,47 @@ public class DraftReviewService {
         } finally {
             approvalsInProgress.remove(postId);
         }
+    }
+
+    /**
+     * Use a photo URL pasted by the reviewer as the standout background: download it with limits, frame it,
+     * regenerate the standout image, store the source and licence, and re-run vision QA.
+     */
+    public void usePhotoUrl(Integer postId, String photoUrl, String licence) throws Exception {
+        Post post = postService.getPostById(postId);
+        if (!DraftStatus.PENDING_REVIEW.equals(post.getDraftStatus())) {
+            throw new IllegalStateException("Post is not pending review");
+        }
+        if (post.getPlayer() == null || post.getPlayerMatchPerformanceStats() == null) {
+            throw new IllegalStateException("Only player posts can use a photo");
+        }
+        if (!imageGeneratorProperties.isEnabled()) {
+            throw new IllegalStateException("Image generation is disabled");
+        }
+        List<String> featuredStats = post.getFeaturedStats();
+        if (featuredStats.isEmpty()) {
+            featuredStats = performanceAnalysisService.highlightStatFields(post);
+        }
+        List<StatisticEntryGenerateDto> selectedStats = postDraftService.selectedStats(post, featuredStats);
+        if (selectedStats.isEmpty()) {
+            throw new IllegalStateException("No stats to feature on the standout image");
+        }
+
+        PhotoPipelineService.SelectedPhoto photo = photoPipelineService.prepareManualPhoto(post, photoUrl, licence);
+        // Replace an existing standout image instead of adding another one
+        if (PostType.STANDOUT_STATS_POST.equals(post.getPostType()) && !post.getImagesUrls().isEmpty()
+                && post.getImagesUrls().get(0).contains("_standout_stat_image_")) {
+            List<String> urls = new ArrayList<>(post.getImagesUrls());
+            urls.remove(0);
+            post.setImagesUrls(urls);
+        }
+        postDraftService.renderStandout(post, selectedStats, photo);
+        if (post.getFeaturedStats().isEmpty()) {
+            post.setFeaturedStats(new ArrayList<>(featuredStats));
+        }
+        visionQaService.review(post);
+        postRepository.save(post);
+        log.atInfo().setMessage("Standout image regenerated with reviewer photo").addKeyValue("postId", postId).log();
     }
 
     public void reject(Integer postId) {

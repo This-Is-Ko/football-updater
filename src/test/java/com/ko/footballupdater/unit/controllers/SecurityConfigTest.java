@@ -186,6 +186,30 @@ public class SecurityConfigTest {
     }
 
     @Test
+    public void reviewPhoto_notLoggedIn_redirectsWithoutFetching() throws Exception {
+        mockMvc.perform(browser(post("/posts/review/5/photo")).with(csrf()).param("photoUrl", "https://photos.example/p.jpg"))
+                .andExpect(redirectedUrlPattern("**/login"));
+        verify(draftReviewService, never()).usePhotoUrl(anyInt(), anyString(), any());
+    }
+
+    @Test
+    @WithMockUser
+    public void reviewPhoto_loggedInWithCsrf_usesPhoto() throws Exception {
+        mockMvc.perform(browser(post("/posts/review/5/photo")).with(csrf())
+                        .param("photoUrl", "https://photos.example/p.jpg").param("licence", "CC BY"))
+                .andExpect(redirectedUrl("/posts/review"));
+        verify(draftReviewService).usePhotoUrl(5, "https://photos.example/p.jpg", "CC BY");
+    }
+
+    @Test
+    @WithMockUser
+    public void reviewPhoto_loggedInWithoutCsrf_forbidden() throws Exception {
+        mockMvc.perform(browser(post("/posts/review/5/photo")).param("photoUrl", "https://photos.example/p.jpg"))
+                .andExpect(status().isForbidden());
+        verify(draftReviewService, never()).usePhotoUrl(anyInt(), anyString(), any());
+    }
+
+    @Test
     @WithMockUser
     public void reviewApprove_loggedInWithoutCsrf_forbidden() throws Exception {
         mockMvc.perform(browser(post("/posts/review/5/approve")).param("caption", "c")).andExpect(status().isForbidden());

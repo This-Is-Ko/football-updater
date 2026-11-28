@@ -129,6 +129,25 @@ the rule-based highlights and template captions are used. STANDOUT picks get a s
 player's standout base image, or the generic base image (IMAGE_GENERATOR_GENERIC_BASE_IMAGE_FILE) if there isn't one. Approve uploads to Instagram through the normal upload path, Reject removes the draft from the queue.
 Create the new columns with `src/main/resources/database/post_draft_review.sql`.
 
+    LLM_VISION_MODEL - Optional, default claude-opus-5-5, used for photo framing and vision QA
+
+With the LLM enabled, vision QA checks each draft's rendered images and caption after they're generated and shows any
+issues (text overflow, clipped face, caption/stat mismatch, low quality, watermark) as warnings on the review page.
+It only flags issues, it never blocks approval or edits the post.
+
+Standout photo pipeline
+
+    PHOTO_SOURCES - Optional, default NONE. Priority list of photo sources, like DATASOURCE_PRIORITY
+    PHOTO_MATCHER - Optional, default NOOP. NOOP only accepts photos picked on the review page
+    PHOTO_FRAMER - Optional, default CENTER. VISION asks the vision model where the player is
+    PHOTO_MAX_DOWNLOAD_BYTES - Optional, default 10485760
+    PHOTO_DOWNLOAD_TIMEOUT_SECONDS - Optional, default 10
+
+On the review page, "Use photo URL" downloads an http/https image (size limit, timeout, no private addresses), frames
+it, regenerates the standout image, re-runs QA and stores the photo URL and licence on the post. No automatic photo
+source or face matcher exists yet, so automatic photos are never used. Create the new columns with
+`src/main/resources/database/photo_pipeline.sql`.
+
 ### API
 
 API endpoints can be configured to check for a secret to prevent unauthorized access. This value can be configured with 

@@ -1,6 +1,8 @@
 package com.ko.footballupdater.models;
 
 import com.ko.footballupdater.converter.StringListConverter;
+import com.ko.footballupdater.llm.VisionQaService;
+import com.ko.footballupdater.llm.models.QaIssue;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -128,6 +130,37 @@ public class Post {
     @Enumerated(EnumType.STRING)
     private CaptionSource captionSource;
 
+    /**
+     * Vision QA verdict: true if no issues were found, null if QA hasn't run.
+     * QA only flags issues for the reviewer, it never blocks approval.
+     */
+    @Column(name = "qa_passed")
+    private Boolean qaPassed;
+
+    /**
+     * Vision QA issues as a JSON array of {type, detail}.
+     */
+    @Column(name = "qa_issues", length = 4000)
+    private String qaIssues;
+
+    @Column(name = "qa_checked_at")
+    private Date qaCheckedAt;
+
+    /**
+     * Where the standout background photo came from, when a photo was used.
+     */
+    @Column(name = "photo_source_url", length = 2000)
+    private String photoSourceUrl;
+
+    @Column(name = "photo_source_name", length = 64)
+    private String photoSourceName;
+
+    /**
+     * Free-text licence or credit for the photo.
+     */
+    @Column(name = "photo_licence", length = 500)
+    private String photoLicence;
+
     public Post() {
     }
 
@@ -159,6 +192,13 @@ public class Post {
         }
         // The converter turns an empty column into a single empty string
         return featuredStats.stream().filter(stat -> stat != null && !stat.isBlank()).toList();
+    }
+
+    /**
+     * QA issues for display, parsed from {@link #qaIssues}.
+     */
+    public List<QaIssue> getQaIssueList() {
+        return VisionQaService.parseIssues(qaIssues);
     }
 
     public List<String> getImagesUrls() {

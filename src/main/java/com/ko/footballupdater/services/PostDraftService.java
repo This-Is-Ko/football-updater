@@ -6,6 +6,7 @@ import com.ko.footballupdater.configuration.LlmProperties;
 import com.ko.footballupdater.llm.CaptionAgent;
 import com.ko.footballupdater.llm.EditorAgent;
 import com.ko.footballupdater.llm.LlmClient;
+import com.ko.footballupdater.llm.VisionQaService;
 import com.ko.footballupdater.llm.models.EditorPostType;
 import com.ko.footballupdater.llm.models.EditorResult;
 import com.ko.footballupdater.llm.models.ValidatedEditorDecision;
@@ -15,6 +16,7 @@ import com.ko.footballupdater.models.DraftStatus;
 import com.ko.footballupdater.models.Post;
 import com.ko.footballupdater.models.PostType;
 import com.ko.footballupdater.models.form.StatisticEntryGenerateDto;
+import com.ko.footballupdater.photo.PhotoPipelineService;
 import com.ko.footballupdater.repositories.PostRepository;
 import com.ko.footballupdater.utils.PostHelper;
 import com.ko.footballupdater.utils.StatFieldHelper;
@@ -28,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -49,6 +52,12 @@ public class PostDraftService {
 
     @Autowired
     private EditorAgent editorAgent;
+
+    @Autowired
+    private PhotoPipelineService photoPipelineService;
+
+    @Autowired
+    private VisionQaService visionQaService;
 
     @Autowired
     private CaptionAgent captionAgent;
@@ -116,6 +125,8 @@ public class PostDraftService {
                     StandoutImageResult imageResult = generateStandoutImage(post, decision.featuredStats());
                     if (imageResult == StandoutImageResult.NOT_GENERATED) {
                         reason.append(" (standout image not generated)");
+                    } else if (imageResult == StandoutImageResult.GENERATED_WITH_PHOTO) {
+                        reason.append(" (standout image uses a photo from ").append(post.getPhotoSourceName()).append(")");
                     } else if (imageResult == StandoutImageResult.GENERATED_WITH_GENERIC_BASE) {
                         reason.append(" (standout image uses the generic base image, no player standout base image found)");
                     }
@@ -133,6 +144,10 @@ public class PostDraftService {
                     post.setCaption(captionResult.caption());
                     post.setCaptionSource(captionResult.source());
                     captionsGenerated++;
+                }
+                // Flags problems for the reviewer only, skipped when the LLM is disabled
+                if (llmEnabled) {
+                    visionQaService.review(post);
                 }
                 postRepository.save(post);
             } catch (Exception ex) {
@@ -178,6 +193,7 @@ public class PostDraftService {
     enum StandoutImageResult {
         GENERATED,
         GENERATED_WITH_GENERIC_BASE,
+        GENERATED_WITH_PHOTO,
         NOT_GENERATED
     }
 
@@ -189,6 +205,55 @@ public class PostDraftService {
         if (!imageGeneratorProperties.isEnabled()) {
             return StandoutImageResult.NOT_GENERATED;
         }
+        List<StatisticEntryGenerateDto> selectedStats = selectedStats(post, featuredStats);
+        if (selectedStats.isEmpty()) {
+            return StandoutImageResult.NOT_GENERATED;
+        }
+        // A photo from the configured photo sources, if one passes the matcher (none by default)
+        Optional<PhotoPipelineService.SelectedPhoto> photo = Optional.empty();
+        try {
+            photo = photoPipelineService.findAutomaticPhoto(post);
+        } catch (Exception ex) {
+            log.atWarn().setMessage("Photo pipeline failed, using the base image").setCause(ex).addKeyValue("postId", post.getId()).log();
+        }
+        if (photo.isPresent()) {
+            try {
+                renderStandout(post, selectedStats, photo.get());
+                return StandoutImageResult.GENERATED_WITH_PHOTO;
+            } catch (Exception ex) {
+                log.atWarn().setMessage("Unable to generate standout image with photo, using the base image").setCause(ex).addKeyValue("postId", post.getId()).log();
+            }
+        }
+        try {
+            // Only upload the new standout image, the stat images are already uploaded
+            post.setImagesFileNames(new ArrayList<>());
+            boolean usedGenericBase = imageGeneratorService.generateStandoutStatsImage(post, selectedStats, null, true);
+            amazonS3Service.uploadToS3(post, true);
+            post.setPostType(PostType.STANDOUT_STATS_POST);
+            return usedGenericBase ? StandoutImageResult.GENERATED_WITH_GENERIC_BASE : StandoutImageResult.GENERATED;
+        } catch (Exception ex) {
+            log.atWarn().setMessage("Unable to generate standout image").setCause(ex).addKeyValue("postId", post.getId()).log();
+            return StandoutImageResult.NOT_GENERATED;
+        }
+    }
+
+    /**
+     * Render the standout image on a framed photo, put it first in the post images and record the photo source.
+     */
+    public void renderStandout(Post post, List<StatisticEntryGenerateDto> selectedStats, PhotoPipelineService.SelectedPhoto photo) throws Exception {
+        post.setImagesFileNames(new ArrayList<>());
+        imageGeneratorService.generateStandoutStatsImage(post, selectedStats, photo.imageGenParams(), false, photo.image());
+        amazonS3Service.uploadToS3(post, true);
+        post.setPostType(PostType.STANDOUT_STATS_POST);
+        post.setPhotoSourceUrl(truncate(photo.candidate().url(), 2000));
+        post.setPhotoSourceName(photo.candidate().sourceName());
+        post.setPhotoLicence(photo.candidate().licence() != null ? truncate(photo.candidate().licence(), 500) : null);
+    }
+
+    /**
+     * Stat entries for the standout image from the featured stat names, skipping null stats.
+     */
+    public List<StatisticEntryGenerateDto> selectedStats(Post post, List<String> featuredStats) {
         Map<String, Object> stats = StatFieldHelper.nonNullStats(post.getPlayerMatchPerformanceStats());
         List<StatisticEntryGenerateDto> selectedStats = new ArrayList<>();
         for (String statName : featuredStats) {
@@ -202,20 +267,7 @@ public class PostDraftService {
             }
             selectedStats.add(new StatisticEntryGenerateDto(displayName, value.toString(), true));
         }
-        if (selectedStats.isEmpty()) {
-            return StandoutImageResult.NOT_GENERATED;
-        }
-        try {
-            // Only upload the new standout image, the stat images are already uploaded
-            post.setImagesFileNames(new ArrayList<>());
-            boolean usedGenericBase = imageGeneratorService.generateStandoutStatsImage(post, selectedStats, null, true);
-            amazonS3Service.uploadToS3(post, true);
-            post.setPostType(PostType.STANDOUT_STATS_POST);
-            return usedGenericBase ? StandoutImageResult.GENERATED_WITH_GENERIC_BASE : StandoutImageResult.GENERATED;
-        } catch (Exception ex) {
-            log.atWarn().setMessage("Unable to generate standout image").setCause(ex).addKeyValue("postId", post.getId()).log();
-            return StandoutImageResult.NOT_GENERATED;
-        }
+        return selectedStats;
     }
 
     private static String truncate(String value, int maxLength) {
